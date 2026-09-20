@@ -19,7 +19,7 @@ import { registerDashboard } from "./tools/dashboard.js";
 import { registerProductComponents } from "./tools/product-components.js";
 import { registerProducts } from "./tools/products.js";
 import { registerPurchaseBundles } from "./tools/purchase-bundles.js";
-import { registerVendors } from "./tools/vendors.js";
+import { registerPlannedTasks } from "./tools/planned-tasks.js";
 
 function createServer(client: MspClient): McpServer {
   const server = new McpServer({
@@ -35,6 +35,7 @@ function createServer(client: MspClient): McpServer {
   registerProductComponents(server, client);
   registerPurchaseBundles(server, client);
   registerVendors(server, client);
+  registerPlannedTasks(server, client);
 
   return server;
 }

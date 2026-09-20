@@ -100,6 +100,12 @@ Switcher: login screen and admin top bar. Translations live in `lang/{code}.json
 - Notices at 30 / 14 / 7 / 1 days and once when expired — each toggle per endpoint
 - See [docs/ENDPOINTS.md](docs/ENDPOINTS.md)
 
+**Planning**
+- Tasks for upcoming moves, migrations, on-site jobs, and internal projects
+- Customer, deadline, type, status, priority, assignee, from/to locations
+- Dashboard widget for open work in the next 60 days (overdue included)
+- CSV export; also on the Agent API and MCP sidecar
+
 **Portal & billing**
 - Magic-link login for contacts (`/portal`)
 - Customers see their services and prices — never cost, margin, or license keys

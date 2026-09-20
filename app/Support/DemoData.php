@@ -6,12 +6,15 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\EndpointKind;
 use App\Enums\EndpointSource;
-use App\Enums\ProductType;
+use App\Enums\PlannedTaskKind;
+use App\Enums\PlannedTaskPriority;
+use App\Enums\PlannedTaskStatus;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\Endpoint;
 use App\Models\Invoice;
+use App\Models\PlannedTask;
 use App\Models\Product;
 use App\Models\PurchaseBundle;
 use App\Models\Vendor;
@@ -23,7 +26,8 @@ final class DemoData
     {
         return Company::query()->where('is_demo', true)->exists()
             || Vendor::query()->where('is_demo', true)->exists()
-            || Endpoint::query()->where('is_demo', true)->exists();
+            || Endpoint::query()->where('is_demo', true)->exists()
+            || PlannedTask::query()->where('is_demo', true)->exists();
     }
 
     public static function seed(): void
@@ -270,6 +274,49 @@ final class DemoData
                 'last_status' => 'warning',
                 'is_demo' => true,
             ]);
+
+            PlannedTask::create([
+                'company_id' => $bakkerij->id,
+                'title' => 'Bakery shop move',
+                'kind' => PlannedTaskKind::Relocation,
+                'status' => PlannedTaskStatus::Planned,
+                'priority' => PlannedTaskPriority::High,
+                'due_on' => now()->addDays(18)->toDateString(),
+                'location_from' => 'Oudegracht 12, Utrecht',
+                'location_to' => 'Leidseweg 8, Utrecht',
+                'notes' => 'Move POS, Wi-Fi, and the back-office PC. Confirm ISP lead time.',
+                'is_demo' => true,
+            ]);
+            PlannedTask::create([
+                'company_id' => $gemeente->id,
+                'title' => 'Microsoft 365 tenant migration',
+                'kind' => PlannedTaskKind::Migration,
+                'status' => PlannedTaskStatus::InProgress,
+                'priority' => PlannedTaskPriority::Urgent,
+                'due_on' => now()->addDays(40)->toDateString(),
+                'notes' => 'Cut over mailboxes after the backup contract renewal.',
+                'is_demo' => true,
+            ]);
+            PlannedTask::create([
+                'company_id' => $studio->id,
+                'title' => 'Firewall cutover on-site',
+                'kind' => PlannedTaskKind::Onsite,
+                'status' => PlannedTaskStatus::Planned,
+                'priority' => PlannedTaskPriority::Normal,
+                'due_on' => now()->addDays(6)->toDateString(),
+                'location_from' => 'Studio Noord server closet',
+                'notes' => 'Swap the managed firewall after hours.',
+                'is_demo' => true,
+            ]);
+            PlannedTask::create([
+                'title' => 'Internal lab hypervisor rebuild',
+                'kind' => PlannedTaskKind::Project,
+                'status' => PlannedTaskStatus::Blocked,
+                'priority' => PlannedTaskPriority::Low,
+                'due_on' => now()->subDays(4)->toDateString(),
+                'notes' => 'Waiting on replacement disks. Internal, no customer.',
+                'is_demo' => true,
+            ]);
         });
     }
 
@@ -289,6 +336,7 @@ final class DemoData
                 $deleted += Invoice::query()->whereIn('company_id', $companyIds)->delete();
             }
 
+            $deleted += PlannedTask::query()->where('is_demo', true)->delete();
             $deleted += Endpoint::query()->where('is_demo', true)->delete();
             $deleted += Contract::query()->where('is_demo', true)->delete();
             $deleted += Contact::query()->where('is_demo', true)->delete();
