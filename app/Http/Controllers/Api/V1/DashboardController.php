@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\ContractStatus;
 use App\Http\Controllers\Api\V1\Concerns\AuthorizesAgentApi;
 use App\Http\Controllers\Controller;
+use App\Models\Contract;
 use App\Models\PlannedTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;

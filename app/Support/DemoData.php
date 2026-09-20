@@ -9,6 +9,7 @@ use App\Enums\EndpointSource;
 use App\Enums\PlannedTaskKind;
 use App\Enums\PlannedTaskPriority;
 use App\Enums\PlannedTaskStatus;
+use App\Enums\ProductType;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Contract;
