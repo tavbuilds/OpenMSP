@@ -1,0 +1,41 @@
+FROM php:8.4-fpm-alpine
+
+# System deps + PHP extensions
+RUN apk add --no-cache \
+        bash git icu-dev libzip-dev zip unzip \
+        postgresql-dev oniguruma-dev libpng-dev libjpeg-turbo-dev freetype-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" \
+        pdo pdo_pgsql pgsql intl zip bcmath gd opcache exif pcntl
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
+COPY docker/php/php.ini /usr/local/etc/php/conf.d/zz-app.ini
+
+RUN addgroup -g 1000 app && adduser -u 1000 -G app -s /bin/bash -D app
+
+WORKDIR /var/www/html
+
+# Source in the image (no bind-mount in production).
+COPY --chown=app:app . /var/www/html
+
+# Production dependencies + optimised autoloader.
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev \
+    # Create a .env so artisan can run during build (runtime env supplies real values).
+    && cp -n .env.example .env \
+    # Publish Filament / app assets to public/.
+    && php artisan filament:assets \
+    # Snapshot of public/ for the shared nginx volume (entrypoint copies this).
+    && cp -a public public-dist \
+    && rm -f .env \
+    && chown -R app:app storage bootstrap/cache public public-dist
+
+# Entrypoint: wait for db, migrate, build caches (php-fpm only).
+COPY --chmod=0755 docker/php/entrypoint.sh /usr/local/bin/entrypoint
+
+USER app
+
+EXPOSE 9000
+ENTRYPOINT ["entrypoint"]
+CMD ["php-fpm"]

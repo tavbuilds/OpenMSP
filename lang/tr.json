@@ -1,0 +1,22 @@
+{
+  "Language": "Dil",
+  "Too many attempts. Try again in a few minutes.": "Çok fazla deneme. Birkaç dakika sonra yeniden deneyin.",
+  "First install — create an account": "İlk kurulum — hesap oluştur",
+  "Create administrator account": "Yönetici hesabı oluştur",
+  "Demo account — look around only. Adding or changing data is blocked.": "Demo hesabı — yalnızca bakın. Ekleme veya değiştirme engellendi.",
+  "Contracts & licenses": "Sözleşmeler ve lisanslar",
+  "Customers": "Müşteriler",
+  "Catalog": "Katalog",
+  "Endpoints": "Uç noktalar",
+  "Vendors": "Tedarikçiler",
+  "Purchase bundles": "Satın alma paketleri",
+  "Users": "Kullanıcılar",
+  "Audit log": "Denetim kaydı",
+  "Settings": "Ayarlar",
+  "Demo data": "Demo verisi",
+  "API tokens": "API jetonları",
+  "Read only": "Salt okunur",
+  "Notice deadlines (60 days)": "Fesih süreleri (60 gün)",
+  "Upcoming renewals": "Yaklaşan yenilemeler",
+  "Active licenses & contracts": "Aktif lisanslar ve sözleşmeler"
+}

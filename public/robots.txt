@@ -1,0 +1,7 @@
+User-agent: *
+Disallow: /admin
+Disallow: /portal
+Disallow: /api
+Disallow: /hooks
+Disallow: /stripe
+Allow: /

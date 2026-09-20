@@ -1,0 +1,22 @@
+{
+  "Language": "Γλώσσα",
+  "Too many attempts. Try again in a few minutes.": "Πάρα πολλές προσπάθειες. Δοκιμάστε ξανά σε λίγα λεπτά.",
+  "First install — create an account": "Πρώτη εγκατάσταση — δημιουργία λογαριασμού",
+  "Create administrator account": "Δημιουργία λογαριασμού διαχειριστή",
+  "Demo account — look around only. Adding or changing data is blocked.": "Λογαριασμός επίδειξης — μόνο περιήγηση. Η προσθήκη ή αλλαγή αποκλείεται.",
+  "Contracts & licenses": "Συμβάσεις και άδειες",
+  "Customers": "Πελάτες",
+  "Catalog": "Κατάλογος",
+  "Endpoints": "Endpoints",
+  "Vendors": "Προμηθευτές",
+  "Purchase bundles": "Πακέτα αγοράς",
+  "Users": "Χρήστες",
+  "Audit log": "Αρχείο ελέγχου",
+  "Settings": "Ρυθμίσεις",
+  "Demo data": "Δεδομένα επίδειξης",
+  "API tokens": "Διακριτικά API",
+  "Read only": "Μόνο ανάγνωση",
+  "Notice deadlines (60 days)": "Προθεσμίες καταγγελίας (60 ημέρες)",
+  "Upcoming renewals": "Επερχόμενες ανανεώσεις",
+  "Active licenses & contracts": "Ενεργές άδειες και συμβάσεις"
+}

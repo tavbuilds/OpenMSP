@@ -1,0 +1,135 @@
+openapi: 3.1.0
+info:
+  title: MSP Platform Agent API
+  version: 1.3.1
+  description: |
+    JSON REST API for AI agents (Sanctum PAT). See AGENT.md for filters.
+    v1.3.1 = purchase-bundles + product-components (BOM) + own-token self-service.
+servers:
+  - url: /api/v1
+    description: Relative to APP_URL
+security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum PAT
+  schemas:
+    PersonalAccessToken:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        abilities: { type: array, items: { type: string } }
+        last_used_at: { type: [string, "null"], format: date-time }
+        created_at: { type: [string, "null"], format: date-time }
+        plain_text_token: { type: string, description: Create response only }
+    ProductComponent:
+      type: object
+      properties:
+        id: { type: integer }
+        product_id: { type: integer }
+        component_id: { type: integer }
+        quantity: { type: integer, minimum: 1 }
+    PurchaseBundle:
+      type: object
+      properties:
+        id: { type: integer }
+        vendor_id: { type: [integer, "null"] }
+        name: { type: string }
+        total_cost: { type: number }
+        billing_cycle: { type: string }
+        annual_cost: { type: number }
+        recovery_percentage: { type: number }
+paths:
+  /dashboard:
+    get: { summary: Portfolio metrics, responses: { '200': { description: OK } } }
+  /companies:
+    get: { summary: List companies, responses: { '200': { description: OK } } }
+    post: { summary: Create company, responses: { '201': { description: Created } } }
+  /companies/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /companies/{company_id}/contacts:
+    parameters: [{ in: path, name: company_id, required: true, schema: { type: integer } }]
+    get: { summary: List company contacts, responses: { '200': { description: OK } } }
+    post: { summary: Create company contact, responses: { '201': { description: Created } } }
+  /contacts:
+    get: { summary: List contacts, responses: { '200': { description: OK } } }
+    post: { summary: Create contact, responses: { '201': { description: Created } } }
+  /contacts/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /vendors:
+    get: { summary: List vendors, responses: { '200': { description: OK } } }
+    post: { summary: Create vendor, responses: { '201': { description: Created } } }
+  /vendors/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /products:
+    get: { summary: List products, responses: { '200': { description: OK } } }
+    post: { summary: Create product, responses: { '201': { description: Created } } }
+  /products/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /products/{product_id}/components:
+    parameters: [{ in: path, name: product_id, required: true, schema: { type: integer } }]
+    get: { summary: List BOM, responses: { '200': { description: OK } } }
+    post: { summary: Attach component, responses: { '201': { description: Created } } }
+  /product-components:
+    get: { summary: List composition links, responses: { '200': { description: OK } } }
+    post: { summary: Create composition link, responses: { '201': { description: Created } } }
+  /product-components/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /purchase-bundles:
+    get: { summary: List purchase bundles, responses: { '200': { description: OK } } }
+    post: { summary: Create purchase bundle, responses: { '201': { description: Created } } }
+  /purchase-bundles/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show with allocation metrics, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /contracts/upcoming-renewals:
+    get: { summary: Upcoming renewals, responses: { '200': { description: OK } } }
+  /contracts:
+    get: { summary: List contracts, responses: { '200': { description: OK } } }
+    post: { summary: Create contract, responses: { '201': { description: Created } } }
+  /contracts/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /tokens:
+    get:
+      summary: List own PATs
+      description: Never returns plaintext.
+      responses: { '200': { description: OK } }
+    post:
+      summary: Create own PAT
+      description: plain_text_token returned once.
+      responses: { '201': { description: Created } }
+  /tokens/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    delete:
+      summary: Revoke own PAT
+      responses: { '204': { description: No content } }

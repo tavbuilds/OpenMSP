@@ -1,0 +1,29 @@
+name: pr-target
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, edited]
+
+jobs:
+  community-targets-dev:
+    name: Community PRs target dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Restrict community pull requests to dev
+        env:
+          BASE: ${{ github.base_ref }}
+          ASSOCIATION: ${{ github.event.pull_request.author_association }}
+        run: |
+          set -euo pipefail
+          if [ "$BASE" = "dev" ]; then
+            echo "PR targets dev."
+            exit 0
+          fi
+          case "$ASSOCIATION" in
+            OWNER|MEMBER|COLLABORATOR)
+              echo "Maintainer PR targeting ${BASE} is allowed."
+              exit 0
+              ;;
+          esac
+          echo "::error::Open a pull request against dev. Direct PRs to ${BASE} are limited to OpenMSP maintainers."
+          exit 1

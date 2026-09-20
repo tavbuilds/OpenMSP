@@ -1,0 +1,22 @@
+{
+  "Language": "Lingua",
+  "Too many attempts. Try again in a few minutes.": "Troppi tentativi. Riprova tra qualche minuto.",
+  "First install — create an account": "Prima installazione — crea un account",
+  "Create administrator account": "Crea account amministratore",
+  "Demo account — look around only. Adding or changing data is blocked.": "Account demo — solo consultazione. Aggiunta e modifica bloccate.",
+  "Contracts & licenses": "Contratti e licenze",
+  "Customers": "Clienti",
+  "Catalog": "Catalogo",
+  "Endpoints": "Endpoint",
+  "Vendors": "Fornitori",
+  "Purchase bundles": "Lotti di acquisto",
+  "Users": "Utenti",
+  "Audit log": "Registro di audit",
+  "Settings": "Impostazioni",
+  "Demo data": "Dati demo",
+  "API tokens": "Token API",
+  "Read only": "Sola lettura",
+  "Notice deadlines (60 days)": "Scadenze di disdetta (60 giorni)",
+  "Upcoming renewals": "Rinnovi imminenti",
+  "Active licenses & contracts": "Licenze e contratti attivi"
+}

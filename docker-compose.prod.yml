@@ -1,0 +1,167 @@
+# Production stack for Portainer / Raspberry Pi.
+# Deploy as a “Git repository” stack in Portainer (so the build context is available).
+# Set environment variables in Portainer: APP_KEY, APP_URL, DB_PASSWORD
+# (see .env.production.example / docs/SECRETS.md).
+# Secrets come from runtime env only — never from the image.
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    image: msp-platform:latest
+    # Force a rebuild on every Portainer (re)deploy so new code is actually
+    # picked up instead of reusing an old image.
+    pull_policy: build
+    restart: unless-stopped
+    environment:
+      APP_NAME: "MSP Platform"
+      APP_ENV: production
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_TIMEZONE: Europe/Amsterdam
+      APP_LOCALE: en
+      APP_FALLBACK_LOCALE: en
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE:-msp}
+      DB_USERNAME: ${DB_USERNAME:-msp}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SESSION_DRIVER: database
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+    volumes:
+      - storage:/var/www/html/storage
+      - public:/var/www/html/public
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - msp
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+    image: msp-nginx:latest
+    pull_policy: build
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8090}:80"
+    volumes:
+      - public:/var/www/html/public:ro
+    depends_on:
+      - app
+    networks:
+      - msp
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-msp}
+      POSTGRES_USER: ${DB_USERNAME:-msp}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - dbdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-msp} -d ${DB_DATABASE:-msp}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - msp
+
+  queue:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    image: msp-platform:latest
+    pull_policy: build
+    restart: unless-stopped
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE:-msp}
+      DB_USERNAME: ${DB_USERNAME:-msp}
+      DB_PASSWORD: ${DB_PASSWORD}
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      # Full MAIL_* needed: ContractRenewalReminder is ShouldQueue.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      - app
+      - db
+    networks:
+      - msp
+
+  scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile.prod
+    image: msp-platform:latest
+    pull_policy: build
+    restart: unless-stopped
+    entrypoint: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
+    environment:
+      APP_ENV: production
+      APP_KEY: ${APP_KEY}
+      APP_URL: ${APP_URL:-http://localhost}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE:-msp}
+      DB_USERNAME: ${DB_USERNAME:-msp}
+      DB_PASSWORD: ${DB_PASSWORD}
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      # Full MAIL_* needed: ContractRenewalReminder is ShouldQueue.
+      MAIL_MAILER: ${MAIL_MAILER:-log}
+      MAIL_HOST: ${MAIL_HOST:-}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+      MAIL_SCHEME: ${MAIL_SCHEME:-}
+      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
+      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+    volumes:
+      - storage:/var/www/html/storage
+    depends_on:
+      - app
+      - db
+    networks:
+      - msp
+
+networks:
+  msp:
+    driver: bridge
+
+volumes:
+  dbdata:
+  storage:
+  public:

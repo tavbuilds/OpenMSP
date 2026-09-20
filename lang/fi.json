@@ -1,0 +1,22 @@
+{
+  "Language": "Kieli",
+  "Too many attempts. Try again in a few minutes.": "Liian monta yritystä. Yritä uudelleen muutaman minuutin kuluttua.",
+  "First install — create an account": "Ensimmäinen asennus — luo tili",
+  "Create administrator account": "Luo järjestelmänvalvojan tili",
+  "Demo account — look around only. Adding or changing data is blocked.": "Demotili — vain katselu. Lisäys ja muokkaus on estetty.",
+  "Contracts & licenses": "Sopimukset ja lisenssit",
+  "Customers": "Asiakkaat",
+  "Catalog": "Luettelo",
+  "Endpoints": "Päätepisteet",
+  "Vendors": "Toimittajat",
+  "Purchase bundles": "Ostopaketit",
+  "Users": "Käyttäjät",
+  "Audit log": "Tarkastusloki",
+  "Settings": "Asetukset",
+  "Demo data": "Demodata",
+  "API tokens": "API-tunnukset",
+  "Read only": "Vain luku",
+  "Notice deadlines (60 days)": "Irtisanomisen määräajat (60 päivää)",
+  "Upcoming renewals": "Tulevat uusinnat",
+  "Active licenses & contracts": "Aktiiviset lisenssit ja sopimukset"
+}

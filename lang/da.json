@@ -1,0 +1,22 @@
+{
+  "Language": "Sprog",
+  "Too many attempts. Try again in a few minutes.": "For mange forsøg. Prøv igen om et par minutter.",
+  "First install — create an account": "Første installation — opret en konto",
+  "Create administrator account": "Opret administratorkonto",
+  "Demo account — look around only. Adding or changing data is blocked.": "Demo-konto — kun kigge. Tilføjelse og ændring er blokeret.",
+  "Contracts & licenses": "Kontrakter og licenser",
+  "Customers": "Kunder",
+  "Catalog": "Katalog",
+  "Endpoints": "Endpoints",
+  "Vendors": "Leverandører",
+  "Purchase bundles": "Indkøbsbundter",
+  "Users": "Brugere",
+  "Audit log": "Revisionslog",
+  "Settings": "Indstillinger",
+  "Demo data": "Demodata",
+  "API tokens": "API-tokens",
+  "Read only": "Skrivebeskyttet",
+  "Notice deadlines (60 days)": "Opsigelsesfrister (60 dage)",
+  "Upcoming renewals": "Kommende fornyelser",
+  "Active licenses & contracts": "Aktive licenser og kontrakter"
+}

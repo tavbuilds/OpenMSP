@@ -1,0 +1,22 @@
+{
+  "Language": "Språk",
+  "Too many attempts. Try again in a few minutes.": "För många försök. Försök igen om några minuter.",
+  "First install — create an account": "Första installationen — skapa ett konto",
+  "Create administrator account": "Skapa administratörskonto",
+  "Demo account — look around only. Adding or changing data is blocked.": "Demokonto — endast visning. Lägga till eller ändra är blockerat.",
+  "Contracts & licenses": "Avtal och licenser",
+  "Customers": "Kunder",
+  "Catalog": "Katalog",
+  "Endpoints": "Endpoints",
+  "Vendors": "Leverantörer",
+  "Purchase bundles": "Inköpspaket",
+  "Users": "Användare",
+  "Audit log": "Granskningslogg",
+  "Settings": "Inställningar",
+  "Demo data": "Demodata",
+  "API tokens": "API-token",
+  "Read only": "Skrivskyddad",
+  "Notice deadlines (60 days)": "Uppsägningsdeadlines (60 dagar)",
+  "Upcoming renewals": "Kommande förnyelser",
+  "Active licenses & contracts": "Aktiva licenser och avtal"
+}
