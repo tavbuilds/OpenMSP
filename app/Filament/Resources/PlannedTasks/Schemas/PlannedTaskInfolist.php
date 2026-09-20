@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PlannedTasks\Schemas;
 
 use App\Models\PlannedTask;
 use App\Support\Breakpoints;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -38,6 +39,15 @@ class PlannedTaskInfolist
                     TextEntry::make('location_from')->label(__('From'))->placeholder(__('—')),
                     TextEntry::make('location_to')->label(__('To'))->placeholder(__('—')),
                     TextEntry::make('notes')->label(__('Notes'))->placeholder(__('—'))->columnSpanFull(),
+                ]),
+            Section::make('Notifications')
+                ->columns(Breakpoints::THREE)
+                ->schema([
+                    IconEntry::make('notify_30')->label(__('30 days'))->boolean(),
+                    IconEntry::make('notify_14')->label(__('14 days'))->boolean(),
+                    IconEntry::make('notify_7')->label(__('7 days'))->boolean(),
+                    IconEntry::make('notify_1')->label(__('1 day'))->boolean(),
+                    IconEntry::make('notify_expired')->label(__('Expired'))->boolean(),
                 ]),
         ]);
     }

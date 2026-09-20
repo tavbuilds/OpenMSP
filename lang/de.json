@@ -45,5 +45,12 @@
   "Add planned task": "Aufgabe hinzufügen",
   "Unassigned": "Nicht zugewiesen",
   "Title": "Titel",
-  "Open": "Offen"
+  "Open": "Offen",
+  "Staff (admin/manager) and the assignee receive the enabled steps. Each toggle is per task.": "Admins/Manager und der Zuständige erhalten die aktivierten Stufen. Jeder Schalter gilt pro Aufgabe.",
+  "Internal (no customer)": "Intern (kein Kunde)",
+  "30 days before": "30 Tage vorher",
+  "14 days before": "14 Tage vorher",
+  "7 days before": "7 Tage vorher",
+  "1 day before": "1 Tag vorher",
+  "When it has expired": "Wenn die Frist abgelaufen ist"
 }

@@ -45,5 +45,12 @@
   "Add planned task": "Görev ekle",
   "Unassigned": "Atanmamış",
   "Title": "Başlık",
-  "Open": "Açık"
+  "Open": "Açık",
+  "Staff (admin/manager) and the assignee receive the enabled steps. Each toggle is per task.": "Yöneticiler ve atanan kişi açık adımları alır. Her anahtar göreve özeldir.",
+  "Internal (no customer)": "Dahili (müşteri yok)",
+  "30 days before": "30 gün önce",
+  "14 days before": "14 gün önce",
+  "7 days before": "7 gün önce",
+  "1 day before": "1 gün önce",
+  "When it has expired": "Son tarih geçtiğinde"
 }

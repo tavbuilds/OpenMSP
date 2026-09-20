@@ -26,6 +26,11 @@ const fields = {
   location_from: z.string().optional().nullable(),
   location_to: z.string().optional().nullable(),
   notes: z.string().optional().nullable(),
+  notify_30: z.boolean().optional(),
+  notify_14: z.boolean().optional(),
+  notify_7: z.boolean().optional(),
+  notify_1: z.boolean().optional(),
+  notify_expired: z.boolean().optional(),
 };
 
 export function registerPlannedTasks(server: McpServer, client: MspClient): void {

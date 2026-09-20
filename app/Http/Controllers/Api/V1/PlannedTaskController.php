@@ -137,6 +137,11 @@ class PlannedTaskController extends Controller
             'location_from' => ['nullable', 'string', 'max:180'],
             'location_to' => ['nullable', 'string', 'max:180'],
             'notes' => ['nullable', 'string'],
+            'notify_30' => ['sometimes', 'boolean'],
+            'notify_14' => ['sometimes', 'boolean'],
+            'notify_7' => ['sometimes', 'boolean'],
+            'notify_1' => ['sometimes', 'boolean'],
+            'notify_expired' => ['sometimes', 'boolean'],
         ]);
     }
 }

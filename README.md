@@ -23,6 +23,7 @@ A small MSP’s **recurring-work** system:
 |---|---|
 | Customers, contacts, vendors, catalog | Portfolio of contracts & licenses with cost / sale / margin |
 | Renewal & notice dates | Dashboard widgets + staff mail + optional customer mail |
+| Moves, migrations, on-site work | Planning board with customer, deadline, assignee, and reminders |
 | Certificates & hostnames | Per-endpoint webhook (e.g. Uptime Kuma) or a manual expiry |
 | SEPA collection (optional Stripe) | Customer portal with magic-link login and iDEAL → SEPA |
 | Integrations | JSON Agent API (`/api/v1`) + optional MCP sidecar |

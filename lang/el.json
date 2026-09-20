@@ -45,5 +45,12 @@
   "Add planned task": "Προσθήκη εργασίας",
   "Unassigned": "Χωρίς ανάθεση",
   "Title": "Τίτλος",
-  "Open": "Ανοιχτό"
+  "Open": "Ανοιχτό",
+  "Staff (admin/manager) and the assignee receive the enabled steps. Each toggle is per task.": "Οι διαχειριστές/managers και ο υπεύθυνος λαμβάνουν τα ενεργά βήματα. Κάθε διακόπτης είναι ανά εργασία.",
+  "Internal (no customer)": "Εσωτερικό (χωρίς πελάτη)",
+  "30 days before": "30 ημέρες πριν",
+  "14 days before": "14 ημέρες πριν",
+  "7 days before": "7 ημέρες πριν",
+  "1 day before": "1 ημέρα πριν",
+  "When it has expired": "Όταν έχει λήξει"
 }

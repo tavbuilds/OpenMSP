@@ -29,6 +29,11 @@ class PlannedTaskResource extends JsonResource
             'location_from' => $this->location_from,
             'location_to' => $this->location_to,
             'notes' => $this->notes,
+            'notify_30' => (bool) $this->notify_30,
+            'notify_14' => (bool) $this->notify_14,
+            'notify_7' => (bool) $this->notify_7,
+            'notify_1' => (bool) $this->notify_1,
+            'notify_expired' => (bool) $this->notify_expired,
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
         ];
