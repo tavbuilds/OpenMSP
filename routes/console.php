@@ -16,3 +16,7 @@ Schedule::command('contracts:send-renewal-reminders --days=30')
 Schedule::command('endpoints:send-expiry-reminders')
     ->dailyAt('08:05')
     ->timezone('Europe/Amsterdam');
+
+Schedule::command('planning:send-deadline-reminders')
+    ->dailyAt('08:10')
+    ->timezone('Europe/Amsterdam');

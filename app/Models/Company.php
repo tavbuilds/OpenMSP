@@ -42,6 +42,11 @@ class Company extends Model
         return $this->hasMany(Endpoint::class);
     }
 
+    public function plannedTasks(): HasMany
+    {
+        return $this->hasMany(PlannedTask::class);
+    }
+
     // --- Key figures over de actieve contracten -------------------------
 
     /** @return \Illuminate\Support\Collection<int, Contract> */

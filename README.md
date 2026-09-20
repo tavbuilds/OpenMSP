@@ -23,6 +23,7 @@ A small MSP’s **recurring-work** system:
 |---|---|
 | Customers, contacts, vendors, catalog | Portfolio of contracts & licenses with cost / sale / margin |
 | Renewal & notice dates | Dashboard widgets + staff mail + optional customer mail |
+| Moves, migrations, on-site work | Planning board with customer, deadline, assignee, and reminders |
 | Certificates & hostnames | Per-endpoint webhook (e.g. Uptime Kuma) or a manual expiry |
 | SEPA collection (optional Stripe) | Customer portal with magic-link login and iDEAL → SEPA |
 | Integrations | JSON Agent API (`/api/v1`) + optional MCP sidecar |
@@ -99,6 +100,12 @@ Switcher: login screen and admin top bar. Translations live in `lang/{code}.json
 - Or a date you type yourself
 - Notices at 30 / 14 / 7 / 1 days and once when expired — each toggle per endpoint
 - See [docs/ENDPOINTS.md](docs/ENDPOINTS.md)
+
+**Planning**
+- Tasks for upcoming moves, migrations, on-site jobs, and internal projects
+- Customer, deadline, type, status, priority, assignee, from/to locations
+- Dashboard widget for open work in the next 60 days (overdue included)
+- CSV export; also on the Agent API and MCP sidecar
 
 **Portal & billing**
 - Magic-link login for contacts (`/portal`)

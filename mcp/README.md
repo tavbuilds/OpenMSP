@@ -1,6 +1,6 @@
 # MSP Platform MCP sidecar
 
-Node MCP server that wraps the Laravel Agent API (`{MSP_API_BASE}/api/v1`) so Cursor / Grok Bot-style agents can call companies, contacts, contracts, products, product components, purchase bundles, vendors, dashboard, and upcoming renewals as tools — without hand-rolling HTTP.
+Node MCP server that wraps the Laravel Agent API (`{MSP_API_BASE}/api/v1`) so Cursor / Grok Bot-style agents can call companies, contacts, contracts, products, product components, purchase bundles, vendors, planned tasks, dashboard, and upcoming renewals as tools — without hand-rolling HTTP.
 
 Laravel stays untouched; this package lives under `mcp/` and talks over Sanctum Bearer tokens.
 
@@ -84,6 +84,8 @@ Dev alternative (no build step):
 | `list_product_bom` / `create_product_bom_item` | `/api/v1/products/{id}/components` |
 | `list_purchase_bundles` / `get_purchase_bundle` / `create_purchase_bundle` / `update_purchase_bundle` / `delete_purchase_bundle` | `/api/v1/purchase-bundles` |
 | `list_vendors` / `get_vendor` / `create_vendor` / `update_vendor` / `delete_vendor` | `/api/v1/vendors` |
+| `list_planned_tasks` / `get_planned_task` / `create_planned_task` / `update_planned_task` / `delete_planned_task` | `/api/v1/planned-tasks` |
+| `list_upcoming_planned_tasks` | `GET /api/v1/planned-tasks/upcoming` |
 
 List tools accept the same filter query params as the REST API (see `AGENT.md`). Writes use PATCH for updates. RBAC matches the API (viewer read; sales+ write; admin/manager delete).
 
