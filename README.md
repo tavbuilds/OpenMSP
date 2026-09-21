@@ -137,7 +137,7 @@ here, not shown on the login card:
 
 | | |
 | --- | --- |
-| Username | `test` |
+| Username | `test` (or email `test@demo.local`) |
 | Password | `test` |
 
 That account is **view-only**. Creating a real administrator removes it
