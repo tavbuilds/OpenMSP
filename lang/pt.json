@@ -52,5 +52,20 @@
   "14 days before": "14 dias antes",
   "7 days before": "7 dias antes",
   "1 day before": "1 dia antes",
-  "When it has expired": "Quando já passou do prazo"
+  "When it has expired": "Quando já passou do prazo",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Ligue o Grok e outros agentes aqui. Sem software extra — este URL é o servidor MCP.",
+  "Server URL": "URL do servidor",
+  "Copy URL": "Copiar URL",
+  "Copied": "Copiado",
+  "Authentication": "Autenticação",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Crie um token em Tokens de API e cole-o como Bearer no agente.",
+  "Open API tokens": "Abrir tokens de API",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Abra grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Cole o URL do servidor.",
+  "When asked for auth, choose Bearer and paste your API token.": "Na autenticação, escolha Bearer e cole o token da API.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Ative o conector no chat e peça ao Grok clientes ou o painel.",
+  "Available tools": "Ferramentas disponíveis",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "As mesmas permissões da API Agent (visualizador só leitura, vendas pode escrever, admin/manager pode apagar)."
 }

@@ -52,5 +52,20 @@
   "14 days before": "14 gün önce",
   "7 days before": "7 gün önce",
   "1 day before": "1 gün önce",
-  "When it has expired": "Son tarih geçtiğinde"
+  "When it has expired": "Son tarih geçtiğinde",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Grok ve diğer ajanları buradan bağlayın. Ek yazılım yok — bu URL MCP sunucusudur.",
+  "Server URL": "Sunucu URL’si",
+  "Copy URL": "URL’yi kopyala",
+  "Copied": "Kopyalandı",
+  "Authentication": "Kimlik doğrulama",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "API jetonlarında bir jeton oluşturun ve ajanına Bearer olarak yapıştırın.",
+  "Open API tokens": "API jetonlarını aç",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "grok.com/connectors → New Connector → Custom açın.",
+  "Paste the server URL.": "Sunucu URL’sini yapıştırın.",
+  "When asked for auth, choose Bearer and paste your API token.": "Kimlikte Bearer seçin ve API jetonunu yapıştırın.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Sohbette bağlayıcıyı açın ve Grok’tan müşterileri veya panoyu isteyin.",
+  "Available tools": "Kullanılabilir araçlar",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Agent API ile aynı yetkiler (izleyici salt okunur, satış yazabilir, yönetici silebilir)."
 }

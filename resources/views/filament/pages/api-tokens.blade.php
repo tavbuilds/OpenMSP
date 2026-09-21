@@ -1,7 +1,8 @@
 <x-filament-panels::page>
     <p class="text-sm text-gray-500 dark:text-gray-400">
-        Tokens authenticate the Agent API and the MCP sidecar. The plaintext value is
-        shown only once. Administrators can revoke other people’s tokens under
+        Tokens authenticate the Agent API and the built-in MCP endpoint
+        (<code>/mcp</code>). The plaintext value is shown only once.
+        Administrators can revoke other people’s tokens under
         <strong>Users</strong>.
     </p>
 
