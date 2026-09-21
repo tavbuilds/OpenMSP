@@ -55,5 +55,20 @@
   "14 days before": "14 dagen van tevoren",
   "7 days before": "7 dagen van tevoren",
   "1 day before": "1 dag van tevoren",
-  "When it has expired": "Als de deadline is verstreken"
+  "When it has expired": "Als de deadline is verstreken",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Koppel Grok en andere agents hier. Geen extra software — deze URL ís de MCP-server.",
+  "Server URL": "Server-URL",
+  "Copy URL": "URL kopiëren",
+  "Copied": "Gekopieerd",
+  "Authentication": "Authenticatie",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Maak een token onder API-tokens en plak die als Bearer-token in de agent.",
+  "Open API tokens": "API-tokens openen",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Open grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Plak de server-URL.",
+  "When asked for auth, choose Bearer and paste your API token.": "Kies bij authenticatie Bearer en plak je API-token.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Zet de connector aan in de chat en vraag Grok om klanten te tonen of het dashboard.",
+  "Available tools": "Beschikbare tools",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Zelfde rechten als de Agent API (viewer alleen lezen, sales mag schrijven, admin/manager mag verwijderen)."
 }

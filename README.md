@@ -26,7 +26,7 @@ A small MSP’s **recurring-work** system:
 | Moves, migrations, on-site work | Planning board with customer, deadline, assignee, and reminders |
 | Certificates & hostnames | Per-endpoint webhook (e.g. Uptime Kuma) or a manual expiry |
 | SEPA collection (optional Stripe) | Customer portal with magic-link login and iDEAL → SEPA |
-| Integrations | JSON Agent API (`/api/v1`) + optional MCP sidecar |
+| Integrations | JSON Agent API (`/api/v1`) + built-in MCP (`/mcp`) |
 
 Nothing is vendor-locked. First boot asks for an admin account and a platform
 name. Mail, Stripe, tokens, logo and color are all set (and reset) from
@@ -105,7 +105,7 @@ Switcher: login screen and admin top bar. Translations live in `lang/{code}.json
 - Tasks for upcoming moves, migrations, on-site jobs, and internal projects
 - Customer, deadline, type, status, priority, assignee, from/to locations
 - Dashboard widget for open work in the next 60 days (overdue included)
-- CSV export; also on the Agent API and MCP sidecar
+- CSV export; also on the Agent API and MCP
 
 **Portal & billing**
 - Magic-link login for contacts (`/portal`)
@@ -122,7 +122,7 @@ Switcher: login screen and admin top bar. Translations live in `lang/{code}.json
 
 **Integrations**
 - Sanctum Agent API — [AGENT.md](AGENT.md), [openapi/agent-api.yaml](openapi/agent-api.yaml)
-- MCP sidecar — [mcp/README.md](mcp/README.md)
+- Built-in MCP at `{APP_URL}/mcp` (System → MCP in admin). Optional stdio sidecar: [mcp/README.md](mcp/README.md)
 
 ---
 
