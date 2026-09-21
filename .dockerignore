@@ -1,0 +1,12 @@
+# Coolify/Portainer write a runtime .env into the build context. Unquoted
+# spaces (APP_NAME=Tav IT Support) make phpdotenv fail during composer
+# post-autoload-dump. Never bake host secrets into the image.
+.env
+.env.*
+!.env.example
+!.env.production.example
+
+.git
+.github
+.gitattributes
+.gitignore
