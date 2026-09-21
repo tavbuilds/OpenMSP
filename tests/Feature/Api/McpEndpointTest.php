@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Company;
 use App\Models\User;
+use App\Support\PlatformSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -140,6 +141,7 @@ class McpEndpointTest extends TestCase
     public function test_admin_mcp_page_renders(): void
     {
         $admin = User::factory()->admin()->create();
+        PlatformSettings::markOnboardingComplete();
 
         $this->actingAs($admin)
             ->get('/admin/mcp')
