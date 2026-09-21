@@ -32,10 +32,7 @@
         <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
             <div class="text-sm font-medium text-gray-950 dark:text-white">{{ __('Authentication') }}</div>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {{ __('Create a token on API tokens, then paste it as a Bearer token in the agent.') }}
-            </p>
-            <p class="mt-2 font-mono text-xs break-all text-gray-500">
-                Authorization: Bearer <token>
+                {{ __('Grok uses OAuth (values below). Cursor and scripts can still use a Bearer token from API tokens.') }}
             </p>
             <a
                 href="{{ \App\Filament\Pages\ApiTokens::getUrl() }}"
@@ -45,13 +42,15 @@
             </a>
         </div>
 
+        @include('filament.pages.partials.oauth-fields')
+
         <div class="rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
             <div class="text-sm font-medium text-gray-950 dark:text-white">{{ __('Grok') }}</div>
             <ol class="mt-2 list-decimal space-y-1 pl-5 text-sm text-gray-600 dark:text-gray-400">
                 <li>{{ __('Open grok.com/connectors → New Connector → Custom.') }}</li>
                 <li>{{ __('Paste the server URL.') }}</li>
-                <li>{{ __('When asked for auth, choose Bearer and paste your API token.') }}</li>
-                <li>{{ __('Enable the connector in the chat and ask Grok to list companies or show the dashboard.') }}</li>
+                <li>{{ __('When Grok asks for OAuth, copy the values from the card above. Leave the client secret empty and pick PKCE.') }}</li>
+                <li>{{ __('Save & Connect, sign in to OpenMSP, click Allow.') }}</li>
             </ol>
         </div>
 

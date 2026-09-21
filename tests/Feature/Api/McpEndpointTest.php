@@ -147,7 +147,8 @@ class McpEndpointTest extends TestCase
             ->get('/admin/mcp')
             ->assertOk()
             ->assertSee('/mcp', false)
-            ->assertSee('get_dashboard', false);
+            ->assertSee('get_dashboard', false)
+            ->assertSee('openmsp', false);
     }
 
     public function test_api_tokens_page_shows_mcp_endpoint(): void

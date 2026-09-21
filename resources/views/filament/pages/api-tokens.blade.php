@@ -29,6 +29,8 @@
         </a>
     </div>
 
+    @include('filament.pages.partials.oauth-fields')
+
     @if (filled($this->plainTextToken))
         <div
             class="rounded-xl border border-primary-200 bg-primary-50 p-4 dark:border-primary-800 dark:bg-primary-950"
