@@ -9,7 +9,8 @@ It builds the code into the image, migrates on boot, and reads secrets from
 environment variables. No bind mounts.
 
 Copy [`.env.production.example`](.env.production.example) and fill it in.
-`app`, `queue`, and `scheduler` get **the same** variables. Full notes:
+Quote values that contain spaces (`APP_NAME="Tav IT Support"`). `app`, `queue`,
+and `scheduler` get **the same** variables. Full notes:
 [docs/SECRETS.md](docs/SECRETS.md).
 
 The stack:

@@ -20,13 +20,12 @@ WORKDIR /var/www/html
 # Source in the image (no bind-mount in production).
 COPY --chown=app:app . /var/www/html
 
-# Production dependencies + optimised autoloader.
-RUN composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev \
-    # Create a .env so artisan can run during build (runtime env supplies real values).
-    && cp -n .env.example .env \
-    # Publish Filament / app assets to public/.
+# Always a valid quoted .env for artisan during build. Coolify may drop an
+# unquoted runtime .env into the context; that must not be used here.
+RUN rm -f .env \
+    && cp .env.example .env \
+    && composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev \
     && php artisan filament:assets \
-    # Snapshot of public/ for the shared nginx volume (entrypoint copies this).
     && cp -a public public-dist \
     && rm -f .env \
     && chown -R app:app storage bootstrap/cache public public-dist

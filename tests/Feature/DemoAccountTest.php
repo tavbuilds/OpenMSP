@@ -20,6 +20,16 @@ class DemoAccountTest extends TestCase
         $this->assertSame('admin@example.com', DemoAccount::resolveLoginEmail('admin@example.com'));
     }
 
+    public function test_login_page_accepts_the_demo_username_field(): void
+    {
+        DemoAccount::ensure();
+
+        $this->get('/admin/login')
+            ->assertSuccessful()
+            ->assertDontSee('type="email"', false);
+    }
+
+
     public function test_demo_user_is_a_read_only_viewer(): void
     {
         $user = DemoAccount::ensure();

@@ -7,6 +7,8 @@ use App\Support\DemoAccount;
 use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
@@ -53,5 +55,15 @@ class Login extends BaseLogin
         return new HtmlString(
             '<a href="'.e(url('/admin/register')).'" class="underline">'.e(__('First install — create an account')).'</a>'
         );
+    }
+
+    /** Allow `test` as well as an email; HTML5 type=email would block the demo username. */
+    protected function getEmailFormComponent(): Component
+    {
+        return TextInput::make('email')
+            ->label(__('Email or username'))
+            ->required()
+            ->autocomplete()
+            ->autofocus();
     }
 }
