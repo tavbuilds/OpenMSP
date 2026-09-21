@@ -52,5 +52,20 @@
   "14 days before": "14 dage før",
   "7 days before": "7 dage før",
   "1 day before": "1 dag før",
-  "When it has expired": "Når fristen er overskredet"
+  "When it has expired": "Når fristen er overskredet",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Tilslut Grok og andre agenter her. Ingen ekstra software — denne URL er MCP-serveren.",
+  "Server URL": "Server-URL",
+  "Copy URL": "Kopiér URL",
+  "Copied": "Kopieret",
+  "Authentication": "Godkendelse",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Opret en token under API-tokens, og indsæt den som Bearer i agenten.",
+  "Open API tokens": "Åbn API-tokens",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Åbn grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Indsæt server-URL’en.",
+  "When asked for auth, choose Bearer and paste your API token.": "Vælg Bearer ved godkendelse, og indsæt din API-token.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Aktivér connectoren i chatten, og bed Grok om kunder eller dashboardet.",
+  "Available tools": "Tilgængelige værktøjer",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samme rettigheder som Agent API (viewer kun læse, sales kan skrive, admin/manager kan slette)."
 }

@@ -345,21 +345,44 @@ curl -sS -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/json"
 
 Create/update/delete still flow through the existing `Auditable` model trait (contacts and product components are not auditable; purchase bundles are).
 
-## MCP sidecar (Cursor / agents)
+## MCP (Grok, Cursor, and other agents)
 
-An optional Node MCP server under [`mcp/`](mcp/) exposes the same Agent API as tools (stdio transport). Laravel is unchanged; the sidecar calls `{MSP_API_BASE}/api/v1` with `MSP_API_TOKEN`.
+The app **hosts MCP itself** at:
 
-### Quick start
+```
+{APP_URL}/mcp
+```
+
+Streamable HTTP, Sanctum Bearer token (same tokens as `/api/v1`). No Node
+install. In admin: **System → MCP** copies the URL; **System → API tokens**
+creates the token.
+
+Grok: [grok.com/connectors](https://grok.com/connectors) → New Connector →
+Custom → paste `{APP_URL}/mcp` → Bearer + token.
+
+```bash
+curl -sS -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Accept: application/json" -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"curl","version":"1"}}}' \
+  "$APP_URL/mcp"
+```
+
+Tools match the Agent API (dashboard, companies, contacts, contracts, catalog,
+BOM, purchase bundles, vendors, planned tasks). RBAC is identical. Token
+self-service stays REST-only (`/api/v1/tokens`).
+
+An optional Node **stdio** sidecar under [`mcp/`](mcp/) still exists for local
+Cursor/CLI hosts that cannot call HTTP. Prefer `{APP_URL}/mcp` for Grok and any
+remote agent.
+
+### Cursor stdio sidecar (optional)
 
 ```bash
 cd mcp
 cp .env.example .env   # set MSP_API_BASE + MSP_API_TOKEN
 npm install
 npm run build
-npm start              # or: npm run dev (tsx)
 ```
-
-### Cursor config example
 
 ```json
 {
@@ -376,6 +399,4 @@ npm start              # or: npm run dev (tsx)
 }
 ```
 
-Token self-service is **REST-only** for now (MCP follow-up).
-
-Full tool list, smoke script, and notes: [`mcp/README.md`](mcp/README.md).
+Full sidecar notes: [`mcp/README.md`](mcp/README.md).

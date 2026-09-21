@@ -52,5 +52,20 @@
   "14 days before": "14 dagar innan",
   "7 days before": "7 dagar innan",
   "1 day before": "1 dag innan",
-  "When it has expired": "När deadline har passerat"
+  "When it has expired": "När deadline har passerat",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Koppla Grok och andra agenter här. Ingen extra programvara — den här URL:en är MCP-servern.",
+  "Server URL": "Server-URL",
+  "Copy URL": "Kopiera URL",
+  "Copied": "Kopierad",
+  "Authentication": "Autentisering",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Skapa en token under API-token och klistra in den som Bearer i agenten.",
+  "Open API tokens": "Öppna API-token",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Öppna grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Klistra in server-URL:en.",
+  "When asked for auth, choose Bearer and paste your API token.": "Välj Bearer vid autentisering och klistra in din API-token.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Aktivera anslutningen i chatten och be Grok om kunder eller instrumentpanelen.",
+  "Available tools": "Tillgängliga verktyg",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samma behörigheter som Agent API (tittare endast läsa, sälj kan skriva, admin/chef kan ta bort)."
 }

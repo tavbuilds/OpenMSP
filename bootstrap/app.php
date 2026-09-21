@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
         then: function () {
             Illuminate\Support\Facades\Route::middleware('web')
                 ->group(base_path('routes/portal.php'));
+            Illuminate\Support\Facades\Route::middleware('api')
+                ->group(base_path('routes/mcp.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -24,10 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'stripe/webhook',
             'hooks/endpoints/*',
+            'mcp',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*'),
+            fn (Request $request) => $request->is('api/*') || $request->is('mcp'),
         );
     })->create();
