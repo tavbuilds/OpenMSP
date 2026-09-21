@@ -148,8 +148,8 @@ automatically and closes registration.
 Requires Docker Compose. Default URL: [http://localhost:8090](http://localhost:8090)
 
 ```bash
-git clone https://github.com/tavbuilds/tav-it-MSP.git
-cd tav-it-MSP
+git clone https://github.com/tavbuilds/OpenMSP.git
+cd OpenMSP
 cp .env.example .env
 ```
 
@@ -196,7 +196,9 @@ docker compose exec app php artisan test
 ## Production
 
 Use [docker-compose.prod.yml](docker-compose.prod.yml) (image-baked, migrates on
-boot). Raspberry Pi / Portainer walkthrough: [DEPLOY.md](DEPLOY.md).
+boot). **Same file** for Docker CLI, Coolify, Portainer, or a DigitalOcean
+droplet. Env list: [`.env.production.example`](.env.production.example).
+Walkthrough: [DEPLOY.md](DEPLOY.md).
 
 Before you go live:
 
@@ -240,7 +242,7 @@ flowchart LR
 | `app` | PHP-FPM 8.4 (Laravel + Filament) |
 | `db` | PostgreSQL 16 |
 | `queue` | `queue:work` — mail and notifications |
-| `scheduler` | Laravel scheduler (daily renewal + certificate alerts, 08:00 Europe/Amsterdam) |
+| `scheduler` | Laravel scheduler (daily reminders at 08:00 in `APP_TIMEZONE`) |
 
 Domain: `Company` → `Contract` ← `Product` / `Vendor`. `Endpoint` is optional
 and may be internal (no customer). Margins (`margin_eur`, `margin_pct`) and
