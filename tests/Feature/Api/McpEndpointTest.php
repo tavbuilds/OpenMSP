@@ -149,4 +149,16 @@ class McpEndpointTest extends TestCase
             ->assertSee('/mcp', false)
             ->assertSee('get_dashboard', false);
     }
+
+    public function test_api_tokens_page_shows_mcp_endpoint(): void
+    {
+        $admin = User::factory()->admin()->create();
+        PlatformSettings::markOnboardingComplete();
+
+        $this->actingAs($admin)
+            ->get('/admin/api-tokens')
+            ->assertOk()
+            ->assertSee('/mcp', false)
+            ->assertSee(__('MCP endpoint'), false);
+    }
 }
