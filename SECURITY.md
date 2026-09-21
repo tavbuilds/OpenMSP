@@ -7,7 +7,7 @@ This is self-hosted software. You are responsible for the instance you run
 
 Please **do not** open a public issue for security bugs.
 
-Use [GitHub Security Advisories](https://github.com/tavbuilds/tav-it-MSP/security/advisories/new)
+Use [GitHub Security Advisories](https://github.com/tavbuilds/OpenMSP/security/advisories/new)
 on this repository. We will coordinate a fix before any disclosure.
 
 ## What is in scope

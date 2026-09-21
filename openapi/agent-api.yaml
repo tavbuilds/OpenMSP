@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: MSP Platform Agent API
-  version: 1.3.1
+  version: 1.4.0
   description: |
     JSON REST API for AI agents (Sanctum PAT). See AGENT.md for filters.
-    v1.3.1 = purchase-bundles + product-components (BOM) + own-token self-service.
+    v1.4.0 = planned tasks (moves, migrations, on-site work).
 servers:
   - url: /api/v1
     description: Relative to APP_URL
@@ -72,6 +72,17 @@ paths:
     get: { summary: List vendors, responses: { '200': { description: OK } } }
     post: { summary: Create vendor, responses: { '201': { description: Created } } }
   /vendors/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /planned-tasks/upcoming:
+    get: { summary: Open planned tasks due within N days, responses: { '200': { description: OK } } }
+  /planned-tasks:
+    get: { summary: List planned tasks, responses: { '200': { description: OK } } }
+    post: { summary: Create planned task, responses: { '201': { description: Created } } }
+  /planned-tasks/{id}:
     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
     get: { summary: Show, responses: { '200': { description: OK } } }
     put: { summary: Update, responses: { '200': { description: OK } } }

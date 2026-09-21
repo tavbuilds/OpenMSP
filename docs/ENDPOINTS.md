@@ -33,7 +33,7 @@ token invalidates the old URL.
 
 ## Notices (per endpoint)
 
-Every morning (08:05 Europe/Amsterdam):
+Every morning (08:05 in `APP_TIMEZONE`, default UTC):
 
 | Toggle | When |
 |--------|------|

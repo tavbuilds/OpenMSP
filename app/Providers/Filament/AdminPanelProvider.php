@@ -57,6 +57,7 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\UpcomingEndpointExpiries::class,
                 \App\Filament\Widgets\UpcomingNoticeDeadlines::class,
                 \App\Filament\Widgets\UpcomingRenewals::class,
+                \App\Filament\Widgets\UpcomingPlanning::class,
             ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,

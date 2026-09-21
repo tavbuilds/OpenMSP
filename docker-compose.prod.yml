@@ -1,8 +1,43 @@
-# Production stack for Portainer / Raspberry Pi.
-# Deploy as a “Git repository” stack in Portainer (so the build context is available).
-# Set environment variables in Portainer: APP_KEY, APP_URL, DB_PASSWORD
-# (see .env.production.example / docs/SECRETS.md).
-# Secrets come from runtime env only — never from the image.
+# Production stack — same file for Docker CLI, Coolify, Portainer, a droplet.
+# Secrets come from runtime env only (never baked into the image).
+# Full list: .env.production.example  |  notes: docs/SECRETS.md, DEPLOY.md
+#
+# Coolify / Portainer: set the variables in the UI; compose interpolates ${…}.
+# Droplet / CLI: copy .env.production.example → .env next to this file.
+
+x-openmsp-php-env: &openmsp-php-env
+  APP_NAME: ${APP_NAME:-MSP Platform}
+  APP_ENV: production
+  APP_DEBUG: ${APP_DEBUG:-false}
+  APP_KEY: ${APP_KEY}
+  APP_URL: ${APP_URL:-http://localhost}
+  APP_TIMEZONE: ${APP_TIMEZONE:-UTC}
+  APP_LOCALE: ${APP_LOCALE:-en}
+  APP_FALLBACK_LOCALE: ${APP_FALLBACK_LOCALE:-en}
+  APP_DEMO_LOGIN: ${APP_DEMO_LOGIN:-false}
+  DB_CONNECTION: pgsql
+  DB_HOST: db
+  DB_PORT: "5432"
+  DB_DATABASE: ${DB_DATABASE:-msp}
+  DB_USERNAME: ${DB_USERNAME:-msp}
+  DB_PASSWORD: ${DB_PASSWORD}
+  SESSION_DRIVER: database
+  SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+  QUEUE_CONNECTION: database
+  CACHE_STORE: database
+  LOG_CHANNEL: ${LOG_CHANNEL:-stack}
+  LOG_LEVEL: ${LOG_LEVEL:-error}
+  MAIL_MAILER: ${MAIL_MAILER:-log}
+  MAIL_HOST: ${MAIL_HOST:-}
+  MAIL_PORT: ${MAIL_PORT:-587}
+  MAIL_USERNAME: ${MAIL_USERNAME:-}
+  MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+  MAIL_SCHEME: ${MAIL_SCHEME:-}
+  MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
+  MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+  STRIPE_KEY: ${STRIPE_KEY:-}
+  STRIPE_SECRET: ${STRIPE_SECRET:-}
+  STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
 
 services:
   app:
@@ -10,37 +45,11 @@ services:
       context: .
       dockerfile: docker/php/Dockerfile.prod
     image: msp-platform:latest
-    # Force a rebuild on every Portainer (re)deploy so new code is actually
-    # picked up instead of reusing an old image.
+    # Rebuild on every (re)deploy so new code is picked up instead of an old image.
     pull_policy: build
     restart: unless-stopped
     environment:
-      APP_NAME: "MSP Platform"
-      APP_ENV: production
-      APP_DEBUG: "false"
-      APP_KEY: ${APP_KEY}
-      APP_URL: ${APP_URL:-http://localhost}
-      APP_TIMEZONE: Europe/Amsterdam
-      APP_LOCALE: en
-      APP_FALLBACK_LOCALE: en
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: "5432"
-      DB_DATABASE: ${DB_DATABASE:-msp}
-      DB_USERNAME: ${DB_USERNAME:-msp}
-      DB_PASSWORD: ${DB_PASSWORD}
-      SESSION_DRIVER: database
-      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
-      MAIL_MAILER: ${MAIL_MAILER:-log}
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_SCHEME: ${MAIL_SCHEME:-}
-      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+      <<: *openmsp-php-env
     volumes:
       - storage:/var/www/html/storage
       - public:/var/www/html/public
@@ -92,26 +101,7 @@ services:
     restart: unless-stopped
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     environment:
-      APP_ENV: production
-      APP_KEY: ${APP_KEY}
-      APP_URL: ${APP_URL:-http://localhost}
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: "5432"
-      DB_DATABASE: ${DB_DATABASE:-msp}
-      DB_USERNAME: ${DB_USERNAME:-msp}
-      DB_PASSWORD: ${DB_PASSWORD}
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
-      # Full MAIL_* needed: ContractRenewalReminder is ShouldQueue.
-      MAIL_MAILER: ${MAIL_MAILER:-log}
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_SCHEME: ${MAIL_SCHEME:-}
-      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+      <<: *openmsp-php-env
     volumes:
       - storage:/var/www/html/storage
     depends_on:
@@ -129,26 +119,7 @@ services:
     restart: unless-stopped
     entrypoint: ["sh", "-c", "while true; do php artisan schedule:run --no-interaction; sleep 60; done"]
     environment:
-      APP_ENV: production
-      APP_KEY: ${APP_KEY}
-      APP_URL: ${APP_URL:-http://localhost}
-      DB_CONNECTION: pgsql
-      DB_HOST: db
-      DB_PORT: "5432"
-      DB_DATABASE: ${DB_DATABASE:-msp}
-      DB_USERNAME: ${DB_USERNAME:-msp}
-      DB_PASSWORD: ${DB_PASSWORD}
-      QUEUE_CONNECTION: database
-      CACHE_STORE: database
-      # Full MAIL_* needed: ContractRenewalReminder is ShouldQueue.
-      MAIL_MAILER: ${MAIL_MAILER:-log}
-      MAIL_HOST: ${MAIL_HOST:-}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
-      MAIL_SCHEME: ${MAIL_SCHEME:-}
-      MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-msp@localhost}
-      MAIL_FROM_NAME: ${MAIL_FROM_NAME:-MSP Platform}
+      <<: *openmsp-php-env
     volumes:
       - storage:/var/www/html/storage
     depends_on:
