@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Kimlikte Bearer seçin ve API jetonunu yapıştırın.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Sohbette bağlayıcıyı açın ve Grok’tan müşterileri veya panoyu isteyin.",
   "Available tools": "Kullanılabilir araçlar",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Agent API ile aynı yetkiler (izleyici salt okunur, satış yazabilir, yönetici silebilir)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Agent API ile aynı yetkiler (izleyici salt okunur, satış yazabilir, yönetici silebilir).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Jetonlar Agent API’yi ve yerleşik MCP uç noktasını doğrular. Düz metin yalnızca bir kez gösterilir.",
+  "Administrators can revoke other people’s tokens under Users.": "Yöneticiler başkalarının jetonlarını Kullanıcılar altında iptal edebilir.",
+  "MCP endpoint": "MCP uç noktası",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Bu URL’yi Grok’ta (Connectors → Custom) veya herhangi bir MCP istemcisinde yapıştırın. Kimlik, aşağıda oluşturduğunuz Bearer jetondur.",
+  "MCP setup & tools": "MCP kurulumu ve araçlar",
+  "New token — copy it now": "Yeni jeton — şimdi kopyalayın",
+  "This token is shown only once.": "Bu jeton yalnızca bir kez gösterilir.",
+  "Copy token": "Jetonu kopyala",
+  "Authorization header": "Authorization başlığı",
+  "Copy header": "Başlığı kopyala",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Aşağıdaki jetonu kopyalayın. Yalnızca bir kez gösterilir. MCP uç noktası yanındadır.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "örn. mcp, grok, ci veya entegrasyon adı."
 }

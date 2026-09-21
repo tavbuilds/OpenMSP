@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Valitse todennuksessa Bearer ja liitä API-tunnus.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Ota liitin käyttöön keskustelussa ja pyydä Grokia näyttämään asiakkaat tai kojitusnäkymä.",
   "Available tools": "Käytettävissä olevat työkalut",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samat oikeudet kuin Agent API:ssa (katselija vain luku, myynti voi kirjoittaa, admin/päällikkö voi poistaa)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samat oikeudet kuin Agent API:ssa (katselija vain luku, myynti voi kirjoittaa, admin/päällikkö voi poistaa).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Tunnukset todentavat Agent API:n ja sisäänrakennetun MCP-päätepisteen. Selväkielinen arvo näytetään vain kerran.",
+  "Administrators can revoke other people’s tokens under Users.": "Ylläpitäjät voivat peruuttaa muiden tunnuksia kohdassa Käyttäjät.",
+  "MCP endpoint": "MCP-päätepiste",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Liitä tämä URL Grokissa (Connectors → Custom) tai missä tahansa MCP-asiakkaassa. Todennus on alla luotava Bearer-tunnus.",
+  "MCP setup & tools": "MCP-asetus ja työkalut",
+  "New token — copy it now": "Uusi tunnus — kopioi se nyt",
+  "This token is shown only once.": "Tämä tunnus näytetään vain kerran.",
+  "Copy token": "Kopioi tunnus",
+  "Authorization header": "Authorization-otsikko",
+  "Copy header": "Kopioi otsikko",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Kopioi tunnus alta. Se näytetään vain kerran. MCP-päätepiste on sen vieressä.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "esim. mcp, grok, ci tai integraation nimi."
 }
