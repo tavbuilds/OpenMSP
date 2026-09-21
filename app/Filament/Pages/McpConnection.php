@@ -38,9 +38,14 @@ class McpConnection extends Page
         return auth()->check();
     }
 
-    public function getUrlForAgents(): string
+    public static function endpointUrl(): string
     {
         return rtrim((string) config('app.url'), '/').'/mcp';
+    }
+
+    public function getUrlForAgents(): string
+    {
+        return self::endpointUrl();
     }
 
     /**

@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Välj Bearer vid autentisering och klistra in din API-token.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Aktivera anslutningen i chatten och be Grok om kunder eller instrumentpanelen.",
   "Available tools": "Tillgängliga verktyg",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samma behörigheter som Agent API (tittare endast läsa, sälj kan skriva, admin/chef kan ta bort)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samma behörigheter som Agent API (tittare endast läsa, sälj kan skriva, admin/chef kan ta bort).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Token autentiserar Agent API och den inbyggda MCP-slutpunkten. Klartexten visas bara en gång.",
+  "Administrators can revoke other people’s tokens under Users.": "Administratörer kan återkalla andras token under Användare.",
+  "MCP endpoint": "MCP-slutpunkt",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Klistra in den här URL:en i Grok (Connectors → Custom) eller valfri MCP-klient. Auth är Bearer-token du skapar nedan.",
+  "MCP setup & tools": "MCP-inställning och verktyg",
+  "New token — copy it now": "Ny token — kopiera den nu",
+  "This token is shown only once.": "Den här token visas bara en gång.",
+  "Copy token": "Kopiera token",
+  "Authorization header": "Authorization-huvud",
+  "Copy header": "Kopiera huvud",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Kopiera token nedan. Den visas bara en gång. MCP-slutpunkten står bredvid.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "t.ex. mcp, grok, ci eller integrationens namn."
 }

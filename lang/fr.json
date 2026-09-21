@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Pour l’auth, choisissez Bearer et collez votre jeton API.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Activez le connecteur dans le chat et demandez à Grok la liste des clients ou le tableau de bord.",
   "Available tools": "Outils disponibles",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Mêmes droits que l’API Agent (lecteur en lecture seule, commercial en écriture, admin/manager en suppression)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Mêmes droits que l’API Agent (lecteur en lecture seule, commercial en écriture, admin/manager en suppression).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Les jetons authentifient l’API Agent et le point de terminaison MCP intégré. La valeur en clair n’est affichée qu’une fois.",
+  "Administrators can revoke other people’s tokens under Users.": "Les administrateurs peuvent révoquer les jetons des autres dans Utilisateurs.",
+  "MCP endpoint": "Point de terminaison MCP",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Collez cette URL dans Grok (Connectors → Custom) ou tout client MCP. L’auth est le jeton Bearer créé ci-dessous.",
+  "MCP setup & tools": "Configuration MCP et outils",
+  "New token — copy it now": "Nouveau jeton — copiez-le maintenant",
+  "This token is shown only once.": "Ce jeton n’est affiché qu’une fois.",
+  "Copy token": "Copier le jeton",
+  "Authorization header": "En-tête Authorization",
+  "Copy header": "Copier l’en-tête",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Copiez le jeton ci-dessous. Il n’est affiché qu’une fois. Le point de terminaison MCP est à côté.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "ex. mcp, grok, ci, ou le nom de l’intégration."
 }

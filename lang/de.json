@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Bei der Anmeldung Bearer wählen und das API-Token einfügen.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Connector im Chat aktivieren und Grok nach Kunden oder dem Dashboard fragen.",
   "Available tools": "Verfügbare Tools",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Dieselben Rechte wie die Agent-API (Viewer nur lesen, Sales schreiben, Admin/Manager löschen)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Dieselben Rechte wie die Agent-API (Viewer nur lesen, Sales schreiben, Admin/Manager löschen).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Token authentifizieren die Agent-API und den eingebauten MCP-Endpunkt. Der Klartext wird nur einmal angezeigt.",
+  "Administrators can revoke other people’s tokens under Users.": "Administratoren können Token anderer unter Benutzer widerrufen.",
+  "MCP endpoint": "MCP-Endpunkt",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Diese URL in Grok (Connectors → Custom) oder einem MCP-Client einfügen. Die Anmeldung ist das Bearer-Token unten.",
+  "MCP setup & tools": "MCP-Einrichtung & Tools",
+  "New token — copy it now": "Neues Token — jetzt kopieren",
+  "This token is shown only once.": "Dieses Token wird nur einmal angezeigt.",
+  "Copy token": "Token kopieren",
+  "Authorization header": "Authorization-Header",
+  "Copy header": "Header kopieren",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Token unten kopieren. Es wird nur einmal angezeigt. Der MCP-Endpunkt steht daneben.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "z. B. mcp, grok, ci oder der Name der Integration."
 }

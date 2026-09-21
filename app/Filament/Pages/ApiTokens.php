@@ -36,6 +36,11 @@ class ApiTokens extends Page implements HasTable
 
     public ?string $plainTextToken = null;
 
+    public function mcpUrl(): string
+    {
+        return McpConnection::endpointUrl();
+    }
+
     public static function canAccess(): bool
     {
         return auth()->check();
@@ -79,14 +84,14 @@ class ApiTokens extends Page implements HasTable
                         ->label(__('Name'))
                         ->required()
                         ->maxLength(255)
-                        ->default('agent')
-                        ->helperText(__('e.g. mcp, ci, or the name of the integration.')),
+                        ->default('mcp')
+                        ->helperText(__('e.g. mcp, grok, ci, or the name of the integration.')),
                 ])
                 ->action(function (array $data): void {
                     $this->plainTextToken = UserAdministration::createToken(auth()->user(), $data['name']);
                     Notification::make()
                         ->title(__('Token created'))
-                        ->body('Copy the token below. It is shown only once.')
+                        ->body(__('Copy the token below. It is shown only once. The MCP endpoint is listed next to it.'))
                         ->success()
                         ->persistent()
                         ->send();

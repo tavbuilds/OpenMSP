@@ -67,5 +67,17 @@
   "When asked for auth, choose Bearer and paste your API token.": "Στην ταυτοποίηση επιλέξτε Bearer και επικολλήστε το διακριτικό API.",
   "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Ενεργοποιήστε τον σύνδεσμο στη συνομιλία και ζητήστε από το Grok πελάτες ή τον πίνακα.",
   "Available tools": "Διαθέσιμα εργαλεία",
-  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Ίδια δικαιώματα με το Agent API (προβολή μόνο ανάγνωση, πωλήσεις εγγραφή, διαχειριστής διαγραφή)."
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Ίδια δικαιώματα με το Agent API (προβολή μόνο ανάγνωση, πωλήσεις εγγραφή, διαχειριστής διαγραφή).",
+  "Tokens authenticate the Agent API and the built-in MCP endpoint. The plaintext value is shown only once.": "Τα διακριτικά πιστοποιούν το Agent API και το ενσωματωμένο endpoint MCP. Η τιμή εμφανίζεται μόνο μία φορά.",
+  "Administrators can revoke other people’s tokens under Users.": "Οι διαχειριστές μπορούν να ανακαλέσουν διακριτικά άλλων στο Χρήστες.",
+  "MCP endpoint": "Endpoint MCP",
+  "Paste this URL in Grok (Connectors → Custom) or any MCP client. Auth is the Bearer token you create below.": "Επικολλήστε αυτό το URL στο Grok (Connectors → Custom) ή σε οποιονδήποτε πελάτη MCP. Η ταυτοποίηση είναι το Bearer που δημιουργείτε παρακάτω.",
+  "MCP setup & tools": "Ρύθμιση MCP και εργαλεία",
+  "New token — copy it now": "Νέο διακριτικό — αντιγράψτε το τώρα",
+  "This token is shown only once.": "Αυτό το διακριτικό εμφανίζεται μόνο μία φορά.",
+  "Copy token": "Αντιγραφή διακριτικού",
+  "Authorization header": "Κεφαλίδα Authorization",
+  "Copy header": "Αντιγραφή κεφαλίδας",
+  "Copy the token below. It is shown only once. The MCP endpoint is listed next to it.": "Αντιγράψτε το διακριτικό παρακάτω. Εμφανίζεται μόνο μία φορά. Το endpoint MCP είναι δίπλα.",
+  "e.g. mcp, grok, ci, or the name of the integration.": "π.χ. mcp, grok, ci ή το όνομα της ενσωμάτωσης."
 }
