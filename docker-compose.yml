@@ -1,3 +1,6 @@
+# Local / development stack. Code is bind-mounted; env comes from `.env`
+# (copy .env.example). Production: docker-compose.prod.yml — same services,
+# baked image, identical env list for app / queue / scheduler.
 services:
   app:
     build:

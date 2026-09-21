@@ -1,126 +1,150 @@
-# Deploy with Portainer (Raspberry Pi)
+# Deploy OpenMSP
 
-The production stack ([docker-compose.prod.yml](docker-compose.prod.yml)) bakes
-the code into the image, migrates on boot, and reads secrets from environment
-variables. No bind mounts — a good fit for Portainer.
+Production is **Docker Compose**. The same file works on a VPS, Coolify,
+Portainer, or a DigitalOcean droplet:
 
-Full secret / SMTP / 2FA notes: [docs/SECRETS.md](docs/SECRETS.md).
+[`docker-compose.prod.yml`](docker-compose.prod.yml)
 
-## Stripe for the customer portal (optional)
+It builds the code into the image, migrates on boot, and reads secrets from
+environment variables. No bind mounts.
 
-The portal payment flow needs `STRIPE_KEY`, `STRIPE_SECRET`, and
-`STRIPE_WEBHOOK_SECRET`. Add them as runtime secrets in Portainer; see
-[docs/SECRETS.md](docs/SECRETS.md) and [docs/PORTAL.md](docs/PORTAL.md).
+Copy [`.env.production.example`](.env.production.example) and fill it in.
+`app`, `queue`, and `scheduler` get **the same** variables. Full notes:
+[docs/SECRETS.md](docs/SECRETS.md).
 
-## Requirements
+The stack:
 
-- Docker + Portainer on the Raspberry Pi (arm64; Pi 4/5 with 4GB+ recommended).
-- The code in a Git repository (GitHub/GitLab/self-hosted). Portainer builds
-  the image from that repo, so the build context is available.
+| Service | Role |
+|---------|------|
+| `app` | PHP 8.4-FPM (Laravel). Migrates and caches on start. |
+| `web` | Nginx, host port `APP_PORT` (default 8090) |
+| `db` | PostgreSQL 16 |
+| `queue` | Mail / notifications |
+| `scheduler` | Daily reminders (contracts, certificates, planning) |
 
-## Step 1 — Generate an APP_KEY
+Health check: `GET /up`.
 
-This key encrypts license keys **and** Filament 2FA secrets.
-**Generate it once and keep it stable** (if it changes, encrypted data
-becomes unreadable):
+## Required environment
+
+| Name | Why |
+|------|-----|
+| `APP_KEY` | Encrypts license keys, 2FA, UI secrets. Generate **once**, never change. |
+| `DB_PASSWORD` | PostgreSQL password |
+| `APP_URL` | Public URL (mail links, portal, Filament) |
+| `APP_PORT` | Host port, default `8090` |
+| `SESSION_SECURE_COOKIE` | `true` behind HTTPS, else `false` |
+
+Generate `APP_KEY`:
 
 ```bash
 docker run --rm php:8.4-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ```
 
-Copy the output (starts with `base64:`). Store it in a password manager;
-**do not** run `key:generate` again on an existing production stack.
+Optional in the same example file: `MAIL_*` (SMTP), `STRIPE_*` (portal
+payments), `APP_DEMO_LOGIN`, `APP_TIMEZONE`, locale, log level. SMTP and
+Stripe can also be set after first login under **System → Settings**.
 
-## Step 2 — Create the stack in Portainer
-
-1. In Portainer go to **Stacks → Add stack**.
-2. Name: e.g. `msp-platform`.
-3. Build method: **Repository**.
-   - **Repository URL**: your Git repo URL.
-   - **Repository reference**: `refs/heads/main` (or your branch).
-   - **Compose path**: `docker-compose.prod.yml`.
-   - Turn **Authentication** on if the repo is private (token/deploy key).
-4. Scroll to **Environment variables** and add:
-
-   | Name | Value |
-   |------|--------|
-   | `APP_KEY` | the key from step 1 (**keep it stable**) |
-   | `DB_PASSWORD` | a strong, unique password |
-   | `APP_URL` | `http://<pi-ip>:8090` (or your domain) |
-   | `APP_PORT` | `8090` (host port) |
-   | `SESSION_SECURE_COOKIE` | `false` (or `true` behind HTTPS) |
-
-   Optional, for real reminder email (see [docs/SECRETS.md](docs/SECRETS.md)):
-
-   | Name | Value |
-   |------|--------|
-   | `MAIL_MAILER` | `smtp` |
-   | `MAIL_HOST` | SMTP host |
-   | `MAIL_PORT` | `587` or `465` |
-   | `MAIL_USERNAME` | SMTP user |
-   | `MAIL_PASSWORD` | SMTP password |
-   | `MAIL_SCHEME` | empty on 587; `smtps` on 465 |
-   | `MAIL_FROM_ADDRESS` | `msp@yourdomain.com` |
-   | `MAIL_FROM_NAME` | `MSP Platform` |
-
-   Secrets are passed as runtime env; they are **not** baked into the image.
-   Full list: [`.env.production.example`](.env.production.example).
-
-5. Click **Deploy the stack**. The first build on a Pi takes a few minutes.
-
-## Step 3 — Create the first account
-
-Open `http://<pi-ip>:8090`. Because the database is empty, you automatically
-see **Create administrator account**. Then the onboarding wizard
-(platform name, optional SMTP/Stripe/API token). See
-[docs/ONBOARDING.md](docs/ONBOARDING.md).
-
-## Step 4 — (Recommended) Test SMTP
+## 1) Docker CLI (droplet / any VPS)
 
 ```bash
-docker exec -it <app-container> php artisan tinker --execute="Mail::raw('MSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('MSP SMTP test'));"
+git clone https://github.com/tavbuilds/OpenMSP.git
+cd OpenMSP
+git checkout main   # or dev
+cp .env.production.example .env
+# edit .env — at least APP_KEY, DB_PASSWORD, APP_URL
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
-Renewal mail (`contracts:send-renewal-reminders`) uses the same `MAIL_*`
-config; the queue worker needs the same env (it is in compose).
+Open `APP_URL`. Empty database → **Create administrator account**, then
+onboarding. See [docs/ONBOARDING.md](docs/ONBOARDING.md).
 
-## Step 5 — (Recommended) Enable Filament 2FA
+Updates:
 
-Authenticator-app MFA (TOTP) is available but **not required**:
+```bash
+git pull
+docker compose -f docker-compose.prod.yml up -d --build
+```
 
-1. Sign in at `/admin`.
-2. Open **Profile**.
-3. Link Google Authenticator / Authy / Microsoft Authenticator (QR code).
-4. Store the recovery codes offline.
+The entrypoint runs migrations again.
 
-To require MFA for every panel user, see
-[docs/SECRETS.md](docs/SECRETS.md#require-2fa-adminmanager)
-(`isRequired: true` in `AdminPanelProvider`). Sanctum API tokens are
-unaffected.
+## 2) Coolify
 
-## Update after a code change
+1. New resource → **Docker Compose**.
+2. Repository `https://github.com/tavbuilds/OpenMSP`, branch `main` (or `dev`).
+3. Compose file: `docker-compose.prod.yml`.
+4. Paste the variables from `.env.production.example` into Coolify’s env UI
+   (same names; compose interpolates `${APP_KEY}` etc.).
+5. Point Coolify’s proxy at the `web` service (container port **80**).
+6. Set `APP_URL=https://your.domain` and `SESSION_SECURE_COOKIE=true`.
 
-Push to Git and in Portainer click the stack → **Pull and redeploy**
-(or turn on **GitOps updates / webhook** for automatic deploys). The
-entrypoint runs migrations again on each start and refreshes assets.
+Coolify already trusts proxies (`TrustProxies` is `*` in the app). Rebuild
+on git push.
+
+Do **not** use Nixpacks / “one Dockerfile”. This is a five-service stack.
+
+## 3) Portainer
+
+1. **Stacks → Add stack**.
+2. Name e.g. `openmsp`.
+3. Build method: **Repository**.
+   - URL: your Git clone of OpenMSP
+   - Reference: `refs/heads/main`
+   - Compose path: `docker-compose.prod.yml`
+   - Authentication on if the repo is private
+4. Environment variables: the table above, plus optional `MAIL_*` / `STRIPE_*`.
+5. Deploy. First build takes a few minutes.
+
+Pull and redeploy (or GitOps webhook) after a push.
+
+## 4) DigitalOcean
+
+**Droplet** (recommended): create a 4 GB droplet, install Docker, then use
+§1 or install Coolify on the droplet and use §2.
+
+**App Platform** is a poor fit: this is not a single 12-factor process. You
+would need Managed Postgres plus separate workers and durable volumes.
+Use a droplet.
+
+## First account
+
+Open the public URL. Because `users` is empty you see **Create administrator
+account**. Then the onboarding wizard (platform name, optional SMTP / Stripe /
+API token). Registration closes after that.
+
+## HTTPS
+
+Terminate TLS on Caddy, Traefik, Nginx Proxy Manager, or Coolify’s proxy,
+forward to `APP_PORT` (or to container port 80). Then:
+
+```env
+APP_URL=https://msp.example.com
+SESSION_SECURE_COOKIE=true
+```
+
+and redeploy.
 
 ## Data & backups
 
-Everything lives in Docker **named volumes** (they survive redeploys):
+Named volumes survive redeploys:
 
-- `dbdata` — the PostgreSQL database (customers, contracts, users).
-- `storage` — logs, sessions, uploaded files.
-- `public` — published assets (refreshed automatically).
-
-Database backup (run on the Pi):
+- `dbdata` — PostgreSQL (customers, contracts, users)
+- `storage` — logs, sessions, uploads
+- `public` — published assets (refreshed on boot)
 
 ```bash
-docker exec <db-container> pg_dump -U msp msp > msp-backup-$(date +%F).sql
+docker compose -f docker-compose.prod.yml exec db pg_dump -U msp msp > openmsp-$(date +%F).sql
 ```
 
-## HTTPS (recommended)
+## SMTP test
 
-Put a reverse proxy in front of the stack (Nginx Proxy Manager, Traefik, or
-Caddy) that terminates TLS and forwards to port `APP_PORT`. Then set
-`SESSION_SECURE_COOKIE=true` and `APP_URL` to your `https://` address, and
-redeploy.
+```bash
+docker compose -f docker-compose.prod.yml exec app php artisan tinker --execute="Mail::raw('OpenMSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('OpenMSP SMTP test'));"
+```
+
+Reminders (`contracts:send-renewal-reminders`, certificate and planning
+commands) use the same `MAIL_*`. The queue worker has those variables too.
+
+## 2FA
+
+Optional TOTP from **Profile**. To require it for every panel user:
+**System → Settings**. Sanctum API tokens are unaffected.
