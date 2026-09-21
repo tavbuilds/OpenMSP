@@ -1,11 +1,15 @@
 # Secrets & production environment
 
-Secrets do **not** belong in Git. Set them in Portainer (stack → Environment
-variables) or in a local `.env` that is in `.gitignore`. Examples:
-[`.env.example`](../.env.example) (local) and
-[`.env.production.example`](../.env.production.example) (Portainer).
+Secrets do **not** belong in Git. Set them in Coolify / Portainer, or in a
+local `.env` that is in `.gitignore`. Examples:
 
-See [DEPLOY.md](../DEPLOY.md) for the full Portainer flow.
+- [`.env.example`](../.env.example) — local `docker compose`
+- [`.env.production.example`](../.env.production.example) — production stack
+
+See [DEPLOY.md](../DEPLOY.md) for CLI, Coolify, Portainer, and droplet.
+
+`docker-compose.prod.yml` passes that production list **identically** to
+`app`, `queue`, and `scheduler`.
 
 You can also set SMTP, Stripe, and the platform name **from the admin UI**
 (System → Settings). Those values override env until you reset them back to
@@ -25,10 +29,10 @@ in the `settings` table.
 docker run --rm php:8.4-cli php -r "echo 'base64:'.base64_encode(random_bytes(32)).PHP_EOL;"
 ```
 
-Put the result (starts with `base64:`) in Portainer as `APP_KEY`. **Never**
+Put the result (starts with `base64:`) in the host env as `APP_KEY`. **Never**
 run `php artisan key:generate` again on an existing production stack.
 
-## Required Portainer env vars
+## Required env vars
 
 Minimum to start `docker-compose.prod.yml`:
 
@@ -36,17 +40,18 @@ Minimum to start `docker-compose.prod.yml`:
 |------|----------------|
 | `APP_KEY` | `base64:…` (stable, see above) |
 | `DB_PASSWORD` | strong, unique password |
-| `APP_URL` | `https://msp.example.com` or `http://<pi-ip>:8090` |
+| `APP_URL` | `https://msp.example.com` or `http://<host>:8090` |
 | `APP_PORT` | host port, default `8090` |
 | `SESSION_SECURE_COOKIE` | `true` behind HTTPS, otherwise `false` |
 
-Optional but recommended: `DB_DATABASE`, `DB_USERNAME` (default `msp`/`msp`).
+Optional: `DB_DATABASE`, `DB_USERNAME` (default `msp`/`msp`), `APP_NAME`,
+`APP_LOCALE`, `APP_FALLBACK_LOCALE`, `APP_TIMEZONE` (default `UTC`; reminder
+jobs fire at 08:00 in this zone), `APP_DEMO_LOGIN` (default `false`).
 
 ## SMTP (`MAIL_*`)
 
 Laravel reads mail from env (`config/mail.php`). Compose passes these through
-to `app`, `queue`, and `scheduler` — secrets are **not** in the image
-(`Dockerfile.prod` copies `.env.example` only during build, then removes it).
+to `app`, `queue`, and `scheduler` — secrets are **not** in the image.
 
 | Variable | Production example |
 |----------|--------------------|
@@ -59,22 +64,13 @@ to `app`, `queue`, and `scheduler` — secrets are **not** in the image
 | `MAIL_FROM_ADDRESS` | `msp@yourdomain.com` |
 | `MAIL_FROM_NAME` | `MSP Platform` (or your platform name; the UI overrides this) |
 
-Renewal reminders (`contracts:send-renewal-reminders` →
-`ContractRenewalReminder`) and portal magic-link mail
-(`PortalMagicLink`) use the same mail config.
+Renewal reminders, certificate/planning reminders, and portal magic-link mail
+use the same mail config.
 
 ### Send a test mail
 
-On the running `app` container (artisan preferred):
-
 ```bash
-docker exec -it <app-container> php artisan tinker --execute="Mail::raw('MSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('MSP SMTP test'));"
-```
-
-Or with a real user/notification (after the queue worker):
-
-```bash
-docker exec -it <app-container> php artisan contracts:send-renewal-reminders --days=30
+docker compose -f docker-compose.prod.yml exec app php artisan tinker --execute="Mail::raw('MSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('MSP SMTP test'));"
 ```
 
 With `MAIL_MAILER=log`, check the Laravel log instead of the inbox.
@@ -90,9 +86,18 @@ See [PORTAL.md](PORTAL.md).
 | `STRIPE_SECRET` | Secret key (`sk_test_…` / `sk_live_…`) |
 | `STRIPE_WEBHOOK_SECRET` | Webhook signing secret (`whsec_…`) for `POST /stripe/webhook` |
 
-Locally: `stripe listen --forward-to localhost:8000/stripe/webhook` and put
+These are passed into **all** PHP services. You can also set them from
+System → Settings after first login.
+
+Locally: `stripe listen --forward-to localhost:8090/stripe/webhook` and put
 the printed `whsec_` in `.env`. Enable iDEAL + SEPA Direct Debit in the
 Stripe Dashboard (test and live).
+
+## Demo login
+
+`APP_DEMO_LOGIN=true` creates the view-only `test` / `test` account on an
+empty database (see the README). Leave it `false` on a real MSP install.
+Passed through compose so Coolify/Portainer env actually reaches the app.
 
 ## Filament 2FA (TOTP)
 
@@ -114,7 +119,7 @@ under **System → Settings**. Sanctum API tokens still work without TOTP.
 
 1. `APP_KEY` generated and stored safely (password manager / vault).
 2. `DB_PASSWORD` strong and unique.
-3. Portainer env set; **no** real secrets in Git commits.
+3. Host env set from `.env.production.example`; **no** real secrets in Git.
 4. (Optional) SMTP tested with artisan/`Mail::raw`.
-5. (Optional) Stripe test keys + webhook secret set; iDEAL/SEPA enabled.
+5. (Optional) Stripe keys + webhook secret set; iDEAL/SEPA enabled.
 6. After deploy: first account + onboarding wizard, then Profile → 2FA and store recovery codes.

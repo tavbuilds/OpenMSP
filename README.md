@@ -23,6 +23,7 @@ A small MSP’s **recurring-work** system:
 |---|---|
 | Customers, contacts, vendors, catalog | Portfolio of contracts & licenses with cost / sale / margin |
 | Renewal & notice dates | Dashboard widgets + staff mail + optional customer mail |
+| Moves, migrations, on-site work | Planning board with customer, deadline, assignee, and reminders |
 | Certificates & hostnames | Per-endpoint webhook (e.g. Uptime Kuma) or a manual expiry |
 | SEPA collection (optional Stripe) | Customer portal with magic-link login and iDEAL → SEPA |
 | Integrations | JSON Agent API (`/api/v1`) + optional MCP sidecar |
@@ -100,6 +101,12 @@ Switcher: login screen and admin top bar. Translations live in `lang/{code}.json
 - Notices at 30 / 14 / 7 / 1 days and once when expired — each toggle per endpoint
 - See [docs/ENDPOINTS.md](docs/ENDPOINTS.md)
 
+**Planning**
+- Tasks for upcoming moves, migrations, on-site jobs, and internal projects
+- Customer, deadline, type, status, priority, assignee, from/to locations
+- Dashboard widget for open work in the next 60 days (overdue included)
+- CSV export; also on the Agent API and MCP sidecar
+
 **Portal & billing**
 - Magic-link login for contacts (`/portal`)
 - Customers see their services and prices — never cost, margin, or license keys
@@ -141,8 +148,8 @@ automatically and closes registration.
 Requires Docker Compose. Default URL: [http://localhost:8090](http://localhost:8090)
 
 ```bash
-git clone https://github.com/tavbuilds/tav-it-MSP.git
-cd tav-it-MSP
+git clone https://github.com/tavbuilds/OpenMSP.git
+cd OpenMSP
 cp .env.example .env
 ```
 
@@ -189,7 +196,9 @@ docker compose exec app php artisan test
 ## Production
 
 Use [docker-compose.prod.yml](docker-compose.prod.yml) (image-baked, migrates on
-boot). Raspberry Pi / Portainer walkthrough: [DEPLOY.md](DEPLOY.md).
+boot). **Same file** for Docker CLI, Coolify, Portainer, or a DigitalOcean
+droplet. Env list: [`.env.production.example`](.env.production.example).
+Walkthrough: [DEPLOY.md](DEPLOY.md).
 
 Before you go live:
 
@@ -233,7 +242,7 @@ flowchart LR
 | `app` | PHP-FPM 8.4 (Laravel + Filament) |
 | `db` | PostgreSQL 16 |
 | `queue` | `queue:work` — mail and notifications |
-| `scheduler` | Laravel scheduler (daily renewal + certificate alerts, 08:00 Europe/Amsterdam) |
+| `scheduler` | Laravel scheduler (daily reminders at 08:00 in `APP_TIMEZONE`) |
 
 Domain: `Company` → `Contract` ← `Product` / `Vendor`. `Endpoint` is optional
 and may be internal (no customer). Margins (`margin_eur`, `margin_pct`) and

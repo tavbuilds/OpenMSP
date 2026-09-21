@@ -83,6 +83,7 @@ class DashboardApiTest extends TestCase
 
         $this->assertIsArray($response->json('data.upcoming_renewals'));
         $this->assertIsArray($response->json('data.upcoming_notice_deadlines'));
+        $this->assertIsArray($response->json('data.upcoming_planned_tasks'));
         $this->assertGreaterThanOrEqual(1, count($response->json('data.upcoming_renewals')));
     }
 

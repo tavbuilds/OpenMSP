@@ -63,6 +63,8 @@ Token self-service (`/api/v1/tokens`) is **own-tokens-only**: any authenticated 
 | Contacts | `/api/v1/contacts` (+ nested under companies) |
 | Contracts | `/api/v1/contracts` |
 | Upcoming renewals | `GET /api/v1/contracts/upcoming-renewals` |
+| Planned tasks | `/api/v1/planned-tasks` |
+| Upcoming planned tasks | `GET /api/v1/planned-tasks/upcoming` |
 | Products | `/api/v1/products` |
 | Product components (BOM) | `/api/v1/product-components` (+ nested under products) |
 | Purchase bundles | `/api/v1/purchase-bundles` |
@@ -94,6 +96,7 @@ Read-only portfolio metrics. Formulas match Filament `PortfolioStats` / `Upcomin
 | `upcoming_renewals_30d_count` | Active contracts with `renewal_date` in the next 30 days |
 | `upcoming_renewals` | Short list (≤25) of active renewals in the next **60** days (widget horizon) |
 | `upcoming_notice_deadlines` | Active contracts whose computed `notice_deadline` falls within 60 days |
+| `upcoming_planned_tasks` | Open planned work (moves, migrations, on-site) due within 60 days, including overdue |
 
 Do **not** invent alternate MRR/ARR math; use these fields or the same model accessors.
 
@@ -158,6 +161,25 @@ Default sort when `sort` is omitted: `id` descending.
 | `per_page` / `page` | Standard pagination |
 
 Sorted by `renewal_date` ascending. Returns the same `Contract` resource shape as the contracts index.
+
+### Planned tasks index (`/api/v1/planned-tasks`)
+
+Moves, migrations, on-site jobs, and other dated work.
+
+| Param | Description |
+|-------|-------------|
+| `search` | title, locations, notes; also company.name |
+| `company_id` | Exact customer FK |
+| `assigned_user_id` | Exact assignee FK |
+| `kind` | `relocation` \| `migration` \| `onsite` \| `project` \| `other` |
+| `status` | `planned` \| `in_progress` \| `blocked` \| `done` \| `cancelled` |
+| `priority` | `low` \| `normal` \| `high` \| `urgent` |
+| `due_after` / `due_before` | `due_on` date range |
+| `open` | Boolean; exclude done/cancelled |
+| `overdue` | Boolean; open tasks with `due_on` before today |
+| `sort` | `id`, `title`, `due_on`, `kind`, `status`, `priority`, `created_at`, `updated_at` |
+
+`GET /api/v1/planned-tasks/upcoming?days=60` returns open tasks due within the horizon (overdue included). Default sort: `due_on` ascending.
 
 ### Renewal reminder notifications (console only)
 

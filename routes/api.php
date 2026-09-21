@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContractController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\PlannedTaskController;
 use App\Http\Controllers\Api\V1\ProductComponentController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PurchaseBundleController;
@@ -46,6 +47,10 @@ Route::prefix('v1')
         Route::apiResource('product-components', ProductComponentController::class);
         Route::apiResource('purchase-bundles', PurchaseBundleController::class);
         Route::apiResource('vendors', VendorController::class);
+
+        Route::get('planned-tasks/upcoming', [PlannedTaskController::class, 'upcoming']);
+        Route::apiResource('planned-tasks', PlannedTaskController::class)
+            ->parameters(['planned-tasks' => 'plannedTask']);
 
         // Own Sanctum tokens only (list / create / revoke).
         Route::get('tokens', [TokenController::class, 'index']);

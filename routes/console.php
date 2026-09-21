@@ -8,11 +8,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-// Every morning at 08:00, send reminders for upcoming renewals / notice deadlines.
+$tz = config('app.timezone');
+
+// Morning reminders in the configured timezone (APP_TIMEZONE).
 Schedule::command('contracts:send-renewal-reminders --days=30')
     ->dailyAt('08:00')
-    ->timezone('Europe/Amsterdam');
+    ->timezone($tz);
 
 Schedule::command('endpoints:send-expiry-reminders')
     ->dailyAt('08:05')
-    ->timezone('Europe/Amsterdam');
+    ->timezone($tz);
+
+Schedule::command('planning:send-deadline-reminders')
+    ->dailyAt('08:10')
+    ->timezone($tz);

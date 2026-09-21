@@ -6,6 +6,7 @@ use App\Enums\ContractStatus;
 use App\Http\Controllers\Api\V1\Concerns\AuthorizesAgentApi;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Models\PlannedTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -85,6 +86,26 @@ class DashboardController extends Controller
                 'status' => $c->status?->value ?? $c->status,
             ]);
 
+        $upcomingPlanning = PlannedTask::query()
+            ->with('company')
+            ->open()
+            ->whereDate('due_on', '<=', now()->addDays(60)->toDateString())
+            ->orderBy('due_on')
+            ->limit(25)
+            ->get()
+            ->map(fn (PlannedTask $task) => [
+                'id' => $task->id,
+                'title' => $task->title,
+                'company_id' => $task->company_id,
+                'company_name' => $task->company?->name,
+                'kind' => $task->kind?->value ?? $task->kind,
+                'status' => $task->status?->value ?? $task->status,
+                'priority' => $task->priority?->value ?? $task->priority,
+                'due_on' => $task->due_on?->toDateString(),
+                'days_until_due' => $task->daysUntilDue(),
+                'overdue' => $task->isOverdue(),
+            ]);
+
         return response()->json([
             'data' => [
                 'active_contracts_count' => $active->count(),
@@ -94,6 +115,7 @@ class DashboardController extends Controller
                 'upcoming_renewals_30d_count' => $upcoming30Count,
                 'upcoming_renewals' => $upcomingList,
                 'upcoming_notice_deadlines' => $upcomingNoticeDeadlines,
+                'upcoming_planned_tasks' => $upcomingPlanning,
             ],
         ]);
     }
