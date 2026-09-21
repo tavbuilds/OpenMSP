@@ -1,8 +1,18 @@
-# MSP Platform MCP sidecar
+# MSP Platform MCP sidecar (optional, stdio)
 
-Node MCP server that wraps the Laravel Agent API (`{MSP_API_BASE}/api/v1`) so Cursor / Grok Bot-style agents can call companies, contacts, contracts, products, product components, purchase bundles, vendors, planned tasks, dashboard, and upcoming renewals as tools — without hand-rolling HTTP.
+**Prefer the built-in server:** `{APP_URL}/mcp` (Streamable HTTP, Sanctum Bearer).
+Copy the URL from admin → **System → MCP**. Grok and other remote agents should
+use that — nothing to install.
 
-Laravel stays untouched; this package lives under `mcp/` and talks over Sanctum Bearer tokens.
+This Node package is only for **local stdio** hosts (Cursor, Claude Desktop,
+Grok Build CLI) that spawn a process instead of calling HTTPS.
+
+It wraps the Laravel Agent API (`{MSP_API_BASE}/api/v1`) so those hosts can call
+companies, contacts, contracts, products, product components, purchase bundles,
+vendors, planned tasks, dashboard, and upcoming renewals as tools.
+
+Laravel is unchanged; this package lives under `mcp/` and talks over Sanctum
+Bearer tokens.
 
 ## Requirements
 

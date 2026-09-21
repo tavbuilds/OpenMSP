@@ -52,5 +52,20 @@
   "14 days before": "14 ημέρες πριν",
   "7 days before": "7 ημέρες πριν",
   "1 day before": "1 ημέρα πριν",
-  "When it has expired": "Όταν έχει λήξει"
+  "When it has expired": "Όταν έχει λήξει",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Συνδέστε το Grok και άλλους πράκτορες εδώ. Χωρίς επιπλέον λογισμικό — αυτό το URL είναι ο διακομιστής MCP.",
+  "Server URL": "URL διακομιστή",
+  "Copy URL": "Αντιγραφή URL",
+  "Copied": "Αντιγράφηκε",
+  "Authentication": "Ταυτοποίηση",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Δημιουργήστε διακριτικό στα διακριτικά API και επικολλήστε το ως Bearer στον πράκτορα.",
+  "Open API tokens": "Άνοιγμα διακριτικών API",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Ανοίξτε grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Επικολλήστε το URL του διακομιστή.",
+  "When asked for auth, choose Bearer and paste your API token.": "Στην ταυτοποίηση επιλέξτε Bearer και επικολλήστε το διακριτικό API.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Ενεργοποιήστε τον σύνδεσμο στη συνομιλία και ζητήστε από το Grok πελάτες ή τον πίνακα.",
+  "Available tools": "Διαθέσιμα εργαλεία",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Ίδια δικαιώματα με το Agent API (προβολή μόνο ανάγνωση, πωλήσεις εγγραφή, διαχειριστής διαγραφή)."
 }

@@ -52,5 +52,20 @@
   "14 days before": "14 päivää ennen",
   "7 days before": "7 päivää ennen",
   "1 day before": "1 päivä ennen",
-  "When it has expired": "Kun määräaika on umpeutunut"
+  "When it has expired": "Kun määräaika on umpeutunut",
+  "MCP": "MCP",
+  "Connect Grok and other agents here. No extra software to install — this URL is the MCP server.": "Yhdistä Grok ja muut agentit tästä. Ei erillistä asennusta — tämä URL on MCP-palvelin.",
+  "Server URL": "Palvelimen URL",
+  "Copy URL": "Kopioi URL",
+  "Copied": "Kopioitu",
+  "Authentication": "Todennus",
+  "Create a token on API tokens, then paste it as a Bearer token in the agent.": "Luo tunnus API-tunnuksissa ja liitä se Bearer-tunnuksena agenttiin.",
+  "Open API tokens": "Avaa API-tunnukset",
+  "Grok": "Grok",
+  "Open grok.com/connectors → New Connector → Custom.": "Avaa grok.com/connectors → New Connector → Custom.",
+  "Paste the server URL.": "Liitä palvelimen URL.",
+  "When asked for auth, choose Bearer and paste your API token.": "Valitse todennuksessa Bearer ja liitä API-tunnus.",
+  "Enable the connector in the chat and ask Grok to list companies or show the dashboard.": "Ota liitin käyttöön keskustelussa ja pyydä Grokia näyttämään asiakkaat tai kojitusnäkymä.",
+  "Available tools": "Käytettävissä olevat työkalut",
+  "The same permissions as the Agent API apply (viewer read-only, sales can write, admin/manager can delete).": "Samat oikeudet kuin Agent API:ssa (katselija vain luku, myynti voi kirjoittaa, admin/päällikkö voi poistaa)."
 }
