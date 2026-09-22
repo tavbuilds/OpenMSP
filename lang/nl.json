@@ -141,5 +141,14 @@
   "Imported Pax8 products": "Geïmporteerde Pax8-producten",
   "Sync Pax8 now?": "Pax8 nu synchroniseren?",
   "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Haalt klanten op, ververst geïmporteerde catalogusprijzen en werkt abonnementen bij. Bestaande verkoopprijzen blijven staan.",
-  "Search": "Zoeken"
+  "Search": "Zoeken",
+  "Pax8 price options": "Pax8-prijsopties",
+  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Alle commitment- en facturatiecombinaties uit Pax8. De catalogustabel toont de maandprijs bij monthly (1-jaar commitment als die er is).",
+  "Commitment": "Commitment",
+  "Billing": "Facturatie",
+  "Price": "Prijs",
+  "Min/max": "Min/max",
+  "List price": "Lijstprijs",
+  "Monthly list price (:term)": "Maandelijkse lijstprijs (:term)",
+  "Sum of components": "Som van onderdelen"
 }

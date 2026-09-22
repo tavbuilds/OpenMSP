@@ -276,4 +276,89 @@ class Pax8SyncTest extends TestCase
         $this->assertEquals(30.0, (float) $product->default_sale_price);
         $this->assertSame(0, $report->contractsCreated);
     }
+
+    public function test_all_pax8_price_options_are_stored_and_monthly_1_year_is_list_price(): void
+    {
+        Http::fake(function (Request $request) {
+            $url = $request->url();
+            if (str_ends_with($url, '/v1/token')) {
+                return Http::response(['access_token' => 'tok', 'expires_in' => 3600]);
+            }
+            if (str_contains($url, '/pricing')) {
+                return Http::response([
+                    'content' => [
+                        [
+                            'billingTerm' => 'Monthly',
+                            'commitmentTerm' => 'Monthly',
+                            'commitmentTermInMonths' => 1,
+                            'unitOfMeasurement' => 'User',
+                            'type' => 'Flat',
+                            'currencyCode' => 'EUR',
+                            'rates' => [[
+                                'partnerBuyRate' => 20.1256,
+                                'suggestedRetailPrice' => 22.87,
+                                'startQuantityRange' => 1,
+                                'endQuantityRange' => 300,
+                            ]],
+                        ],
+                        [
+                            'billingTerm' => 'Monthly',
+                            'commitmentTerm' => '1-Year',
+                            'commitmentTermInMonths' => 12,
+                            'unitOfMeasurement' => 'User',
+                            'type' => 'Flat',
+                            'currencyCode' => 'EUR',
+                            'rates' => [[
+                                'partnerBuyRate' => 17.6088,
+                                'suggestedRetailPrice' => 20.01,
+                                'startQuantityRange' => 1,
+                                'endQuantityRange' => 300,
+                            ]],
+                        ],
+                        [
+                            'billingTerm' => 'Annual',
+                            'commitmentTerm' => '1-Year',
+                            'commitmentTermInMonths' => 12,
+                            'unitOfMeasurement' => 'User',
+                            'type' => 'Flat',
+                            'currencyCode' => 'EUR',
+                            'rates' => [[
+                                'partnerBuyRate' => 201.2736,
+                                'suggestedRetailPrice' => 228.72,
+                                'startQuantityRange' => 1,
+                                'endQuantityRange' => 300,
+                            ]],
+                        ],
+                    ],
+                ]);
+            }
+            if (str_contains($url, '/products/')) {
+                return Http::response([
+                    'id' => 'prod-nce',
+                    'name' => 'Microsoft 365 Business Premium [New Commerce Experience]',
+                    'vendorName' => 'Microsoft',
+                    'sku' => 'MST-NCE-103-C100',
+                ]);
+            }
+
+            return Http::response(['error' => $url], 500);
+        });
+
+        $product = app(Pax8Sync::class)->importProduct('prod-nce');
+
+        $this->assertSame(3, $product->priceOptions()->count());
+        $this->assertEquals(17.6088, (float) $product->default_cost_price);
+        $this->assertEquals(20.01, (float) $product->default_sale_price);
+        $this->assertSame(BillingCycle::Monthly, $product->billing_cycle);
+
+        $default = $product->defaultPriceOption();
+        $this->assertNotNull($default);
+        $this->assertSame('1-Year', $default->commitment_term);
+        $this->assertSame('Monthly', $default->billing_term);
+        $this->assertTrue($default->is_default);
+
+        $this->assertTrue($product->priceOptions->contains(
+            fn ($o) => $o->billing_term === 'Annual' && (float) $o->cost_price === 201.2736
+        ));
+    }
 }

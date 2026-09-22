@@ -9,6 +9,7 @@ use App\Enums\ProductType;
 use App\Models\Company;
 use App\Models\Contract;
 use App\Models\Product;
+use App\Models\ProductPriceOption;
 use App\Models\Vendor;
 use App\Support\PlatformSettings;
 use Carbon\Carbon;
@@ -230,7 +231,8 @@ class Pax8Sync
         $sku = $detail['sku'] ?? $detail['vendorSku'] ?? null;
         $vendor = $this->upsertVendor($vendorName, (string) ($detail['vendorId'] ?? ''));
 
-        $pricing = $productId !== '' ? $this->pickPricing($productId) : ['cost' => 0.0, 'sale' => null, 'cycle' => BillingCycle::Monthly, 'currency' => 'EUR'];
+        $parsed = $productId !== '' ? $this->parsePriceOptions($productId) : [];
+        $pricing = $this->preferredPricing($parsed);
 
         $match = $productId !== ''
             ? Product::query()->where('source', Pax8Client::SOURCE)->where('source_id', $productId)->first()
@@ -253,13 +255,16 @@ class Pax8Sync
 
         if ($match) {
             $saleWas = (float) $match->default_sale_price;
+            $suggestedWas = $match->suggested_sale_price;
+            $followsSuggested = $suggestedWas !== null && abs($saleWas - (float) $suggestedWas) < 0.02;
             unset($fields['name']);
             $match->fill($fields);
-            if ($saleWas <= 0 && $pricing['sale']) {
+            if (($saleWas <= 0 || $followsSuggested) && $pricing['sale'] !== null) {
                 $match->default_sale_price = $pricing['sale'];
             }
             $dirtyCost = $match->isDirty('default_cost_price');
             $match->save();
+            $this->persistPriceOptions($match, $parsed);
             if ($productId === '' || ! isset($this->seenProducts[$productId])) {
                 $report->productsUpserted++;
                 if ($dirtyCost) {
@@ -276,6 +281,7 @@ class Pax8Sync
 
         $fields['default_sale_price'] = $pricing['sale'] ?? $pricing['cost'];
         $created = Product::query()->create($fields);
+        $this->persistPriceOptions($created, $parsed);
         $report->productsUpserted++;
         if ($productId !== '') {
             $this->seenProducts[$productId] = true;
@@ -309,38 +315,171 @@ class Pax8Sync
     }
 
     /**
-     * @return array{cost: float, sale: ?float, cycle: BillingCycle, currency: string}
+     * @return list<array<string, mixed>>
      */
-    private function pickPricing(string $productId): array
+    private function parsePriceOptions(string $productId): array
     {
         try {
             $rows = $this->client->productPricing($productId);
         } catch (Throwable) {
-            return ['cost' => 0.0, 'sale' => null, 'cycle' => BillingCycle::Monthly, 'currency' => 'EUR'];
+            return [];
         }
 
-        $preferred = null;
-        foreach (['Monthly', 'Annual', 'One-Time'] as $term) {
-            foreach ($rows as $row) {
-                if (strcasecmp((string) ($row['billingTerm'] ?? ''), $term) === 0) {
-                    $preferred = $row;
-                    break 2;
+        $out = [];
+        foreach ($rows as $row) {
+            if (! is_array($row)) {
+                continue;
+            }
+            $rates = is_array($row['rates'] ?? null) ? $row['rates'] : [$row];
+            $billingTerm = (string) ($row['billingTerm'] ?? 'Monthly');
+            $commitmentMonths = $this->commitmentMonths($row);
+            $commitmentTerm = $this->commitmentLabel($row, $commitmentMonths);
+            foreach ($rates as $rate) {
+                if (! is_array($rate)) {
+                    continue;
                 }
+                $out[] = [
+                    'billing_term' => $billingTerm,
+                    'commitment_term' => $commitmentTerm,
+                    'commitment_months' => $commitmentMonths,
+                    'billing_cycle' => $this->mapBillingCycle($billingTerm),
+                    'unit_of_measure' => $row['unitOfMeasurement'] ?? $rate['unitOfMeasurement'] ?? null,
+                    'charge_type' => $row['type'] ?? $rate['chargeType'] ?? null,
+                    'min_qty' => (int) ($rate['startQuantityRange'] ?? 1),
+                    'max_qty' => isset($rate['endQuantityRange']) ? (int) $rate['endQuantityRange'] : null,
+                    'cost_price' => (float) ($rate['partnerBuyRate'] ?? $rate['cost'] ?? 0),
+                    'sale_price' => (float) ($rate['suggestedRetailPrice'] ?? $rate['price'] ?? 0),
+                    'currency' => strtoupper((string) ($row['currencyCode'] ?? $rate['currencyCode'] ?? 'EUR')),
+                ];
             }
         }
-        $preferred ??= $rows[0] ?? null;
-        if (! is_array($preferred)) {
+
+        return $out;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $options
+     * @return array{cost: float, sale: ?float, cycle: BillingCycle, currency: string}
+     */
+    private function preferredPricing(array $options): array
+    {
+        if ($options === []) {
             return ['cost' => 0.0, 'sale' => null, 'cycle' => BillingCycle::Monthly, 'currency' => 'EUR'];
         }
 
-        $rate = is_array($preferred['rates'][0] ?? null) ? $preferred['rates'][0] : $preferred;
+        $best = $this->preferredOption($options);
+        if ($best === null) {
+            return ['cost' => 0.0, 'sale' => null, 'cycle' => BillingCycle::Monthly, 'currency' => 'EUR'];
+        }
+
+        $cycle = $best['billing_cycle'] instanceof BillingCycle ? $best['billing_cycle'] : BillingCycle::Monthly;
 
         return [
-            'cost' => (float) ($rate['partnerBuyRate'] ?? $rate['cost'] ?? 0),
-            'sale' => isset($rate['suggestedRetailPrice']) ? (float) $rate['suggestedRetailPrice'] : null,
-            'cycle' => $this->mapBillingCycle((string) ($preferred['billingTerm'] ?? 'Monthly')),
-            'currency' => strtoupper((string) ($preferred['currencyCode'] ?? $rate['currencyCode'] ?? 'EUR')),
+            'cost' => (float) $best['cost_price'],
+            'sale' => $best['sale_price'] > 0 ? (float) $best['sale_price'] : null,
+            'cycle' => $cycle,
+            'currency' => (string) $best['currency'],
         ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $options
+     */
+    private function persistPriceOptions(Product $product, array $options): void
+    {
+        if (! $product->exists) {
+            return;
+        }
+
+        $product->priceOptions()->delete();
+        $preferred = $this->preferredOption($options);
+
+        foreach ($options as $option) {
+            $cycle = $option['billing_cycle'] instanceof BillingCycle
+                ? $option['billing_cycle']
+                : BillingCycle::Monthly;
+            ProductPriceOption::query()->create([
+                'product_id' => $product->id,
+                'billing_term' => $option['billing_term'],
+                'commitment_term' => $option['commitment_term'],
+                'commitment_months' => $option['commitment_months'],
+                'billing_cycle' => $cycle->value,
+                'unit_of_measure' => $option['unit_of_measure'],
+                'charge_type' => $option['charge_type'],
+                'min_qty' => $option['min_qty'],
+                'max_qty' => $option['max_qty'],
+                'cost_price' => $option['cost_price'],
+                'sale_price' => $option['sale_price'],
+                'currency' => $option['currency'],
+                'is_default' => $preferred !== null
+                    && $option['billing_term'] === $preferred['billing_term']
+                    && $option['commitment_months'] === $preferred['commitment_months']
+                    && $option['min_qty'] === $preferred['min_qty']
+                    && $option['currency'] === $preferred['currency'],
+            ]);
+        }
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $options
+     * @return array<string, mixed>|null
+     */
+    private function preferredOption(array $options): ?array
+    {
+        if ($options === []) {
+            return null;
+        }
+
+        usort($options, function (array $a, array $b): int {
+            $score = fn (array $o): int => ($o['currency'] === 'EUR' ? 100 : 0)
+                + (($o['billing_cycle'] ?? null) === BillingCycle::Monthly ? 50 : 0)
+                + (($o['commitment_months'] ?? 0) === 12 ? 20 : 0)
+                + (($o['min_qty'] ?? 1) <= 1 ? 5 : 0);
+
+            return $score($b) <=> $score($a);
+        });
+
+        return $options[0];
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function commitmentMonths(array $row): int
+    {
+        if (isset($row['commitmentTermInMonths']) && is_numeric($row['commitmentTermInMonths'])) {
+            return max(1, (int) $row['commitmentTermInMonths']);
+        }
+
+        $term = strtolower((string) ($row['commitmentTerm'] ?? $row['commitment'] ?? ''));
+        if ($term === '') {
+            $term = strtolower((string) ($row['billingTerm'] ?? ''));
+        }
+
+        return match (true) {
+            str_contains($term, '36') || str_contains($term, '3-year') || str_contains($term, '3 year') => 36,
+            str_contains($term, '24') || str_contains($term, '2-year') || str_contains($term, '2 year') => 24,
+            str_contains($term, 'year') || str_contains($term, 'annual') => 12,
+            default => 1,
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function commitmentLabel(array $row, int $months): string
+    {
+        $raw = trim((string) ($row['commitmentTerm'] ?? ''));
+        if ($raw !== '') {
+            return $raw;
+        }
+
+        return match ($months) {
+            36 => '3-Year',
+            24 => '2-Year',
+            12 => '1-Year',
+            default => 'Monthly',
+        };
     }
 
     /**

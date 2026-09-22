@@ -138,5 +138,14 @@
   "Connect your Pax8 partner account. OpenMSP pulls companies, catalog products you pick, partner cost (inkoop) and subscriptions. Your own sale prices are not overwritten.": "Connectez Pax8. OpenMSP importe clients, produits choisis, coût d’achat et abonnements. Vos prix de vente restent.",
   "Search the Pax8 catalog and import the Microsoft 365 (or other) products you sell. Nightly sync keeps their inkoopprijs current.": "Cherchez le catalogue Pax8 et importez les produits Microsoft 365 vendus. La sync nocturne tient le coût à jour.",
   "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Cherchez Pax8 (ex. « Microsoft 365 Business ») et n’importez que les SKU voulus.",
-  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importe clients, rafraîchit les prix catalogue et les abonnements. Les prix de vente restent."
+  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importe clients, rafraîchit les prix catalogue et les abonnements. Les prix de vente restent.",
+  "Pax8 price options": "Options tarifaires Pax8",
+  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Toutes les combinaisons d’engagement et de facturation Pax8. Le tableau catalogue affiche le prix mensuel pour les abos mensuels.",
+  "Commitment": "Engagement",
+  "Billing": "Facturation",
+  "Price": "Prix",
+  "Min/max": "Min/max",
+  "List price": "Prix liste",
+  "Monthly list price (:term)": "Prix mensuel (:term)",
+  "Sum of components": "Somme des composants"
 }
