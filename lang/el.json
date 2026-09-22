@@ -479,5 +479,6 @@
   "— (fixed cost)": "— (σταθερό κόστος)",
   "Current site": "Τρέχουσα τοποθεσία",
   "New site": "Νέα τοποθεσία",
-  "e.g. Office move or Microsoft 365 tenant migration": "π.χ. μετακόμιση γραφείου ή μετάβαση tenant Microsoft 365"
+  "e.g. Office move or Microsoft 365 tenant migration": "π.χ. μετακόμιση γραφείου ή μετάβαση tenant Microsoft 365",
+  "Quarterly and yearly contracts only — a monthly contract can be cancelled every month.": "Μόνο τριμηνιαία και ετήσια συμβόλαια — ένα μηνιαίο συμβόλαιο μπορεί να καταγγελθεί κάθε μήνα."
 }
