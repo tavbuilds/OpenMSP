@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Vendors\Tables;
 
+use App\Support\Breakpoints;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,14 +19,14 @@ class VendorsTable
                     ->searchable(),
                 TextColumn::make('website')
                     ->searchable()
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('email')
                     ->label(__('Email address'))
                     ->searchable()
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('phone')
                     ->searchable()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_TERTIARY),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -2,30 +2,22 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0b1220">
     <title>{{ __('Allow access') }} — {{ $platformName }}</title>
-    <style>
-        :root { color-scheme: light dark; }
-        body { font-family: ui-sans-serif, system-ui, sans-serif; margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #0b1220; color: #e5e7eb; padding: 1.25rem; }
-        .card { width: 100%; max-width: 28rem; background: #111827; border: 1px solid #1f2937; border-radius: 1rem; padding: 1.5rem; }
-        h1 { font-size: 1.15rem; margin: 0 0 .5rem; }
-        p { color: #9ca3af; font-size: .95rem; line-height: 1.45; }
-        .who { margin: 1rem 0; padding: .75rem 1rem; border-radius: .75rem; background: #0b1220; font-size: .9rem; }
-        .row { display: flex; gap: .75rem; flex-wrap: wrap; margin-top: 1.25rem; }
-        button { flex: 1; min-width: 8rem; border: 0; border-radius: .75rem; padding: .75rem 1rem; font-weight: 600; cursor: pointer; }
-        .allow { background: #2563eb; color: white; }
-        .deny { background: transparent; color: #e5e7eb; border: 1px solid #374151; }
-        code { font-size: .8rem; word-break: break-all; }
-    </style>
+    @include('oauth.styles')
 </head>
 <body>
-    <div class="card">
+    <main class="card">
         <h1>{{ __('Allow Grok to use :name?', ['name' => $platformName]) }}</h1>
         <p>{{ __('This lets the connector read and change records with the same rights as your user account.') }}</p>
+
         <div class="who">
-            {{ __('Signed in as') }} <strong>{{ $user->name }}</strong><br>
+            <span class="who-label">{{ __('Signed in as') }}</span>
+            <strong>{{ $user->name }}</strong>
             <code>{{ $user->email }}</code>
         </div>
+
         <form method="post" action="{{ route('oauth.authorize.approve') }}">
             @csrf
             <input type="hidden" name="client_id" value="{{ $clientId }}">
@@ -41,6 +33,6 @@
                 <button class="allow" type="submit" name="decision" value="allow">{{ __('Allow') }}</button>
             </div>
         </form>
-    </div>
+    </main>
 </body>
 </html>

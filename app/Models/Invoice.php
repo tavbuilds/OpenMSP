@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -42,18 +43,57 @@ class Invoice extends Model
         return $this->belongsTo(Contract::class);
     }
 
-    /** Display amount in major units (e.g. euros). */
+    /** Stripe reports amounts in minor units; show them like every other price. */
     public function amountPaidFormatted(): string
     {
-        $major = $this->amount_paid / 100;
-
-        return strtoupper($this->currency).' '.number_format($major, 2);
+        return Money::formatMinor($this->amount_paid, $this->currency);
     }
 
     public function amountDueFormatted(): string
     {
-        $major = $this->amount_due / 100;
+        return Money::formatMinor($this->amount_due, $this->currency);
+    }
 
-        return strtoupper($this->currency).' '.number_format($major, 2);
+    /** The amount a customer cares about: what was paid, or what is still owed. */
+    public function displayAmountFormatted(): string
+    {
+        return $this->status === 'paid'
+            ? $this->amountPaidFormatted()
+            : $this->amountDueFormatted();
+    }
+
+    /** A human label for the invoice: its number, or a dated fallback for drafts. */
+    public function displayNumber(): string
+    {
+        if (filled($this->number)) {
+            return $this->number;
+        }
+
+        return $this->stripe_created_at
+            ? __('Invoice of :date', ['date' => $this->stripe_created_at->translatedFormat('M j, Y')])
+            : __('Draft invoice');
+    }
+
+    /** Badge colour class suffix for the portal status pill. */
+    public function statusTone(): string
+    {
+        return match ($this->status) {
+            'paid' => 'ok',
+            'open', 'draft' => 'pending',
+            'uncollectible', 'void' => 'err',
+            default => 'neutral',
+        };
+    }
+
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            'paid' => __('Paid'),
+            'open' => __('Open'),
+            'draft' => __('Draft'),
+            'uncollectible' => __('Uncollectible'),
+            'void' => __('Void'),
+            default => ucfirst((string) $this->status),
+        };
     }
 }

@@ -6,6 +6,7 @@ use App\Enums\EndpointKind;
 use App\Enums\EndpointSource;
 use App\Filament\Resources\Endpoints\EndpointResource;
 use App\Models\Endpoint;
+use App\Support\Breakpoints;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -24,9 +25,9 @@ class EndpointsTable
             ->recordUrl(fn (Endpoint $record) => EndpointResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('name')->label(__('Name'))->searchable()->weight('bold'),
-                TextColumn::make('company.name')->label(__('Customer'))->placeholder(__('Internal'))->searchable()->visibleFrom('md'),
-                TextColumn::make('kind')->label(__('Type'))->badge()->visibleFrom('lg'),
-                TextColumn::make('hostname')->label(__('Host'))->placeholder(__('—'))->toggleable()->visibleFrom('lg'),
+                TextColumn::make('company.name')->label(__('Customer'))->placeholder(__('Internal'))->searchable()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
+                TextColumn::make('kind')->label(__('Type'))->badge()->visibleFrom(Breakpoints::COLUMN_TERTIARY),
+                TextColumn::make('hostname')->label(__('Host'))->placeholder(__('—'))->toggleable()->visibleFrom(Breakpoints::COLUMN_WIDEST),
                 TextColumn::make('expires_at')->label(__('Expires'))->date('M j, Y')->sortable()->placeholder(__('—')),
                 TextColumn::make('days')
                     ->label(__('Days'))
@@ -38,8 +39,8 @@ class EndpointsTable
                     ->badge()
                     ->formatStateUsing(fn (Endpoint $record) => $record->statusLabel())
                     ->color(fn (Endpoint $record) => $record->statusColor())
-                    ->visibleFrom('md'),
-                TextColumn::make('source')->label(__('Source'))->badge()->visibleFrom('xl'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
+                TextColumn::make('source')->label(__('Source'))->badge()->visibleFrom(Breakpoints::COLUMN_WIDEST),
             ])
             ->filters([
                 SelectFilter::make('kind')->label(__('Type'))->options(EndpointKind::class),

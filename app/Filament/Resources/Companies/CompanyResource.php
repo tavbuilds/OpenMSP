@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Companies;
 
+use App\Filament\Concerns\AuthorizesByRole;
 use App\Filament\Resources\Companies\Pages\CreateCompany;
 use App\Filament\Resources\Companies\Pages\EditCompany;
 use App\Filament\Resources\Companies\Pages\ListCompanies;
@@ -13,13 +14,13 @@ use App\Filament\Resources\Companies\RelationManagers\PlannedTasksRelationManage
 use App\Filament\Resources\Companies\Schemas\CompanyForm;
 use App\Filament\Resources\Companies\Schemas\CompanyInfolist;
 use App\Filament\Resources\Companies\Tables\CompaniesTable;
-use App\Filament\Concerns\AuthorizesByRole;
 use App\Models\Company;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class CompanyResource extends Resource
 {
@@ -37,7 +38,7 @@ class CompanyResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    public static function getRecordTitle(?\Illuminate\Database\Eloquent\Model $record): ?string
+    public static function getRecordTitle(?Model $record): ?string
     {
         return $record?->name;
     }

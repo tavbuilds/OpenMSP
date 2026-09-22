@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PurchaseBundles\Schemas;
 
 use App\Models\PurchaseBundle;
 use App\Support\Breakpoints;
+use App\Support\Money;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -24,10 +25,10 @@ class PurchaseBundleInfolist
                             ->state(fn (PurchaseBundle $record) => $record->activeContractsCount()),
                         TextEntry::make('allocated')
                             ->label(__('Cost per contract (per year)'))
-                            ->state(fn (PurchaseBundle $record) => '€ ' . number_format($record->allocatedAnnualCostPerContract(), 2)),
+                            ->state(fn (PurchaseBundle $record) => Money::format($record->allocatedAnnualCostPerContract())),
                         TextEntry::make('recovery')
                             ->label(__('Covered by resale'))
-                            ->state(fn (PurchaseBundle $record) => $record->recoveryPercentage() . '%')
+                            ->state(fn (PurchaseBundle $record) => $record->recoveryPercentage().'%')
                             ->badge()
                             ->color(fn (PurchaseBundle $record) => $record->recoveryPercentage() >= 100 ? 'success' : ($record->recoveryPercentage() >= 60 ? 'warning' : 'danger')),
                     ]),
@@ -43,7 +44,7 @@ class PurchaseBundleInfolist
                         TextEntry::make('renewal_date')->label(__('Renewal / end date'))->date('M j, Y')->placeholder(__('—')),
                         TextEntry::make('annual_resale')
                             ->label(__('Resale revenue (per year)'))
-                            ->state(fn (PurchaseBundle $record) => '€ ' . number_format($record->annualResale(), 2))
+                            ->state(fn (PurchaseBundle $record) => Money::format($record->annualResale()))
                             ->color('success'),
                     ]),
             ]);

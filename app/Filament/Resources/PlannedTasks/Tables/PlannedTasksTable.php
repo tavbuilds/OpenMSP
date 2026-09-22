@@ -7,6 +7,7 @@ use App\Enums\PlannedTaskPriority;
 use App\Enums\PlannedTaskStatus;
 use App\Filament\Resources\PlannedTasks\PlannedTaskResource;
 use App\Models\PlannedTask;
+use App\Support\Breakpoints;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -25,17 +26,17 @@ class PlannedTasksTable
             ->recordUrl(fn (PlannedTask $record) => PlannedTaskResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('title')->label(__('Title'))->searchable()->weight('bold'),
-                TextColumn::make('company.name')->label(__('Customer'))->placeholder(__('Internal'))->searchable()->visibleFrom('md'),
-                TextColumn::make('kind')->label(__('Type'))->badge()->visibleFrom('lg'),
+                TextColumn::make('company.name')->label(__('Customer'))->placeholder(__('Internal'))->searchable()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
+                TextColumn::make('kind')->label(__('Type'))->badge()->visibleFrom(Breakpoints::COLUMN_TERTIARY),
                 TextColumn::make('status')->label(__('Status'))->badge(),
-                TextColumn::make('priority')->label(__('Priority'))->badge()->visibleFrom('md'),
+                TextColumn::make('priority')->label(__('Priority'))->badge()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('due_on')->label(__('Deadline'))->date('M j, Y')->sortable(),
                 TextColumn::make('days')
                     ->label(__('Days'))
                     ->state(fn (PlannedTask $record) => $record->daysUntilDue())
                     ->badge()
                     ->color(fn (PlannedTask $record) => $record->dueColor()),
-                TextColumn::make('assignedUser.name')->label(__('Assignee'))->placeholder(__('Unassigned'))->visibleFrom('xl'),
+                TextColumn::make('assignedUser.name')->label(__('Assignee'))->placeholder(__('Unassigned'))->visibleFrom(Breakpoints::COLUMN_WIDEST),
             ])
             ->filters([
                 SelectFilter::make('kind')->label(__('Type'))->options(PlannedTaskKind::class),

@@ -55,7 +55,7 @@ the UI.
 
 Resolution order:
 
-1. Language switcher cookie (`msp.locale`)
+1. Language switcher cookie (`msp_locale`)
 2. Browser `Accept-Language`
 3. `APP_LOCALE` (default `en`)
 4. English
