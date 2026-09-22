@@ -39,6 +39,18 @@ class PlatformSettings
 
     public const STRIPE_WEBHOOK_SECRET = 'stripe.webhook_secret';
 
+    public const PAX8_CLIENT_ID = 'pax8.client_id';
+
+    public const PAX8_CLIENT_SECRET = 'pax8.client_secret';
+
+    public const PAX8_AUDIENCE = 'pax8.audience';
+
+    public const PAX8_LAST_SYNC_AT = 'pax8.last_sync_at';
+
+    public const PAX8_LAST_SYNC_REPORT = 'pax8.last_sync_report';
+
+    public const PAX8_LAST_ERROR = 'pax8.last_error';
+
     public const REQUIRE_MFA = 'security.require_mfa';
 
     public const ONBOARDING_COMPLETED = 'onboarding.completed';
@@ -56,6 +68,7 @@ class PlatformSettings
         self::MAIL_PASSWORD,
         self::STRIPE_SECRET,
         self::STRIPE_WEBHOOK_SECRET,
+        self::PAX8_CLIENT_SECRET,
     ];
 
     public static function ready(): bool
