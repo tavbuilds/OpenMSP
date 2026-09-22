@@ -33,6 +33,13 @@ class UserResource extends Resource
 
     protected static ?int $navigationSort = 80;
 
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
+
     public static function getNavigationLabel(): string
     {
         return __(static::$navigationLabel ?? parent::getNavigationLabel());

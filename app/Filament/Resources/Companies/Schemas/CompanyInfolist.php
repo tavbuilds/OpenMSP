@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Companies\Schemas;
 use App\Enums\ContractStatus;
 use App\Models\Company;
 use App\Support\Breakpoints;
+use App\Support\Money;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -26,15 +27,15 @@ class CompanyInfolist
 
                         TextEntry::make('mrr')
                             ->label(__('MRR'))
-                            ->state(fn (Company $record) => '€ ' . number_format($record->mrr(), 2)),
+                            ->state(fn (Company $record) => Money::format($record->mrr())),
 
                         TextEntry::make('arr')
                             ->label(__('ARR'))
-                            ->state(fn (Company $record) => '€ ' . number_format($record->mrr() * 12, 2)),
+                            ->state(fn (Company $record) => Money::format($record->mrr() * 12)),
 
                         TextEntry::make('annual_margin')
                             ->label(__('Annual margin'))
-                            ->state(fn (Company $record) => '€ ' . number_format($record->annualMargin(), 2))
+                            ->state(fn (Company $record) => Money::format($record->annualMargin()))
                             ->color('success'),
                     ]),
 
@@ -65,9 +66,9 @@ class CompanyInfolist
                                 return $contacts->map(function ($c) {
                                     $line = trim(
                                         $c->name
-                                        . ($c->job_title ? " ({$c->job_title})" : '')
-                                        . ($c->email ? " · {$c->email}" : '')
-                                        . ($c->phone ? " · {$c->phone}" : '')
+                                        .($c->job_title ? " ({$c->job_title})" : '')
+                                        .($c->email ? " · {$c->email}" : '')
+                                        .($c->phone ? " · {$c->phone}" : '')
                                     );
 
                                     if ($c->canUsePortal()) {

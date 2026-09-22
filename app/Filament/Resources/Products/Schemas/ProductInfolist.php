@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Products\Schemas;
 use App\Enums\ContractStatus;
 use App\Models\Product;
 use App\Support\Breakpoints;
+use App\Support\Money;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -56,10 +57,10 @@ class ProductInfolist
                                 TextEntry::make('billing_term')->label(__('Billing')),
                                 TextEntry::make('cost_price')
                                     ->label(__('Cost'))
-                                    ->formatStateUsing(fn ($state) => '€ '.number_format((float) $state, 4, ',', '.')),
+                                    ->formatStateUsing(fn ($state) => Money::format($state, precision: 4)),
                                 TextEntry::make('sale_price')
                                     ->label(__('Price'))
-                                    ->formatStateUsing(fn ($state) => '€ '.number_format((float) $state, 2, ',', '.')),
+                                    ->formatStateUsing(fn ($state) => Money::format($state)),
                                 TextEntry::make('qty')
                                     ->label(__('Min/max'))
                                     ->state(fn ($record) => $record->qtyLabel()),

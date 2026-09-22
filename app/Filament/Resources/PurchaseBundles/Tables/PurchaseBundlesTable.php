@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\PurchaseBundles\Tables;
 
 use App\Filament\Resources\PurchaseBundles\PurchaseBundleResource;
+use App\Support\Breakpoints;
+use App\Support\Money;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -19,23 +21,23 @@ class PurchaseBundlesTable
             ->recordUrl(fn ($record) => PurchaseBundleResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('name')->label(__('Bundle'))->searchable()->sortable()->weight('bold'),
-                TextColumn::make('vendor.name')->label(__('Vendor'))->placeholder(__('—'))->searchable()->visibleFrom('md'),
+                TextColumn::make('vendor.name')->label(__('Vendor'))->placeholder(__('—'))->searchable()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('total_cost')->label(__('Total cost'))->money('EUR')->alignEnd()->sortable(),
-                TextColumn::make('billing_cycle')->label(__('Cycle'))->badge()->visibleFrom('md'),
+                TextColumn::make('billing_cycle')->label(__('Cycle'))->badge()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('active_contracts')
                     ->label(__('Active contracts'))
                     ->state(fn ($record) => $record->activeContractsCount())
                     ->badge()
                     ->alignEnd()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_TERTIARY),
                 TextColumn::make('allocated_per_contract')
                     ->label(__('Cost / contract'))
-                    ->state(fn ($record) => '€ ' . number_format($record->allocatedAnnualCostPerContract(), 2) . ' /yr')
+                    ->state(fn ($record) => Money::format($record->allocatedAnnualCostPerContract()).' '.__('/yr'))
                     ->alignEnd()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_WIDEST),
                 TextColumn::make('recovery')
                     ->label(__('Coverage'))
-                    ->state(fn ($record) => $record->recoveryPercentage() . '%')
+                    ->state(fn ($record) => $record->recoveryPercentage().'%')
                     ->badge()
                     ->color(fn ($record) => $record->recoveryPercentage() >= 100 ? 'success' : ($record->recoveryPercentage() >= 60 ? 'warning' : 'danger'))
                     ->alignEnd(),

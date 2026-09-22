@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Tables;
 
 use App\Enums\UserRole;
 use App\Models\User;
+use App\Support\Breakpoints;
 use App\Support\UserAdministration;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -21,14 +22,14 @@ class UsersTable
         return $table
             ->columns([
                 TextColumn::make('name')->label(__('Name'))->searchable()->sortable()->weight('bold'),
-                TextColumn::make('email')->label(__('Email'))->searchable()->copyable()->visibleFrom('md'),
+                TextColumn::make('email')->label(__('Email'))->searchable()->copyable()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('role')->label(__('Role'))->badge()->sortable(),
                 TextColumn::make('tokens_count')
                     ->label(__('API tokens'))
                     ->counts('tokens')
                     ->badge()
                     ->alignEnd()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_TERTIARY),
                 TextColumn::make('created_at')->label(__('Created'))->dateTime('M j, Y H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([

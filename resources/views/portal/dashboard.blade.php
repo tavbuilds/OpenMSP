@@ -1,63 +1,65 @@
 @extends('portal.layouts.app')
 
-@section('title', 'Services')
+@section('title', __('Services'))
 
 @section('content')
-<h1>Active services</h1>
-<p class="muted lede">{{ $company?->name }} — services for your organization only.</p>
+<h1>{{ __('Active services') }}</h1>
+<p class="muted lede">{{ __(':company — the services and licenses we currently run for you.', ['company' => $company?->name]) }}</p>
 
 @if ($services->isEmpty())
-    <div class="card"><p class="muted">There are no active services or licenses right now.</p></div>
+    <div class="card"><p class="muted empty">{{ __('There are no active services or licenses right now.') }}</p></div>
 @else
+    {{-- Phone and small tablet: one card per service. --}}
     <div class="stack">
         @foreach ($services as $service)
             <article class="card stack-card">
                 <h2>{{ $service->name }}</h2>
                 @if ($service->quantity > 1)
-                    <div class="muted">Quantity: {{ $service->quantity }}</div>
+                    <div class="muted cell-sub">{{ __('Quantity: :count', ['count' => $service->quantity]) }}</div>
                 @endif
-                <div class="stack-meta">
+
+                <dl class="stack-meta">
                     <div>
-                        <dt>Price</dt>
-                        <strong>{{ $service->portalSalePriceFormatted() }}</strong>
+                        <dt>{{ __('Price') }}</dt>
+                        <dd><strong>{{ $service->portalSalePriceFormatted() }}</strong></dd>
                     </div>
                     <div>
-                        <dt>Billing</dt>
-                        <span>{{ $service->billing_cycle?->getLabel() }}</span>
+                        <dt>{{ __('Billing') }}</dt>
+                        <dd>{{ $service->billing_cycle?->getLabel() }}</dd>
                     </div>
                     <div>
-                        <dt>Term</dt>
-                        <span>{{ $service->portalRenewalDescription() }}</span>
+                        <dt>{{ __('Term') }}</dt>
+                        <dd>{{ $service->portalRenewalDescription() }}</dd>
                     </div>
-                </div>
+                </dl>
+
                 <div class="stack-actions">
                     @if ($service->auto_collect && $service->stripe_payment_status === 'active')
-                        <span class="badge badge-ok">Auto-collect on</span>
+                        <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
                     @elseif ($service->stripe_payment_status === 'pending')
-                        <span class="badge badge-pending">Activating…</span>
+                        <span class="badge badge-pending">{{ __('Activating…') }}</span>
                     @elseif ($service->stripe_payment_status === 'past_due')
-                        <span class="badge badge-pending">Payment failed</span>
-                        <div style="margin-top:.65rem">
-                            <a class="btn btn-block" href="{{ route('portal.auto-collect', $service) }}">Set up payment again</a>
-                        </div>
+                        <span class="badge badge-err">{{ __('Payment failed') }}</span>
+                        <a class="btn" href="{{ route('portal.auto-collect', $service) }}">{{ __('Set up payment again') }}</a>
                     @else
-                        <a class="btn btn-block" href="{{ route('portal.auto-collect', $service) }}">Enable auto-collect</a>
-                        <div class="muted" style="font-size:.8rem;margin-top:.4rem">via iDEAL → SEPA mandate</div>
+                        <a class="btn" href="{{ route('portal.auto-collect', $service) }}">{{ __('Enable auto-collect') }}</a>
+                        <span class="muted cell-sub">{{ __('via iDEAL → SEPA mandate') }}</span>
                     @endif
                 </div>
             </article>
         @endforeach
     </div>
 
+    {{-- Tablet and up: the same services as a table. --}}
     <div class="data-table">
-        <div class="card" style="padding:0; overflow:auto">
+        <div class="card card-flush">
             <table>
                 <thead>
                     <tr>
-                        <th>Service / license</th>
-                        <th>Price</th>
-                        <th>Term / renewal</th>
-                        <th>Collection</th>
+                        <th scope="col">{{ __('Service / license') }}</th>
+                        <th scope="col" class="num">{{ __('Price') }}</th>
+                        <th scope="col">{{ __('Term / renewal') }}</th>
+                        <th scope="col">{{ __('Collection') }}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -66,26 +68,27 @@
                         <td>
                             <strong>{{ $service->name }}</strong>
                             @if ($service->quantity > 1)
-                                <div class="muted">Quantity: {{ $service->quantity }}</div>
+                                <div class="muted cell-sub">{{ __('Quantity: :count', ['count' => $service->quantity]) }}</div>
                             @endif
                         </td>
-                        <td>{{ $service->portalSalePriceFormatted() }}
-                            <div class="muted">{{ $service->billing_cycle?->getLabel() }}</div>
+                        <td class="num">
+                            {{ $service->portalSalePriceFormatted() }}
+                            <div class="muted cell-sub">{{ $service->billing_cycle?->getLabel() }}</div>
                         </td>
                         <td>{{ $service->portalRenewalDescription() }}</td>
                         <td>
                             @if ($service->auto_collect && $service->stripe_payment_status === 'active')
-                                <span class="badge badge-ok">Auto-collect on</span>
+                                <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
                             @elseif ($service->stripe_payment_status === 'pending')
-                                <span class="badge badge-pending">Activating…</span>
+                                <span class="badge badge-pending">{{ __('Activating…') }}</span>
                             @elseif ($service->stripe_payment_status === 'past_due')
-                                <span class="badge badge-pending">Payment failed</span>
-                                <div style="margin-top:.5rem">
-                                    <a class="btn" href="{{ route('portal.auto-collect', $service) }}">Set up payment again</a>
+                                <span class="badge badge-err">{{ __('Payment failed') }}</span>
+                                <div class="cell-sub">
+                                    <a class="btn btn-sm" href="{{ route('portal.auto-collect', $service) }}">{{ __('Set up payment again') }}</a>
                                 </div>
                             @else
-                                <a class="btn" href="{{ route('portal.auto-collect', $service) }}">Enable auto-collect</a>
-                                <div class="muted" style="font-size:.8rem;margin-top:.35rem">via iDEAL → SEPA mandate</div>
+                                <a class="btn btn-sm" href="{{ route('portal.auto-collect', $service) }}">{{ __('Enable auto-collect') }}</a>
+                                <div class="muted cell-sub">{{ __('via iDEAL → SEPA mandate') }}</div>
                             @endif
                         </td>
                     </tr>

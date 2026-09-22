@@ -19,6 +19,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 
 class Onboarding extends Page implements HasSchemas
 {
@@ -40,6 +41,16 @@ class Onboarding extends Page implements HasSchemas
     public array $data = [];
 
     public ?string $plainTextToken = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Setup');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('First-run setup');
+    }
 
     public static function shouldRegisterNavigation(): bool
     {

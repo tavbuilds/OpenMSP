@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 
 class DemoData extends Page
 {
@@ -24,6 +25,23 @@ class DemoData extends Page
     protected static ?string $title = 'Demo data';
 
     protected string $view = 'filament.pages.demo-data';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Demo data');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('Demo data');
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
 
     public static function canAccess(): bool
     {
