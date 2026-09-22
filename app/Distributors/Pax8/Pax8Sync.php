@@ -343,10 +343,13 @@ class Pax8Sync
                     'commitment_term' => $commitmentTerm,
                     'commitment_months' => $commitmentMonths,
                     'billing_cycle' => $this->mapBillingCycle($billingTerm),
+                    'pricing_type' => $row['type'] ?? null,
                     'unit_of_measure' => $row['unitOfMeasurement'] ?? $rate['unitOfMeasurement'] ?? null,
-                    'charge_type' => $row['type'] ?? $rate['chargeType'] ?? null,
-                    'min_qty' => (int) ($rate['startQuantityRange'] ?? 1),
-                    'max_qty' => isset($rate['endQuantityRange']) ? (int) $rate['endQuantityRange'] : null,
+                    'charge_type' => $rate['chargeType'] ?? null,
+                    'min_qty' => (int) ($rate['startQuantityRange'] ?? $rate['startQuantity'] ?? 0),
+                    'max_qty' => isset($rate['endQuantityRange'])
+                        ? (int) $rate['endQuantityRange']
+                        : (isset($rate['endQuantity']) ? (int) $rate['endQuantity'] : null),
                     'cost_price' => (float) ($rate['partnerBuyRate'] ?? $rate['cost'] ?? 0),
                     'sale_price' => (float) ($rate['suggestedRetailPrice'] ?? $rate['price'] ?? 0),
                     'currency' => strtoupper((string) ($row['currencyCode'] ?? $rate['currencyCode'] ?? 'EUR')),
@@ -354,7 +357,82 @@ class Pax8Sync
             }
         }
 
-        return $out;
+        return $this->filterPartnerRates($out);
+    }
+
+    /**
+     * Keep the rates Pax8 assigns to this partner: skip trials/zero, prefer Flat
+     * over Volume/Tiered/Mark-Up, and for volume only the qty=1 band.
+     *
+     * @param  list<array<string, mixed>>  $options
+     * @return list<array<string, mixed>>
+     */
+    private function filterPartnerRates(array $options): array
+    {
+        $options = array_values(array_filter($options, function (array $option): bool {
+            $term = strtolower((string) $option['billing_term']);
+            if (str_contains($term, 'trial') || str_contains($term, 'activation')) {
+                return false;
+            }
+
+            return (float) $option['cost_price'] > 0 || (float) $option['sale_price'] > 0;
+        }));
+
+        $options = array_values(array_filter($options, function (array $option): bool {
+            $type = strtolower((string) ($option['pricing_type'] ?? ''));
+            if (! in_array($type, ['volume', 'tiered'], true)) {
+                return true;
+            }
+            $max = $option['max_qty'];
+
+            return (int) $option['min_qty'] <= 1 && ($max === null || (int) $max >= 1);
+        }));
+
+        $flatKeys = [];
+        foreach ($options as $option) {
+            if (strcasecmp((string) ($option['pricing_type'] ?? ''), 'Flat') === 0) {
+                $flatKeys[$this->rateGroupKey($option)] = true;
+            }
+        }
+        if ($flatKeys !== []) {
+            $options = array_values(array_filter($options, function (array $option) use ($flatKeys): bool {
+                $key = $this->rateGroupKey($option);
+                if (! isset($flatKeys[$key])) {
+                    return true;
+                }
+
+                return strcasecmp((string) ($option['pricing_type'] ?? ''), 'Flat') === 0;
+            }));
+        }
+
+        $grouped = [];
+        foreach ($options as $option) {
+            $grouped[$this->rateGroupKey($option).'|'.strtolower((string) ($option['pricing_type'] ?? 'flat'))][] = $option;
+        }
+
+        $deduped = [];
+        foreach ($grouped as $rows) {
+            usort($rows, function (array $a, array $b): int {
+                $aBound = $a['max_qty'] !== null ? 1 : 0;
+                $bBound = $b['max_qty'] !== null ? 1 : 0;
+                if ($aBound !== $bBound) {
+                    return $bBound <=> $aBound;
+                }
+
+                return ((float) $b['cost_price']) <=> ((float) $a['cost_price']);
+            });
+            $deduped[] = $rows[0];
+        }
+
+        return array_values($deduped);
+    }
+
+    /**
+     * @param  array<string, mixed>  $option
+     */
+    private function rateGroupKey(array $option): string
+    {
+        return strtolower($option['commitment_term'].'|'.$option['billing_term'].'|'.$option['currency']);
     }
 
     /**
@@ -404,6 +482,7 @@ class Pax8Sync
                 'commitment_term' => $option['commitment_term'],
                 'commitment_months' => $option['commitment_months'],
                 'billing_cycle' => $cycle->value,
+                'pricing_type' => $option['pricing_type'] ?? null,
                 'unit_of_measure' => $option['unit_of_measure'],
                 'charge_type' => $option['charge_type'],
                 'min_qty' => $option['min_qty'],

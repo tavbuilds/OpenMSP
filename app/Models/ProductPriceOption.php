@@ -10,7 +10,7 @@ class ProductPriceOption extends Model
 {
     protected $fillable = [
         'product_id', 'billing_term', 'commitment_term', 'commitment_months',
-        'billing_cycle', 'unit_of_measure', 'charge_type',
+        'billing_cycle', 'pricing_type', 'unit_of_measure', 'charge_type',
         'min_qty', 'max_qty', 'cost_price', 'sale_price', 'currency', 'is_default',
     ];
 
@@ -31,9 +31,10 @@ class ProductPriceOption extends Model
 
     public function qtyLabel(): string
     {
+        $min = max(1, (int) $this->min_qty);
         $max = $this->max_qty;
 
-        return $max ? $this->min_qty.'–'.$max : (string) $this->min_qty.'+';
+        return $max ? $min.'–'.$max : $min.'+';
     }
 
     public function label(): string
