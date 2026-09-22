@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\BillingCycle;
+use App\Enums\ProductType;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -15,17 +17,19 @@ class Product extends Model
 
     protected $fillable = [
         'vendor_id', 'name', 'sku', 'type',
-        'default_cost_price', 'default_sale_price',
+        'default_cost_price', 'default_sale_price', 'suggested_sale_price',
         'currency', 'billing_cycle', 'description', 'active', 'is_demo',
+        'source', 'source_id',
     ];
 
     protected $casts = [
         'default_cost_price' => 'decimal:2',
         'default_sale_price' => 'decimal:2',
+        'suggested_sale_price' => 'decimal:2',
         'active' => 'boolean',
         'is_demo' => 'boolean',
-        'type' => \App\Enums\ProductType::class,
-        'billing_cycle' => \App\Enums\BillingCycle::class,
+        'type' => ProductType::class,
+        'billing_cycle' => BillingCycle::class,
     ];
 
     public function vendor(): BelongsTo
