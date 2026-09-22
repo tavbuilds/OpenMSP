@@ -138,5 +138,14 @@
   "Imported Pax8 products": "Importierte Pax8-Produkte",
   "Sync Pax8 now?": "Pax8 jetzt synchronisieren?",
   "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importiert Firmen, aktualisiert Katalogpreise und Abos. Verkaufspreise bleiben.",
-  "Search": "Suchen"
+  "Search": "Suchen",
+  "Pax8 price options": "Pax8-Preisoptionen",
+  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Alle Commitment- und Abrechnungsvarianten aus Pax8. Die Katalogtabelle zeigt den Monatspreis bei monatlicher Abrechnung (1-Jahres-Commitment wenn vorhanden).",
+  "Commitment": "Commitment",
+  "Billing": "Abrechnung",
+  "Price": "Preis",
+  "Min/max": "Min/max",
+  "List price": "Listenpreis",
+  "Monthly list price (:term)": "Monatlicher Listenpreis (:term)",
+  "Sum of components": "Summe der Komponenten"
 }
