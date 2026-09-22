@@ -62,6 +62,14 @@ class Invoice extends Model
             : $this->amountDueFormatted();
     }
 
+    /** The invoice date in the viewer's locale, or a dash when Stripe has none. */
+    public function displayDate(): string
+    {
+        return $this->stripe_created_at
+            ?->timezone(config('app.timezone'))
+            ->translatedFormat('M j, Y') ?? '—';
+    }
+
     /** A human label for the invoice: its number, or a dated fallback for drafts. */
     public function displayNumber(): string
     {
@@ -70,7 +78,7 @@ class Invoice extends Model
         }
 
         return $this->stripe_created_at
-            ? __('Invoice of :date', ['date' => $this->stripe_created_at->translatedFormat('M j, Y')])
+            ? __('Invoice of :date', ['date' => $this->displayDate()])
             : __('Draft invoice');
     }
 

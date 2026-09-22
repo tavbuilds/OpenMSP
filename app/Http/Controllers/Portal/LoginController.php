@@ -37,7 +37,7 @@ class LoginController extends Controller
 
             return back()
                 ->withInput()
-                ->withErrors(['email' => "Too many requests. Try again in {$seconds} seconds."]);
+                ->withErrors(['email' => __('Too many requests. Try again in :seconds seconds.', ['seconds' => $seconds])]);
         }
 
         RateLimiter::hit($key, 60);
@@ -48,7 +48,7 @@ class LoginController extends Controller
             ->first();
 
         // Always show the same message (no email enumeration).
-        $message = 'If this email is on file, you will receive a sign-in link shortly.';
+        $message = __('If this email is on file, you will receive a sign-in link shortly.');
 
         if ($contact && $contact->canUsePortal()) {
             $expires = now()->addMinutes(30);
@@ -58,7 +58,9 @@ class LoginController extends Controller
                 ['contact' => $contact->id]
             );
 
-            $contact->notify(new PortalMagicLink($url, 30));
+            // The contact has no stored language, so send the mail in the one
+            // they are reading the portal in right now.
+            $contact->notify((new PortalMagicLink($url, 30))->locale(app()->getLocale()));
         }
 
         return back()->with('status', $message);
@@ -69,7 +71,7 @@ class LoginController extends Controller
         if (! $request->hasValidSignature()) {
             return redirect()
                 ->route('portal.login')
-                ->withErrors(['email' => 'This sign-in link is invalid or has expired. Request a new one.']);
+                ->withErrors(['email' => __('This sign-in link is invalid or has expired. Request a new one.')]);
         }
 
         if (! $contact->canUsePortal()) {
