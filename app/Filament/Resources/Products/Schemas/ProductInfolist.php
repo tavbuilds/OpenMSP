@@ -41,7 +41,7 @@ class ProductInfolist
                     ]),
 
                 Section::make(__('Pax8 price options'))
-                    ->description(__('All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).'))
+                    ->description(__('Sellable rates Pax8 assigns to this partner (Flat). Trials and other pricing models are omitted. The catalog table uses 1-year / monthly when that exists.'))
                     ->visible(fn (Product $record) => $record->priceOptions->isNotEmpty())
                     ->schema([
                         RepeatableEntry::make('priceOptions')

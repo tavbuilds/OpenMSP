@@ -140,12 +140,12 @@
   "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Αναζητήστε στο Pax8 (π.χ. “Microsoft 365 Business”) και εισάγετε μόνο τα SKU που θέλετε.",
   "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Εισάγει πελάτες, ανανεώνει τιμές καταλόγου και συνδρομές. Οι τιμές πώλησης μένουν.",
   "Pax8 price options": "Επιλογές τιμών Pax8",
-  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Όλοι οι συνδυασμοί δέσμευσης και χρέωσης από το Pax8. Ο πίνακας δείχνει τη μηνιαία τιμή στα μηνιαία.",
   "Commitment": "Δέσμευση",
   "Billing": "Χρέωση",
   "Price": "Τιμή",
   "Min/max": "Ελάχ/μέγ",
   "List price": "Τιμή καταλόγου",
   "Monthly list price (:term)": "Μηνιαία τιμή (:term)",
-  "Sum of components": "Άθροισμα στοιχείων"
+  "Sum of components": "Άθροισμα στοιχείων",
+  "Sellable rates Pax8 assigns to this partner (Flat). Trials and other pricing models are omitted. The catalog table uses 1-year / monthly when that exists.": "Πωλήσιμες τιμές που το Pax8 αντιστοιχεί στον συνεργάτη (Flat). Δοκιμές και άλλα μοντέλα παραλείπονται. Ο πίνακας χρησιμοποιεί 1 έτος / μηνιαία αν υπάρχει."
 }
