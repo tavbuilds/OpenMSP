@@ -12,7 +12,7 @@ class PortfolioStats extends BaseWidget
 {
     protected static ?int $sort = 1;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected function getColumns(): int
     {
@@ -27,8 +27,8 @@ class PortfolioStats extends BaseWidget
         $annualMargin = $active->sum(fn (Contract $c) => $c->annual_margin);
         $mrr = $arr / 12;
 
-        $upcoming = Contract::where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+        $upcoming = Contract::query()
+            ->withUpcomingRenewalTerm()
             ->whereBetween('renewal_date', [now(), now()->addDays(30)])
             ->count();
 

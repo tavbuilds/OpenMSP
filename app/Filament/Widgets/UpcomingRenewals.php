@@ -2,12 +2,10 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\ContractStatus;
 use App\Filament\Resources\Contracts\ContractResource;
 use App\Models\Contract;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -20,14 +18,18 @@ class UpcomingRenewals extends BaseWidget
         return __('Upcoming renewals');
     }
 
+    public function getTableDescription(): ?string
+    {
+        return __('Quarterly and yearly contracts only — a monthly contract can be cancelled every month.');
+    }
+
     protected int|string|array $columnSpan = 'full';
 
     protected function getTableQuery(): Builder
     {
         return Contract::query()
             ->with('company')
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->whereBetween('renewal_date', [now(), now()->addDays(60)])
             ->orderBy('renewal_date');
     }

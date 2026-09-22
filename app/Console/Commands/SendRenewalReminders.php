@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\ContractStatus;
 use App\Models\Contract;
 use App\Models\User;
 use App\Notifications\ContractRenewalReminder;
@@ -28,10 +27,12 @@ class SendRenewalReminders extends Command
         $today = now()->startOfDay();
         $horizon = $today->copy()->addDays($days);
 
+        // Monthly and one-time contracts are skipped: see
+        // BillingCycle::withRenewalTerm(). Reminding staff and the customer
+        // about a monthly contract every single month is noise, not a warning.
         $contracts = Contract::query()
             ->with(['company.contacts'])
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->get();
 
         $recipients = User::query()

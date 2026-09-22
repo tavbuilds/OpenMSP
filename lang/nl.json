@@ -479,5 +479,6 @@
   "Yes": "Ja",
   "empty = STARTTLS (587); smtps = 465": "leeg = STARTTLS (587); smtps = 465",
   "off": "uit",
-  "— (fixed cost)": "— (vaste kosten)"
+  "— (fixed cost)": "— (vaste kosten)",
+  "Quarterly and yearly contracts only — a monthly contract can be cancelled every month.": "Alleen kwartaal- en jaarcontracten — een maandcontract kan elke maand worden opgezegd."
 }
