@@ -10,7 +10,7 @@ class Vendor extends Model
 {
     use Auditable;
 
-    protected $fillable = ['name', 'website', 'email', 'phone', 'notes', 'is_demo'];
+    protected $fillable = ['name', 'website', 'email', 'phone', 'notes', 'is_demo', 'source', 'source_id'];
 
     protected $casts = [
         'is_demo' => 'boolean',

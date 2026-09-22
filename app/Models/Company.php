@@ -6,6 +6,7 @@ use App\Enums\ContractStatus;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 
 class Company extends Model
 {
@@ -20,6 +21,7 @@ class Company extends Model
         'name', 'kvk_number', 'vat_number', 'email', 'phone',
         'address', 'postal_code', 'city', 'country', 'notes',
         'stripe_customer_id', 'notify_renewals', 'is_demo',
+        'source', 'source_id',
     ];
 
     public function contacts(): HasMany
@@ -49,7 +51,7 @@ class Company extends Model
 
     // --- Key figures over de actieve contracten -------------------------
 
-    /** @return \Illuminate\Support\Collection<int, Contract> */
+    /** @return Collection<int, Contract> */
     protected function activeContracts()
     {
         return $this->contracts()

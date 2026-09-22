@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
+use App\Enums\ProductType;
 use App\Models\Concerns\Auditable;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +25,7 @@ class Contract extends Model
         'auto_collect', 'stripe_subscription_id', 'stripe_subscription_item_id',
         'stripe_payment_method_id', 'stripe_mandate_id', 'stripe_payment_status',
         'auto_collect_enabled_at',
+        'source', 'source_id',
     ];
 
     protected $casts = [
@@ -40,9 +42,9 @@ class Contract extends Model
         'notice_period_days' => 'integer',
         'notify_renewals' => 'boolean',
         'is_demo' => 'boolean',
-        'type' => \App\Enums\ProductType::class,
-        'billing_cycle' => \App\Enums\BillingCycle::class,
-        'status' => \App\Enums\ContractStatus::class,
+        'type' => ProductType::class,
+        'billing_cycle' => BillingCycle::class,
+        'status' => ContractStatus::class,
         // Versleuteld opgeslagen in de database (encryptie via APP_KEY).
         'license_keys' => 'encrypted',
     ];
