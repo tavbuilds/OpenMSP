@@ -30,16 +30,14 @@ class DashboardController extends Controller
         $mrr = $arr / 12;
 
         $upcoming30Count = Contract::query()
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->whereBetween('renewal_date', [now(), now()->addDays(30)])
             ->count();
 
         // Same horizon as Filament UpcomingRenewals widget (60 days).
         $upcomingList = Contract::query()
             ->with('company')
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->whereBetween('renewal_date', [now(), now()->addDays(60)])
             ->orderBy('renewal_date')
             ->limit(25)
@@ -60,8 +58,7 @@ class DashboardController extends Controller
         // Active contracts whose notice deadline falls within 60 days (cancel-before-renew awareness).
         $upcomingNoticeDeadlines = Contract::query()
             ->with('company')
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->get()
             ->filter(function (Contract $c) {
                 $deadline = $c->notice_deadline;

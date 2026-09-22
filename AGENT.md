@@ -85,7 +85,17 @@ REST: `GET` index/show, `POST` store, `PUT`/`PATCH` update, `DELETE` destroy (wh
 
 ### Dashboard (`GET /api/v1/dashboard`)
 
-Read-only portfolio metrics. Formulas match Filament `PortfolioStats` / `UpcomingRenewals`:
+Read-only portfolio metrics. Formulas match Filament `PortfolioStats` / `UpcomingRenewals`.
+
+> **Renewal watching covers committed terms only.** Everything below that talks
+> about renewals or notice deadlines counts `billing_cycle` `quarterly` and
+> `yearly` and skips `monthly` and `once`: a monthly contract can be cancelled
+> at any month boundary, so its renewal is not a deadline, and one-time work
+> never renews. Revenue metrics (`mrr`, `arr`, `annual_margin`,
+> `active_contracts_count`) are unaffected and still include every active
+> contract. See `BillingCycle::withRenewalTerm()` and the
+> `Contract::withUpcomingRenewalTerm()` scope.
+
 
 | Field | Meaning |
 |-------|---------|
@@ -93,9 +103,9 @@ Read-only portfolio metrics. Formulas match Filament `PortfolioStats` / `Upcomin
 | `arr` | Sum of `Contract::annual_revenue` over active contracts |
 | `mrr` | `arr / 12` |
 | `annual_margin` | Sum of `Contract::annual_margin` over active contracts |
-| `upcoming_renewals_30d_count` | Active contracts with `renewal_date` in the next 30 days |
-| `upcoming_renewals` | Short list (≤25) of active renewals in the next **60** days (widget horizon) |
-| `upcoming_notice_deadlines` | Active contracts whose computed `notice_deadline` falls within 60 days |
+| `upcoming_renewals_30d_count` | Active term contracts with `renewal_date` in the next 30 days |
+| `upcoming_renewals` | Short list (≤25) of active term renewals in the next **60** days (widget horizon) |
+| `upcoming_notice_deadlines` | Active term contracts whose computed `notice_deadline` falls within 60 days |
 | `upcoming_planned_tasks` | Open planned work (moves, migrations, on-site) due within 60 days, including overdue |
 
 Do **not** invent alternate MRR/ARR math; use these fields or the same model accessors.
@@ -157,7 +167,7 @@ Default sort when `sort` is omitted: `id` descending.
 
 | Param | Description |
 |-------|-------------|
-| `days` | Horizon (default 30, max 365). Active contracts with `renewal_date` in `[today, today+days]` |
+| `days` | Horizon (default 30, max 365). Active term contracts with `renewal_date` in `[today, today+days]` |
 | `per_page` / `page` | Standard pagination |
 
 Sorted by `renewal_date` ascending. Returns the same `Contract` resource shape as the contracts index.
@@ -183,7 +193,7 @@ Moves, migrations, on-site jobs, and other dated work.
 
 ### Renewal reminder notifications (console only)
 
-There is **no** HTTP trigger for `contracts:send-renewal-reminders`. The artisan command emails/notifies every admin/manager for matching contracts on **every** run (not idempotent / not safe to spam from agents).
+There is **no** HTTP trigger for `contracts:send-renewal-reminders`. The artisan command emails/notifies every admin/manager for matching contracts on **every** run (not idempotent / not safe to spam from agents). It follows the same term rule as the dashboard: monthly and one-time contracts never trigger a reminder.
 
 ```bash
 php artisan contracts:send-renewal-reminders --days=30

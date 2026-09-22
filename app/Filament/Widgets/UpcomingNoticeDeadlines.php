@@ -2,11 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\ContractStatus;
 use App\Filament\Resources\Contracts\ContractResource;
 use App\Models\Contract;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -19,6 +17,11 @@ class UpcomingNoticeDeadlines extends BaseWidget
         return __('Notice deadlines (60 days)');
     }
 
+    public function getTableDescription(): ?string
+    {
+        return __('Quarterly and yearly contracts only — a monthly contract can be cancelled every month.');
+    }
+
     protected static ?int $sort = 4;
 
     protected int|string|array $columnSpan = 'full';
@@ -26,8 +29,7 @@ class UpcomingNoticeDeadlines extends BaseWidget
     protected function getTableQuery(): Builder
     {
         $ids = Contract::query()
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->get()
             ->filter(function (Contract $contract): bool {
                 $deadline = $contract->notice_deadline;
