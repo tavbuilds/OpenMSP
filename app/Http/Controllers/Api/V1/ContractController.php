@@ -117,8 +117,7 @@ class ContractController extends Controller
 
         $query = Contract::query()
             ->with(['company', 'product', 'vendor'])
-            ->where('status', ContractStatus::Active->value)
-            ->whereNotNull('renewal_date')
+            ->withUpcomingRenewalTerm()
             ->whereBetween('renewal_date', [now()->startOfDay(), now()->addDays($days)->endOfDay()])
             ->orderBy('renewal_date');
 

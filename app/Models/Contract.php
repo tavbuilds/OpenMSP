@@ -7,6 +7,7 @@ use App\Enums\ContractStatus;
 use App\Enums\ProductType;
 use App\Models\Concerns\Auditable;
 use App\Support\Money;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -264,6 +265,18 @@ class Contract extends Model
     protected function annualMargin(): Attribute
     {
         return Attribute::get(fn () => $this->margin_eur * ($this->billing_cycle?->periodsPerYear() ?? 0));
+    }
+
+    /**
+     * Contracts whose renewal is worth seeing coming: active, dated, and on a
+     * committed term. See BillingCycle::withRenewalTerm().
+     */
+    public function scopeWithUpcomingRenewalTerm(Builder $query): Builder
+    {
+        return $query
+            ->where('status', ContractStatus::Active->value)
+            ->whereNotNull('renewal_date')
+            ->whereIn('billing_cycle', BillingCycle::renewalTermValues());
     }
 
     /** Last date to cancel in order to prevent renewal. */
