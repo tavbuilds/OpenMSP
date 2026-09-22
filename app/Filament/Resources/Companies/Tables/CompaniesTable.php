@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Companies\Tables;
 
 use App\Enums\ContractStatus;
 use App\Filament\Resources\Companies\CompanyResource;
+use App\Support\Breakpoints;
+use App\Support\Money;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -20,9 +22,9 @@ class CompaniesTable
             ->recordUrl(fn ($record) => CompanyResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('name')->label(__('Company name'))->searchable()->sortable()->weight('bold'),
-                TextColumn::make('city')->label(__('City'))->searchable()->visibleFrom('md'),
-                TextColumn::make('email')->label(__('Email'))->searchable()->toggleable()->visibleFrom('lg'),
-                TextColumn::make('phone')->label(__('Phone'))->searchable()->toggleable()->visibleFrom('xl'),
+                TextColumn::make('city')->label(__('City'))->searchable()->visibleFrom(Breakpoints::COLUMN_SECONDARY),
+                TextColumn::make('email')->label(__('Email'))->searchable()->toggleable()->visibleFrom(Breakpoints::COLUMN_TERTIARY),
+                TextColumn::make('phone')->label(__('Phone'))->searchable()->toggleable()->visibleFrom(Breakpoints::COLUMN_WIDEST),
                 TextColumn::make('contracts_count')
                     ->label(__('Active contracts'))
                     ->counts(['contracts' => fn ($query) => $query->where('status', ContractStatus::Active->value)])
@@ -30,15 +32,15 @@ class CompaniesTable
                     ->alignEnd(),
                 TextColumn::make('mrr')
                     ->label(__('MRR'))
-                    ->state(fn ($record) => '€ ' . number_format($record->mrr(), 2))
+                    ->state(fn ($record) => Money::format($record->mrr()))
                     ->alignEnd()
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('annual_margin')
                     ->label(__('Annual margin'))
-                    ->state(fn ($record) => '€ ' . number_format($record->annualMargin(), 2))
+                    ->state(fn ($record) => Money::format($record->annualMargin()))
                     ->color('success')
                     ->alignEnd()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_TERTIARY),
             ])
             ->recordActions([
                 ViewAction::make(),

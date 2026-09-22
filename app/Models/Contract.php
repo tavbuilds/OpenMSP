@@ -6,6 +6,7 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\ProductType;
 use App\Models\Concerns\Auditable;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -83,27 +84,29 @@ class Contract extends Model
      */
     public function portalRenewalDescription(): string
     {
+        $date = $this->renewal_date?->translatedFormat('M j, Y');
+
         return match ($this->billing_cycle) {
-            BillingCycle::Monthly => 'Monthly service/license — renews every month',
-            BillingCycle::Quarterly => $this->renewal_date
-                ? 'Renews: '.$this->renewal_date->format('M j, Y').' (quarterly)'
-                : 'Billed quarterly',
-            BillingCycle::Yearly => $this->renewal_date
-                ? 'Renews / ends: '.$this->renewal_date->format('M j, Y')
-                : 'Yearly service/license',
-            BillingCycle::Once => $this->renewal_date
-                ? 'Ends: '.$this->renewal_date->format('M j, Y')
-                : 'One-time service',
-            default => $this->renewal_date?->format('M j, Y') ?? '—',
+            BillingCycle::Monthly => __('Monthly service/license — renews every month'),
+            BillingCycle::Quarterly => $date
+                ? __('Renews: :date (quarterly)', ['date' => $date])
+                : __('Billed quarterly'),
+            BillingCycle::Yearly => $date
+                ? __('Renews / ends: :date', ['date' => $date])
+                : __('Yearly service/license'),
+            BillingCycle::Once => $date
+                ? __('Ends: :date', ['date' => $date])
+                : __('One-time service'),
+            default => $date ?? '—',
         };
     }
 
-    /** Unit sale price formatted for portal (EUR). */
+    /** Total sale price (unit price x quantity), formatted for the portal. */
     public function portalSalePriceFormatted(): string
     {
         $total = (float) $this->sale_price * (int) $this->quantity;
 
-        return '€ '.number_format($total, 2);
+        return Money::format($total, $this->currency);
     }
 
     public function isActiveForPortal(): bool

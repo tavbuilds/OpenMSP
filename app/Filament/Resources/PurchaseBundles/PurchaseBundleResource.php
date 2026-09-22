@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PurchaseBundles;
 
+use App\Filament\Concerns\AuthorizesByRole;
 use App\Filament\Resources\PurchaseBundles\Pages\CreatePurchaseBundle;
 use App\Filament\Resources\PurchaseBundles\Pages\EditPurchaseBundle;
 use App\Filament\Resources\PurchaseBundles\Pages\ListPurchaseBundles;
@@ -10,13 +11,13 @@ use App\Filament\Resources\PurchaseBundles\RelationManagers\ContractsRelationMan
 use App\Filament\Resources\PurchaseBundles\Schemas\PurchaseBundleForm;
 use App\Filament\Resources\PurchaseBundles\Schemas\PurchaseBundleInfolist;
 use App\Filament\Resources\PurchaseBundles\Tables\PurchaseBundlesTable;
-use App\Filament\Concerns\AuthorizesByRole;
 use App\Models\PurchaseBundle;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Model;
 
 class PurchaseBundleResource extends Resource
 {
@@ -36,7 +37,14 @@ class PurchaseBundleResource extends Resource
 
     protected static ?int $navigationSort = 12;
 
-    public static function getRecordTitle(?\Illuminate\Database\Eloquent\Model $record): ?string
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
+
+    public static function getRecordTitle(?Model $record): ?string
     {
         return $record?->name;
     }

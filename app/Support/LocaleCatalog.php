@@ -7,7 +7,11 @@ namespace App\Support;
  */
 final class LocaleCatalog
 {
-    public const COOKIE = 'msp.locale';
+    /**
+     * No dot in the name: PHP rewrites "." to "_" in $_COOKIE keys, so a
+     * cookie named "msp.locale" can never be read back from a real request.
+     */
+    public const COOKIE = 'msp_locale';
 
     public const DEFAULT = 'en';
 

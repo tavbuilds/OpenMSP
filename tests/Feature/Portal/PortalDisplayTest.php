@@ -4,7 +4,10 @@ namespace Tests\Feature\Portal;
 
 use App\Enums\BillingCycle;
 use App\Models\Company;
+use App\Models\Contact;
 use App\Models\Contract;
+use App\Models\Invoice;
+use App\Support\LocaleCatalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -48,8 +51,10 @@ class PortalDisplayTest extends TestCase
         $this->assertStringContainsString('Monthly service/license', $monthly->portalRenewalDescription());
         $this->assertStringContainsString('renews every month', $monthly->portalRenewalDescription());
 
-        $this->assertSame('€ 80.00', $yearly->portalSalePriceFormatted());
-        $this->assertSame('€ 25.00', $monthly->portalSalePriceFormatted());
+        // One money format across the portal, the admin pages and the
+        // dashboard stats; Filament's own money() columns render the same way.
+        $this->assertSame('€80.00', $yearly->portalSalePriceFormatted());
+        $this->assertSame('€25.00', $monthly->portalSalePriceFormatted());
     }
 
     public function test_portal_invoices_are_scoped_to_company(): void
@@ -57,13 +62,13 @@ class PortalDisplayTest extends TestCase
         $companyA = Company::create(['name' => 'Inv A', 'country' => 'NL']);
         $companyB = Company::create(['name' => 'Inv B', 'country' => 'NL']);
 
-        $contact = \App\Models\Contact::create([
+        $contact = Contact::create([
             'company_id' => $companyA->id,
             'name' => 'Inv User',
             'email' => 'inv@a.example',
         ]);
 
-        \App\Models\Invoice::create([
+        Invoice::create([
             'company_id' => $companyA->id,
             'stripe_invoice_id' => 'in_a_1',
             'number' => 'INV-A-1',
@@ -74,7 +79,7 @@ class PortalDisplayTest extends TestCase
             'invoice_pdf' => 'https://example.com/a.pdf',
         ]);
 
-        \App\Models\Invoice::create([
+        Invoice::create([
             'company_id' => $companyB->id,
             'stripe_invoice_id' => 'in_b_1',
             'number' => 'INV-B-SECRET',
@@ -100,7 +105,7 @@ class PortalDisplayTest extends TestCase
         $login->assertSee('font-size:16px', false);
 
         $company = Company::create(['name' => 'Mobile Co', 'country' => 'NL']);
-        $contact = \App\Models\Contact::create([
+        $contact = Contact::create([
             'company_id' => $company->id,
             'name' => 'Mobile User',
             'email' => 'mobile@co.example',
@@ -123,5 +128,42 @@ class PortalDisplayTest extends TestCase
         $dash->assertSee('stack-card', false);
         $dash->assertSee('Mobile License');
         $dash->assertSee('min-height: 2.75rem', false);
+    }
+
+    public function test_portal_is_rendered_in_the_visitors_language(): void
+    {
+        $company = Company::create(['name' => 'Taal BV', 'country' => 'NL']);
+        $contact = Contact::create([
+            'company_id' => $company->id,
+            'name' => 'Nederlandse Klant',
+            'email' => 'klant@taal.example',
+        ]);
+        Contract::create([
+            'company_id' => $company->id,
+            'name' => 'Beheerde Firewall',
+            'type' => 'service',
+            'quantity' => 1,
+            'cost_price' => 20,
+            'sale_price' => 79,
+            'currency' => 'EUR',
+            'billing_cycle' => BillingCycle::Monthly->value,
+            'start_date' => '2026-01-01',
+            'renewal_date' => '2026-02-01',
+            'status' => 'active',
+        ]);
+
+        $login = $this->withCookie(LocaleCatalog::COOKIE, 'nl')
+            ->get(route('portal.login'))
+            ->assertOk();
+        $login->assertSee('Klantenportaal');
+        $login->assertDontSee('Customer portal');
+
+        $dash = $this->withCookie(LocaleCatalog::COOKIE, 'nl')
+            ->actingAs($contact, 'portal')
+            ->get(route('portal.dashboard'))
+            ->assertOk();
+        $dash->assertSee('Actieve diensten');
+        $dash->assertSee('Maandelijkse dienst/licentie — verlengt elke maand', false);
+        $dash->assertDontSee('Active services');
     }
 }

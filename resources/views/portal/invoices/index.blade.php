@@ -1,65 +1,69 @@
 @extends('portal.layouts.app')
 
-@section('title', 'Invoices')
+@section('title', __('Invoices'))
 
 @section('content')
-<h1>Invoices</h1>
-<p class="muted lede">Stripe invoices for {{ $company?->name }}. PDF via the Stripe download link.</p>
+<h1>{{ __('Invoices') }}</h1>
+<p class="muted lede">{{ __(':company — open an invoice to view or download the PDF.', ['company' => $company?->name]) }}</p>
 
 @if ($invoices->isEmpty())
-    <div class="card"><p class="muted">No invoices yet.</p></div>
+    <div class="card"><p class="muted empty">{{ __('No invoices yet.') }}</p></div>
 @else
+    {{-- Phone and small tablet: one card per invoice. --}}
     <div class="stack">
         @foreach ($invoices as $invoice)
             <article class="card stack-card">
-                <h2>{{ $invoice->number ?: $invoice->stripe_invoice_id }}</h2>
-                <div class="stack-meta">
+                <h2>{{ $invoice->displayNumber() }}</h2>
+
+                <dl class="stack-meta">
                     <div>
-                        <dt>Date</dt>
-                        <span>{{ $invoice->stripe_created_at?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}</span>
+                        <dt>{{ __('Date') }}</dt>
+                        <dd>{{ $invoice->displayDate() }}</dd>
                     </div>
                     <div>
-                        <dt>Amount</dt>
-                        <strong>{{ $invoice->status === 'paid' ? $invoice->amountPaidFormatted() : $invoice->amountDueFormatted() }}</strong>
+                        <dt>{{ __('Amount') }}</dt>
+                        <dd><strong>{{ $invoice->displayAmountFormatted() }}</strong></dd>
                     </div>
                     <div>
-                        <dt>Status</dt>
-                        <span class="badge">{{ $invoice->status }}</span>
+                        <dt>{{ __('Status') }}</dt>
+                        <dd><span class="badge badge-{{ $invoice->statusTone() }}">{{ $invoice->statusLabel() }}</span></dd>
                     </div>
-                </div>
+                </dl>
+
                 <div class="stack-actions">
                     @if ($invoice->invoice_pdf || $invoice->hosted_invoice_url)
-                        <a class="btn btn-outline btn-block" href="{{ route('portal.invoices.download', $invoice) }}">PDF / view</a>
+                        <a class="btn btn-outline" href="{{ route('portal.invoices.download', $invoice) }}">{{ __('View PDF') }}</a>
                     @else
-                        <span class="muted">No PDF available</span>
+                        <span class="muted cell-sub">{{ __('No PDF available yet') }}</span>
                     @endif
                 </div>
             </article>
         @endforeach
     </div>
 
+    {{-- Tablet and up: the same invoices as a table. --}}
     <div class="data-table">
-        <div class="card" style="padding:0; overflow:auto">
+        <div class="card card-flush">
             <table>
                 <thead>
                     <tr>
-                        <th>Number</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Status</th>
-                        <th></th>
+                        <th scope="col">{{ __('Number') }}</th>
+                        <th scope="col">{{ __('Date') }}</th>
+                        <th scope="col" class="num">{{ __('Amount') }}</th>
+                        <th scope="col">{{ __('Status') }}</th>
+                        <th scope="col"><span class="visually-hidden">{{ __('Actions') }}</span></th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach ($invoices as $invoice)
                     <tr>
-                        <td>{{ $invoice->number ?: $invoice->stripe_invoice_id }}</td>
-                        <td>{{ $invoice->stripe_created_at?->timezone(config('app.timezone'))->format('M j, Y') ?? '—' }}</td>
-                        <td>{{ $invoice->status === 'paid' ? $invoice->amountPaidFormatted() : $invoice->amountDueFormatted() }}</td>
-                        <td><span class="badge">{{ $invoice->status }}</span></td>
-                        <td>
+                        <td>{{ $invoice->displayNumber() }}</td>
+                        <td>{{ $invoice->displayDate() }}</td>
+                        <td class="num">{{ $invoice->displayAmountFormatted() }}</td>
+                        <td><span class="badge badge-{{ $invoice->statusTone() }}">{{ $invoice->statusLabel() }}</span></td>
+                        <td class="num">
                             @if ($invoice->invoice_pdf || $invoice->hosted_invoice_url)
-                                <a class="btn btn-outline" href="{{ route('portal.invoices.download', $invoice) }}">PDF / view</a>
+                                <a class="btn btn-outline btn-sm" href="{{ route('portal.invoices.download', $invoice) }}">{{ __('View PDF') }}</a>
                             @else
                                 <span class="muted">—</span>
                             @endif
@@ -70,6 +74,7 @@
             </table>
         </div>
     </div>
-    <div>{{ $invoices->onEachSide(1)->links() }}</div>
+
+    {{ $invoices->onEachSide(1)->links('portal.pagination') }}
 @endif
 @endsection

@@ -36,6 +36,17 @@ class LocaleSwitchTest extends TestCase
         $this->assertSame('sv', app()->getLocale());
     }
 
+    public function test_cookie_name_survives_phps_cookie_key_mangling(): void
+    {
+        // PHP rewrites "." and " " to "_" in $_COOKIE keys, so a cookie whose
+        // name contains one is never readable from a real browser request —
+        // only from the test client, which sets cookies on the request object.
+        $this->assertSame(
+            LocaleCatalog::COOKIE,
+            str_replace(['.', ' '], '_', LocaleCatalog::COOKIE),
+        );
+    }
+
     public function test_fallback_is_english(): void
     {
         $this->withHeaders(['Accept-Language' => 'ja,zh;q=0.8'])

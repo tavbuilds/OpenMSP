@@ -4,8 +4,9 @@ namespace App\Filament\Pages;
 
 use App\Mcp\ToolCatalog;
 use BackedEnum;
-use Filament\Support\Icons\Heroicon;
 use Filament\Pages\Page;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 
 class McpConnection extends Page
 {
@@ -23,12 +24,19 @@ class McpConnection extends Page
 
     protected string $view = 'filament.pages.mcp-connection';
 
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
+
     public static function getNavigationLabel(): string
     {
         return __('MCP');
     }
 
-    public function getTitle(): string|\Illuminate\Contracts\Support\Htmlable
+    public function getTitle(): string|Htmlable
     {
         return __('MCP');
     }

@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Contract;
+use App\Support\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -36,7 +37,7 @@ class ContractRenewalReminder extends Notification implements ShouldQueue
             ->line("The contract '{$c->name}' for {$c->company?->name} {$label}.")
             ->line('Renewal date: '.($c->renewal_date?->format('M j, Y') ?? 'unknown'))
             ->line('Auto-renew: '.($c->auto_renew ? 'ON' : 'OFF'))
-            ->line('Sale value: € '.number_format($c->total_sale, 2))
+            ->line('Sale value: '.Money::format($c->total_sale, $c->currency))
             ->action('View contract', url('/admin/contracts/'.$c->getKey()));
     }
 
