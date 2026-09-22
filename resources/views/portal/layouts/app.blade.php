@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="theme-color" content="{{ $platformColor ?? '#0f172a' }}">
-    <title>@yield('title', 'Customer portal') — {{ $platformName ?? 'MSP Platform' }}</title>
+    <title>@yield('title', __('Customer portal')) — {{ $platformName ?? 'MSP Platform' }}</title>
     @if (!empty($platformFavicon))
         <link rel="icon" href="{{ $platformFavicon }}">
     @endif
@@ -294,17 +294,17 @@
                 @endif
                 <span>{{ $platformName ?? 'MSP Platform' }}</span>
             </div>
-            <nav class="nav-primary" aria-label="Portal">
+            <nav class="nav-primary" aria-label="{{ __('Customer portal') }}">
                 <a class="nav-link" href="{{ route('portal.dashboard') }}"
-                   @if ($currentRoute === 'portal.dashboard') aria-current="page" @endif>Services</a>
+                   @if ($currentRoute === 'portal.dashboard') aria-current="page" @endif>{{ __('Services') }}</a>
                 <a class="nav-link" href="{{ route('portal.invoices') }}"
-                   @if ($currentRoute === 'portal.invoices') aria-current="page" @endif>Invoices</a>
+                   @if ($currentRoute === 'portal.invoices') aria-current="page" @endif>{{ __('Invoices') }}</a>
             </nav>
             <div class="nav-account">
                 <span class="nav-user">{{ Auth::guard('portal')->user()->name }}</span>
                 <form method="POST" action="{{ route('portal.logout') }}">
                     @csrf
-                    <button type="submit" class="btn btn-secondary btn-sm">Sign out</button>
+                    <button type="submit" class="btn btn-secondary btn-sm">{{ __('Sign out') }}</button>
                 </form>
             </div>
         </div>
@@ -337,10 +337,9 @@
 </main>
 <footer>
     @auth('portal')
-        {{ $platformName ?? 'MSP Platform' }} — customer portal.
-        Prices shown are the amounts we invoice you.
+        {{ __(':platform — customer portal. Prices shown are the amounts we invoice you.', ['platform' => $platformName ?? 'MSP Platform']) }}
     @else
-        {{ $platformName ?? 'MSP Platform' }} — customer portal.
+        {{ __(':platform — customer portal.', ['platform' => $platformName ?? 'MSP Platform']) }}
     @endauth
 </footer>
 </body>
