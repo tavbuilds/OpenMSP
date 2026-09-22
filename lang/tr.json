@@ -138,5 +138,14 @@
   "Connect your Pax8 partner account. OpenMSP pulls companies, catalog products you pick, partner cost (inkoop) and subscriptions. Your own sale prices are not overwritten.": "Pax8’i bağlayın. OpenMSP müşterileri, seçilen ürünleri, maliyeti ve abonelikleri çeker. Satış fiyatlarınız ezilmez.",
   "Search the Pax8 catalog and import the Microsoft 365 (or other) products you sell. Nightly sync keeps their inkoopprijs current.": "Pax8 kataloğunda arayın ve sattığınız Microsoft 365 ürünlerini içe aktarın. Gece senkronu maliyeti güncel tutar.",
   "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Pax8’de arayın (örn. “Microsoft 365 Business”) ve yalnızca istediğiniz SKU’ları alın.",
-  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Müşterileri alır, katalog fiyatlarını ve abonelikleri günceller. Satış fiyatları kalır."
+  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Müşterileri alır, katalog fiyatlarını ve abonelikleri günceller. Satış fiyatları kalır.",
+  "Pax8 price options": "Pax8 fiyat seçenekleri",
+  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Pax8’deki tüm taahhüt ve faturalama kombinasyonları. Tabloda aylık aboneliklerde aylık fiyat gösterilir.",
+  "Commitment": "Taahhüt",
+  "Billing": "Faturalama",
+  "Price": "Fiyat",
+  "Min/max": "Min/maks",
+  "List price": "Liste fiyatı",
+  "Monthly list price (:term)": "Aylık liste fiyatı (:term)",
+  "Sum of components": "Bileşenlerin toplamı"
 }

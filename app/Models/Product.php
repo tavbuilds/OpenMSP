@@ -23,9 +23,9 @@ class Product extends Model
     ];
 
     protected $casts = [
-        'default_cost_price' => 'decimal:2',
-        'default_sale_price' => 'decimal:2',
-        'suggested_sale_price' => 'decimal:2',
+        'default_cost_price' => 'decimal:4',
+        'default_sale_price' => 'decimal:4',
+        'suggested_sale_price' => 'decimal:4',
         'active' => 'boolean',
         'is_demo' => 'boolean',
         'type' => ProductType::class,
@@ -40,6 +40,20 @@ class Product extends Model
     public function contracts(): HasMany
     {
         return $this->hasMany(Contract::class);
+    }
+
+    public function priceOptions(): HasMany
+    {
+        return $this->hasMany(ProductPriceOption::class)
+            ->orderByDesc('is_default')
+            ->orderBy('commitment_months')
+            ->orderBy('billing_term');
+    }
+
+    public function defaultPriceOption(): ?ProductPriceOption
+    {
+        return $this->priceOptions->firstWhere('is_default', true)
+            ?? $this->priceOptions->first();
     }
 
     // --- Samenstelling (stuklijst) --------------------------------------
