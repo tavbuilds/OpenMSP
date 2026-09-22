@@ -22,3 +22,7 @@ Schedule::command('endpoints:send-expiry-reminders')
 Schedule::command('planning:send-deadline-reminders')
     ->dailyAt('08:10')
     ->timezone($tz);
+
+Schedule::command('pax8:sync')
+    ->dailyAt('06:30')
+    ->timezone($tz);
