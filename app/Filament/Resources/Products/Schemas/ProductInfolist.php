@@ -23,7 +23,11 @@ class ProductInfolist
                         TextEntry::make('effective_cost_price')
                             ->label(__('Effective cost'))
                             ->money('EUR')
-                            ->helperText(fn (Product $record) => $record->isComposite() ? 'Sum of components' : null),
+                            ->helperText(fn (Product $record) => $record->isComposite()
+                                ? __('Sum of components')
+                                : ($record->defaultPriceOption()
+                                    ? __('Monthly list price (:term)', ['term' => $record->defaultPriceOption()->label()])
+                                    : null)),
                         TextEntry::make('default_sale_price')->label(__('Sale'))->money('EUR'),
                         TextEntry::make('margin_eur')
                             ->label(__('Margin €'))
@@ -34,6 +38,37 @@ class ProductInfolist
                             ->suffix('%')
                             ->badge()
                             ->color(fn ($state) => $state >= 30 ? 'success' : ($state >= 15 ? 'warning' : 'danger')),
+                    ]),
+
+                Section::make(__('Pax8 price options'))
+                    ->description(__('All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).'))
+                    ->visible(fn (Product $record) => $record->priceOptions->isNotEmpty())
+                    ->schema([
+                        RepeatableEntry::make('priceOptions')
+                            ->hiddenLabel()
+                            ->columns([
+                                'default' => 1,
+                                'md' => 2,
+                                'xl' => 6,
+                            ])
+                            ->schema([
+                                TextEntry::make('commitment_term')->label(__('Commitment')),
+                                TextEntry::make('billing_term')->label(__('Billing')),
+                                TextEntry::make('cost_price')
+                                    ->label(__('Cost'))
+                                    ->formatStateUsing(fn ($state) => '€ '.number_format((float) $state, 4, ',', '.')),
+                                TextEntry::make('sale_price')
+                                    ->label(__('Price'))
+                                    ->formatStateUsing(fn ($state) => '€ '.number_format((float) $state, 2, ',', '.')),
+                                TextEntry::make('qty')
+                                    ->label(__('Min/max'))
+                                    ->state(fn ($record) => $record->qtyLabel()),
+                                TextEntry::make('is_default')
+                                    ->label(__('List price'))
+                                    ->badge()
+                                    ->formatStateUsing(fn ($state) => $state ? __('Yes') : __('No'))
+                                    ->color(fn ($state) => $state ? 'success' : 'gray'),
+                            ]),
                     ]),
 
                 Section::make('Components')

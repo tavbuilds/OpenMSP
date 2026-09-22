@@ -138,5 +138,14 @@
   "Connect your Pax8 partner account. OpenMSP pulls companies, catalog products you pick, partner cost (inkoop) and subscriptions. Your own sale prices are not overwritten.": "Tilslut Pax8. OpenMSP henter kunder, valgte produkter, indkøbspris og abonnementer. Salgspriser overskrives ikke.",
   "Search the Pax8 catalog and import the Microsoft 365 (or other) products you sell. Nightly sync keeps their inkoopprijs current.": "Søg i Pax8-kataloget og importér de Microsoft 365-produkter I sælger. Natsync holder indkøbsprisen ajour.",
   "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Søg i Pax8 (fx “Microsoft 365 Business”) og importér kun de SKU’er I vil have.",
-  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Henter kunder, opdaterer katalogpriser og abonnementer. Salgspriser bevares."
+  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Henter kunder, opdaterer katalogpriser og abonnementer. Salgspriser bevares.",
+  "Pax8 price options": "Pax8-prisoptioner",
+  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Alle commitment- og faktureringskombinationer fra Pax8. Tabellen viser månedsprisen ved månedligt abonnement.",
+  "Commitment": "Commitment",
+  "Billing": "Fakturering",
+  "Price": "Pris",
+  "Min/max": "Min/maks",
+  "List price": "Listepris",
+  "Monthly list price (:term)": "Månedlig listepris (:term)",
+  "Sum of components": "Sum af komponenter"
 }
