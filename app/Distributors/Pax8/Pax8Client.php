@@ -76,6 +76,26 @@ class Pax8Client
     }
 
     /**
+     * @return list<array<string, mixed>>
+     */
+    public function searchProducts(string $search, ?string $vendor = null, int $size = 50): array
+    {
+        $query = [
+            'page' => 0,
+            'size' => max(1, min($size, 200)),
+            'search' => $search,
+        ];
+        if (filled($vendor)) {
+            $query['vendor'] = $vendor;
+        }
+
+        $json = $this->http()->get('/products', $query)->throw()->json();
+        $content = is_array($json) ? ($json['content'] ?? []) : [];
+
+        return is_array($content) ? array_values(array_filter($content, 'is_array')) : [];
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function product(string $id): array
@@ -117,7 +137,7 @@ class Pax8Client
 
         do {
             $json = $this->http()->get($path, ['page' => $page, 'size' => $size])->throw()->json();
-            $content = is_array($json) ? ($json['content'] ?? $json) : [];
+            $content = is_array($json) ? ($json['content'] ?? $json['data'] ?? $json) : [];
             if (! is_array($content)) {
                 break;
             }
