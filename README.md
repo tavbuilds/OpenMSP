@@ -1,239 +1,145 @@
-# MSP Platform
+<div align="center">
 
-Self-hosted operations platform for **Managed Service Providers**.
+# 🔁 OpenMSP
 
-Track recurring contracts and licenses, see your real margin, get reminded
-before something renews or a certificate expires, and give customers a portal
-for their own services. White-label: you name it, you brand it.
+**The recurring-work system for Managed Service Providers.**
 
-**Laravel 13 · Filament 4 · PHP 8.4 · PostgreSQL 16 · Docker**
-[MIT license](LICENSE)
+Contracts, licenses, renewals and certificates — with the margin sitting right next to them.
+Self-hosted, white-label, no vendor lock-in.
 
-The operator UI is **English-native**. Missing strings fall back to **English**.
-The interface follows the browser language, with a switcher on login and in
-admin. Branding (name, logo, color) is yours.
+[![Live demo](https://img.shields.io/badge/live_demo-demo.openmsp.eu-2563eb?style=for-the-badge&logo=rocket&logoColor=white)](https://demo.openmsp.eu)
+[![License](https://img.shields.io/badge/license-MIT-16a34a?style=for-the-badge)](LICENSE)
 
----
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
+![Filament](https://img.shields.io/badge/Filament-4-FDAE4B?logo=laravel&logoColor=white)
+![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
+![Languages](https://img.shields.io/badge/UI-13_languages-64748b)
 
-## What this is
+</div>
 
-A small MSP’s **recurring-work** system:
-
-| You manage | The platform does |
-|---|---|
-| Customers, contacts, vendors, catalog | Portfolio of contracts & licenses with cost / sale / margin |
-| Renewal & notice dates | Dashboard widgets + staff mail + optional customer mail |
-| Moves, migrations, on-site work | Planning board with customer, deadline, assignee, and reminders |
-| Certificates & hostnames | Per-endpoint webhook (e.g. Uptime Kuma) or a manual expiry |
-| SEPA collection (optional Stripe) | Customer portal with magic-link login and iDEAL → SEPA |
-| Integrations | JSON Agent API (`/api/v1`) + built-in MCP (`/mcp`) |
-
-Nothing is vendor-locked. First boot asks for an admin account and a platform
-name. Mail, Stripe, tokens, logo and color are all set (and reset) from
-**System** — no tinker, no baked-in company name.
-
-## What this is not
-
-On purpose. Do not expect these; they are different products:
-
-- **Not a PSA** — no tickets, time tracking, or projects
-- **Not an RMM** — no agents on customer machines
-- **Not a CMDB** — no servers, racks, or CI graphs
-- **Not invoicing / quoting** — you do not send invoices or offers from here
-  (Stripe collection in the portal is optional, for customers who already have
-  a contract)
-
-If a date comes back every year (or every month), it belongs here.
+![Dashboard](docs/img/dashboard.png)
 
 ---
 
-## Languages
+## 💡 The idea
 
-English is the source language **and** the fallback (`APP_LOCALE=en`,
-`APP_FALLBACK_LOCALE=en`). Adding a language later does not require rewriting
-the UI.
+> **If a date comes back every year, it belongs here.**
 
-Resolution order:
+Most MSPs track renewals in a spreadsheet until the day a €4,000 contract
+silently rolls over. OpenMSP is the small, boring system that stops that —
+and shows you what you actually earn on each line.
 
-1. Language switcher cookie (`msp_locale`)
-2. Browser `Accept-Language`
-3. `APP_LOCALE` (default `en`)
-4. English
+|  |  |  |
+| :--: | :-- | :-- |
+| 📦 | **Contracts & catalog** | Customers, contacts, vendors, products, purchase bundles — with cost, sale and computed margin |
+| ⏰ | **Renewals** | Notice deadlines and upcoming renewals on the dashboard, plus reminder mail to staff and (optionally) the customer |
+| 🔐 | **Certificates** | A webhook per endpoint (Uptime Kuma or generic JSON), or a date you type. Alerts at 30 / 14 / 7 / 1 days |
+| 🗓️ | **Planning** | Moves, migrations and on-site work with deadline, assignee and reminders |
+| 🧾 | **Customer portal** | Magic-link login. Customers see their services and prices — never your cost, margin or license keys |
+| 🤖 | **Built for agents** | JSON API at `/api/v1` and a built-in MCP server at `/mcp` |
 
-| Code | Language |
-|------|----------|
-| `en` | English (default / fallback) |
-| `nl` | Dutch |
-| `de` | German |
-| `fr` | French |
-| `es` | Spanish |
-| `it` | Italian |
-| `pt` | Portuguese |
-| `da` | Danish |
-| `sv` | Swedish |
-| `fi` | Finnish |
-| `pl` | Polish |
-| `el` | Greek |
-| `tr` | Turkish |
+<table>
+<tr>
+<td width="50%"><img src="docs/img/contracts.png" alt="Contracts with margin"></td>
+<td width="50%"><img src="docs/img/portal.png" alt="Customer portal"></td>
+</tr>
+<tr>
+<td align="center"><em>Margin per line, not per invoice</em></td>
+<td align="center"><em>What your customer sees</em></td>
+</tr>
+</table>
 
-Switcher: login screen and admin top bar. Translations live in `lang/{code}.json`
-(English keys → translated strings). To add a locale: register it in
-`app/Support/LocaleCatalog.php` and add the JSON file.
+### 🚫 What it deliberately isn't
 
----
-
-## Features
-
-**Contracts & catalog**
-- Customers, contacts, vendors, products, purchase bundles
-- Filters, search, CSV export
-- Computed margin and annualised revenue (not stored)
-
-**Renewals**
-- One-click renew or cancel
-- Notice-deadline widget
-- Failed Stripe collections on the dashboard
-- Customer reminder mail, on/off **per customer** and **per contract**
-
-**Endpoints (certificates / domains)**
-- Own webhook URL per endpoint (Uptime Kuma or generic JSON)
-- Or a date you type yourself
-- Notices at 30 / 14 / 7 / 1 days and once when expired — each toggle per endpoint
-- See [docs/ENDPOINTS.md](docs/ENDPOINTS.md)
-
-**Planning**
-- Tasks for upcoming moves, migrations, on-site jobs, and internal projects
-- Customer, deadline, type, status, priority, assignee, from/to locations
-- Dashboard widget for open work in the next 60 days (overdue included)
-- CSV export; also on the Agent API and MCP
-
-**Portal & billing**
-- Magic-link login for contacts (`/portal`)
-- Customers see their services and prices — never cost, margin, or license keys
-- Optional automatic collection via Stripe (iDEAL → SEPA)
-
-**Operations**
-- Roles: `admin`, `manager`, `sales`, `viewer` (viewer is read-only, including catalog)
-- Optional TOTP 2FA (can be required)
-- Audit log
-- Demo data you can load and wipe in one click
-- Sign-in lockout: 5 failures / 15 minutes, per IP and per email
-- 13 interface languages; switcher on login and in the admin top bar
-
-**Integrations**
-- Sanctum Agent API — [AGENT.md](AGENT.md), [openapi/agent-api.yaml](openapi/agent-api.yaml)
-- Built-in MCP at `{APP_URL}/mcp` (System → MCP in admin). Optional stdio sidecar: [mcp/README.md](mcp/README.md)
+**Not a PSA** (no tickets or time tracking) · **not an RMM** (no agents on
+customer machines) · **not a CMDB** (no racks or CI graphs) · **not invoicing**
+(Stripe collection in the portal is optional, for contracts you already have).
 
 ---
 
-## Demo login
+## 🎬 Try it
 
-There is **no default login** on a normal install. Registration closes after the
-first administrator.
+Poke at the real thing — no install:
 
-For a public demo instance, set `APP_DEMO_LOGIN=true` in `.env` (or run
-`php artisan demo:seed --login` on an empty database). Credentials — documented
-here, not shown on the login card:
+**[demo.openmsp.eu](https://demo.openmsp.eu)** · `test@demo.local` · password `test`
 
-| | |
-| --- | --- |
-| Username | `test` (or email `test@demo.local`) |
-| Password | `test` |
+That account is **view-only** and the data resets. On your own install there is
+**no default login at all** — the first screen creates your administrator and
+registration closes behind you. Running your own public demo? Set
+`APP_DEMO_LOGIN=true`.
 
-That account is **view-only**. Creating a real administrator removes it
-automatically and closes registration.
+## 🚀 Run it
 
-## Quick start (Docker)
-
-Requires Docker Compose. Default URL: [http://localhost:8090](http://localhost:8090)
+Docker Compose, roughly two minutes:
 
 ```bash
 git clone https://github.com/tavbuilds/OpenMSP.git
 cd OpenMSP
-cp .env.example .env
-```
+cp .env.example .env            # set APP_URL + DB_* (see .env.example)
 
-Set at least:
-
-```env
-APP_URL=http://localhost:8090
-APP_LOCALE=en
-APP_FALLBACK_LOCALE=en
-DB_CONNECTION=pgsql
-DB_HOST=db
-DB_PORT=5432
-DB_DATABASE=msp
-DB_USERNAME=msp
-DB_PASSWORD=secret
-```
-
-Then:
-
-```bash
 docker compose build
 docker compose up -d
-docker compose exec app php artisan key:generate   # local only; never on an existing production volume
+docker compose exec app php artisan key:generate   # new installs only ⚠️
 docker compose exec app php artisan migrate
 ```
 
-Open `/admin`:
-
-1. Create the first **admin** account (this screen exists only while `users` is empty).
-2. Finish **onboarding**: platform name, color, logo; optionally mail, Stripe, an API token.
-3. Optional: **System → Demo data** to load sample customers (and wipe them later).
-
-There is **no default login**. Existing installs skip the wizard; you can re-run
-it from settings. Details: [docs/ONBOARDING.md](docs/ONBOARDING.md).
-
-### Tests
+Open **<http://localhost:8090/admin>**: the first screen creates your
+administrator, then a short wizard brands the platform and optionally wires up
+mail, Stripe and an API token. Want something to look at? **System → Demo data** loads a sample
+portfolio and wipes it again in one click.
 
 ```bash
-docker compose exec app php artisan test
+docker compose exec app php artisan test   # 141 tests
 ```
 
 ---
 
-## Production
+## 🔌 For machines
 
-Use [docker-compose.prod.yml](docker-compose.prod.yml) (image-baked, migrates on
-boot). **Same file** for Docker CLI, Coolify, Portainer, or a DigitalOcean
-droplet. Env list: [`.env.production.example`](.env.production.example).
-Walkthrough: [DEPLOY.md](DEPLOY.md).
-
-Before you go live:
-
-1. `APP_ENV=production`, `APP_DEBUG=false`, a **stable** `APP_KEY` — see [docs/SECRETS.md](docs/SECRETS.md)
-2. Strong `DB_PASSWORD`. Secrets in env or the UI, never in Git
-3. HTTPS in front of the stack
-4. Working SMTP (magic links and reminders)
-5. Database backups
-
-`APP_KEY` encrypts license keys, 2FA secrets, and UI-stored SMTP/Stripe
-secrets. Generate it **once** and keep it. Rotating it on a live volume makes
-that ciphertext unreadable.
+| | |
+|---|---|
+| **Agent API** | `GET {APP_URL}/api/v1/...` with a Sanctum bearer token → [AGENT.md](AGENT.md) · [OpenAPI spec](openapi/agent-api.yaml) |
+| **MCP server** | `{APP_URL}/mcp`, built in — OAuth or bearer. Set it up under **System → MCP** → [mcp/README.md](mcp/README.md) |
+| **Webhooks** | One unguessable URL per endpoint for certificate monitors → [docs/ENDPOINTS.md](docs/ENDPOINTS.md) |
 
 ---
 
-## Architecture
+<a id="languages"></a>
+
+<details>
+<summary><b>🌍 13 languages</b> — English-native, switcher on login and in the top bar</summary>
+
+<br>
+
+English is the source language **and** the fallback, so a missing string never
+shows a blank.
+
+`en` `nl` `de` `fr` `es` `it` `pt` `da` `sv` `fi` `pl` `el` `tr`
+
+Resolution order: switcher cookie (`msp_locale`) → browser `Accept-Language` →
+`APP_LOCALE` → English.
+
+Translations live in `lang/{code}.json`, keyed by the English string. To add a
+language: register the code in `app/Support/LocaleCatalog.php` and drop in the
+JSON file. A test fails the build if any locale is missing a string.
+
+</details>
+
+<details>
+<summary><b>🏗️ Architecture</b> — five containers, one database</summary>
+
+<br>
 
 ```mermaid
 flowchart LR
-  subgraph operators [Operators]
-    Admin["/admin · Filament"]
-  end
-  subgraph customers [Customers]
-    Portal["/portal · magic link"]
-  end
-  subgraph machines [Machines]
-    API["/api/v1 · Sanctum"]
-    Hooks["/hooks/endpoints/{token}"]
-  end
-  Admin --> DB[(PostgreSQL)]
-  Portal --> DB
-  API --> DB
-  Hooks --> DB
-  Queue[queue worker] --> Mail[SMTP]
-  Scheduler[scheduler] --> Queue
+  Admin["/admin · Filament"] --> DB[(PostgreSQL)]
+  Portal["/portal · magic link"] --> DB
+  API["/api/v1 · Sanctum"] --> DB
+  Hooks["/hooks/endpoints/{token}"] --> DB
+  Scheduler[scheduler] --> Queue[queue worker]
+  Queue --> Mail[SMTP]
 ```
 
 | Container | Role |
@@ -242,57 +148,76 @@ flowchart LR
 | `app` | PHP-FPM 8.4 (Laravel + Filament) |
 | `db` | PostgreSQL 16 |
 | `queue` | `queue:work` — mail and notifications |
-| `scheduler` | Laravel scheduler (daily reminders at 08:00 in `APP_TIMEZONE`) |
+| `scheduler` | Daily reminders at 08:00 in `APP_TIMEZONE` |
 
-Domain: `Company` → `Contract` ← `Product` / `Vendor`. `Endpoint` is optional
-and may be internal (no customer). Margins (`margin_eur`, `margin_pct`) and
-`annual_revenue` are computed.
+Domain: `Company` → `Contract` ← `Product` / `Vendor`. An `Endpoint` may be
+internal (no customer). Margin and annual revenue are computed, never stored.
 
-### Roles
+Renewal watching covers **quarterly and yearly** contracts: a monthly contract
+can be cancelled every month, so its renewal is not a deadline.
+
+</details>
+
+<details>
+<summary><b>🔒 Roles &amp; security</b></summary>
+
+<br>
 
 | Role | Read | Create / edit contracts | Delete, users, settings |
-|------|------|-------------------------|-------------------------|
-| `viewer` | yes | no | no |
-| `sales` | yes | yes | no |
-| `manager` | yes | yes | yes |
-| `admin` | yes | yes | yes |
+|------|:----:|:----:|:----:|
+| `viewer` | ✅ | — | — |
+| `sales` | ✅ | ✅ | — |
+| `manager` | ✅ | ✅ | ✅ |
+| `admin` | ✅ | ✅ | ✅ |
 
 The last administrator cannot be deleted or demoted.
 
+- License keys, 2FA secrets and UI-stored SMTP/Stripe secrets are encrypted with `APP_KEY`
+- Optional TOTP 2FA, which you can make mandatory
+- Sign-in lockout after 5 failures in 15 minutes, per IP **and** per email
+- Audit log, with tokens redacted
+- Webhook URLs are unguessable per endpoint; an unknown token returns 404
+- Registration closes after the first real administrator
+
+Report a vulnerability: [SECURITY.md](SECURITY.md).
+
+</details>
+
+<details>
+<summary><b>🏭 Going to production</b></summary>
+
+<br>
+
+Use [docker-compose.prod.yml](docker-compose.prod.yml) — the same file works for
+Docker CLI, Coolify, Portainer or a plain droplet. Walkthrough:
+[DEPLOY.md](DEPLOY.md) · env list: [.env.production.example](.env.production.example).
+
+Before you go live:
+
+1. `APP_ENV=production`, `APP_DEBUG=false`, and a **stable** `APP_KEY`
+2. A strong `DB_PASSWORD`; secrets in env or the UI, never in Git
+3. HTTPS in front of the stack
+4. Working SMTP — magic links and reminders depend on it
+5. Database backups
+
+> ⚠️ **`APP_KEY` is not rotatable in place.** It encrypts license keys, 2FA
+> secrets and UI-stored credentials. Generate it once, keep it safe; rotating it
+> on a live volume makes that ciphertext unreadable. See [docs/SECRETS.md](docs/SECRETS.md).
+
+</details>
+
 ---
 
-## Security
+## 📚 Docs
 
-- Passwords hashed, CSRF, Eloquent (no ad-hoc SQL)
-- License keys and UI secrets encrypted with `APP_KEY`
-- Role checks in the panel and the API
-- Webhook URLs are unguessable per endpoint; unknown token → 404
-- Audit log (tokens redacted)
-- Sign-in lockout after 5 failures (15 minutes), per IP and per email
-- Registration closed after the first real administrator
+[Onboarding](docs/ONBOARDING.md) · [Deploy](DEPLOY.md) · [Secrets](docs/SECRETS.md) · [Portal](docs/PORTAL.md) · [Endpoints](docs/ENDPOINTS.md) · [Agent API](AGENT.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
----
+## 🤝 Contributing
 
-## Documentation
+Branch from `dev`, open a PR into `dev`. Maintainers promote `dev` → `staging` →
+`main`. Keep it vendor-neutral — no customer names in UI, MCP or docs.
+Details in [CONTRIBUTING.md](CONTRIBUTING.md).
 
-| Doc | Contents |
-|-----|----------|
-| [docs/ONBOARDING.md](docs/ONBOARDING.md) | First boot, settings, reset |
-| [DEPLOY.md](DEPLOY.md) | Portainer / production compose |
-| [docs/SECRETS.md](docs/SECRETS.md) | `APP_KEY`, SMTP, Stripe, 2FA |
-| [docs/PORTAL.md](docs/PORTAL.md) | Customer portal and collection |
-| [docs/ENDPOINTS.md](docs/ENDPOINTS.md) | Certificates, webhooks, notice toggles |
-| [AGENT.md](AGENT.md) | JSON API for agents |
-| [SECURITY.md](SECURITY.md) | How to report vulnerabilities |
-| [CONTRIBUTING.md](CONTRIBUTING.md) | Branch workflow (`feature/*` → `dev` → `main`) |
+## ⚖️ License
 
----
-
-## Contributing
-
-Work starts from `dev`, not `main`. Open a PR into `dev`; releases are `dev` →
-`main`. Keep the product vendor-neutral. See [CONTRIBUTING.md](CONTRIBUTING.md).
-
-## License
-
-[MIT](LICENSE) — use it, fork it, white-label it.
+[MIT](LICENSE) — use it, fork it, white-label it, sell it.
