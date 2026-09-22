@@ -6,6 +6,7 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\ProductType;
 use App\Filament\Resources\Contracts\ContractResource;
+use App\Support\Breakpoints;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -13,7 +14,6 @@ use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
@@ -42,31 +42,31 @@ class ContractsTable
                 TextColumn::make('type')
                     ->label(__('Type'))
                     ->badge()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_WIDEST),
 
                 TextColumn::make('effective_cost')
                     ->label(__('Cost'))
                     ->money('EUR')
                     ->alignEnd()
                     ->tooltip(fn ($record) => $record->uses_bundle
-                        ? 'Allocated from bundle: ' . $record->purchaseBundle?->name
+                        ? 'Allocated from bundle: '.$record->purchaseBundle?->name
                         : null)
                     ->icon(fn ($record) => $record->uses_bundle ? 'heroicon-m-squares-2x2' : null)
                     ->toggleable()
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_WIDEST),
 
                 TextColumn::make('total_sale')
                     ->label(__('Sale'))
                     ->money('EUR')
                     ->alignEnd()
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
 
                 TextColumn::make('margin_eur')
                     ->label(__('Margin €'))
                     ->money('EUR')
                     ->alignEnd()
                     ->color(fn ($state) => $state > 0 ? 'success' : 'danger')
-                    ->visibleFrom('lg'),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('margin_pct')
                     ->label(__('Margin %'))
@@ -74,7 +74,7 @@ class ContractsTable
                     ->alignEnd()
                     ->badge()
                     ->color(fn ($state) => $state >= 30 ? 'success' : ($state >= 15 ? 'warning' : 'danger'))
-                    ->visibleFrom('lg'),
+                    ->visibleFrom(Breakpoints::COLUMN_TERTIARY),
 
                 TextColumn::make('billing_cycle')
                     ->label(__('Billing'))
@@ -85,7 +85,7 @@ class ContractsTable
                     ->label(__('Start'))
                     ->date('M j, Y')
                     ->sortable()
-                    ->visibleFrom('xl'),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('renewal_date')
                     ->label(__('Renewal'))
@@ -96,13 +96,13 @@ class ContractsTable
                 IconColumn::make('auto_renew')
                     ->label(__('Auto-renew'))
                     ->boolean()
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_WIDEST),
 
                 IconColumn::make('auto_collect')
                     ->label(__('Collection'))
                     ->boolean()
                     ->tooltip(fn ($record) => $record->stripePaymentStatusLabel())
-                    ->visibleFrom('md'),
+                    ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
 
                 TextColumn::make('stripe_payment_status')
                     ->label(__('Collection status'))
@@ -110,8 +110,7 @@ class ContractsTable
                     ->placeholder(__('Off'))
                     ->formatStateUsing(fn ($record) => $record->stripePaymentStatusLabel())
                     ->color(fn ($record) => $record->stripePaymentStatusColor())
-                    ->toggleable()
-                    ->visibleFrom('xl'),
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('status')
                     ->label(__('Status'))
@@ -143,17 +142,17 @@ class ContractsTable
                     ->label(__('Auto-collect')),
 
                 Filter::make('sale_price_range')
-                    ->label(__('Salebedrag'))
+                    ->label(__('Sale amount'))
                     ->schema([
-                        TextInput::make('sale_from')->label(__('Vanaf (€)'))->numeric(),
-                        TextInput::make('sale_to')->label(__('Tot (€)'))->numeric(),
+                        TextInput::make('sale_from')->label(__('From'))->numeric(),
+                        TextInput::make('sale_to')->label(__('To'))->numeric(),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
                             ->when($data['sale_from'] ?? null, fn (Builder $q, $v) => $q->where('sale_price', '>=', $v))
                             ->when($data['sale_to'] ?? null, fn (Builder $q, $v) => $q->where('sale_price', '<=', $v));
                     }),
-            ], layout: FiltersLayout::AboveContentCollapsible)
+            ])
             ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),

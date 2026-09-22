@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Support\Breakpoints;
 use App\Support\PlatformSettings;
 use App\Support\UserAdministration;
-use App\Support\Breakpoints;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
@@ -21,6 +21,7 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Contracts\Support\Htmlable;
 
 class ManageSettings extends Page implements HasSchemas
 {
@@ -42,6 +43,23 @@ class ManageSettings extends Page implements HasSchemas
 
     /** @var array<string, mixed> */
     public array $data = [];
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Settings');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('Settings');
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
 
     public static function canAccess(): bool
     {

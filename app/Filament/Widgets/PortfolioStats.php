@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\ContractStatus;
 use App\Models\Contract;
+use App\Support\Money;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -32,19 +33,19 @@ class PortfolioStats extends BaseWidget
             ->count();
 
         return [
-            Stat::make('Active contracts', $active->count())
+            Stat::make(__('Active contracts'), $active->count())
                 ->description(__('Active licenses & contracts'))
                 ->color('primary'),
 
-            Stat::make('MRR', '€ '.number_format($mrr, 0))
-                ->description('ARR: € '.number_format($arr, 0))
+            Stat::make(__('MRR'), Money::formatWhole($mrr))
+                ->description(__('ARR').': '.Money::formatWhole($arr))
                 ->color('success'),
 
-            Stat::make('Annual margin', '€ '.number_format($annualMargin, 0))
+            Stat::make(__('Annual margin'), Money::formatWhole($annualMargin))
                 ->description(__('Annualized margin'))
                 ->color('success'),
 
-            Stat::make('Renews in < 30 days', $upcoming)
+            Stat::make(__('Renews in < 30 days'), $upcoming)
                 ->description(__('Needs attention'))
                 ->color($upcoming > 0 ? 'warning' : 'gray'),
         ];

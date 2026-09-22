@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Distributors\Pax8\Pax8Client;
 use App\Distributors\Pax8\Pax8Sync as Pax8SyncService;
 use App\Models\Product;
+use App\Support\Money;
 use App\Support\PlatformSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -50,6 +51,13 @@ class Pax8Sync extends Page implements HasSchemas
     public array $catalogHits = [];
 
     public ?string $catalogError = null;
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
 
     public static function getNavigationLabel(): string
     {
@@ -165,7 +173,7 @@ class Pax8Sync extends Page implements HasSchemas
             $product = app(Pax8SyncService::class)->importProduct($productId);
             Notification::make()
                 ->title(__('Product imported'))
-                ->body($product->name.' · € '.number_format((float) $product->default_cost_price, 2))
+                ->body($product->name.' · '.Money::format($product->default_cost_price, $product->currency))
                 ->success()
                 ->send();
             $this->searchCatalog();

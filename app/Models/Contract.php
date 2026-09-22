@@ -6,6 +6,7 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\ProductType;
 use App\Models\Concerns\Auditable;
+use App\Support\Money;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -98,12 +99,12 @@ class Contract extends Model
         };
     }
 
-    /** Unit sale price formatted for portal (EUR). */
+    /** Total sale price (unit price x quantity), formatted for the portal. */
     public function portalSalePriceFormatted(): string
     {
         $total = (float) $this->sale_price * (int) $this->quantity;
 
-        return '€ '.number_format($total, 2);
+        return Money::format($total, $this->currency);
     }
 
     public function isActiveForPortal(): bool

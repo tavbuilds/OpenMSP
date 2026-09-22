@@ -48,8 +48,10 @@ class PortalDisplayTest extends TestCase
         $this->assertStringContainsString('Monthly service/license', $monthly->portalRenewalDescription());
         $this->assertStringContainsString('renews every month', $monthly->portalRenewalDescription());
 
-        $this->assertSame('€ 80.00', $yearly->portalSalePriceFormatted());
-        $this->assertSame('€ 25.00', $monthly->portalSalePriceFormatted());
+        // One money format across the portal, the admin pages and the
+        // dashboard stats; Filament's own money() columns render the same way.
+        $this->assertSame('€80.00', $yearly->portalSalePriceFormatted());
+        $this->assertSame('€25.00', $monthly->portalSalePriceFormatted());
     }
 
     public function test_portal_invoices_are_scoped_to_company(): void

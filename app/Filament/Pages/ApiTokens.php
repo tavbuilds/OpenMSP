@@ -14,6 +14,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Contracts\Support\Htmlable;
 use Laravel\Sanctum\PersonalAccessToken;
 
 class ApiTokens extends Page implements HasTable
@@ -35,6 +36,23 @@ class ApiTokens extends Page implements HasTable
     protected string $view = 'filament.pages.api-tokens';
 
     public ?string $plainTextToken = null;
+
+    public static function getNavigationLabel(): string
+    {
+        return __('API tokens');
+    }
+
+    public function getTitle(): string|Htmlable
+    {
+        return __('API tokens');
+    }
+
+    public static function getNavigationGroup(): string|\UnitEnum|null
+    {
+        return is_string(static::$navigationGroup)
+            ? __(static::$navigationGroup)
+            : parent::getNavigationGroup();
+    }
 
     public function mcpUrl(): string
     {
