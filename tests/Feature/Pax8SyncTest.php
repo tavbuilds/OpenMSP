@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Models\Vendor;
 use App\Support\PlatformSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -171,7 +172,8 @@ class Pax8SyncTest extends TestCase
         $this->actingAs($admin)
             ->get('/admin/pax8')
             ->assertOk()
-            ->assertSee('Create API credential', false);
+            ->assertSee('Create API credential', false)
+            ->assertSee('Catalog search', false);
     }
 
     public function test_token_failure_is_readable(): void
@@ -182,5 +184,96 @@ class Pax8SyncTest extends TestCase
 
         $this->expectException(\RuntimeException::class);
         app(Pax8Client::class)->token();
+    }
+
+    public function test_sync_imports_companies_without_subscriptions(): void
+    {
+        Http::fake([
+            'https://api.pax8.com/v1/token' => Http::response(['access_token' => 'tok', 'expires_in' => 3600]),
+            'https://api.pax8.com/v1/companies*' => Http::response([
+                'content' => [
+                    ['id' => 'co-self', 'name' => 'Tav-IT'],
+                    ['id' => 'co-2', 'name' => 'Klant B.V.'],
+                    ['id' => 'co-3', 'name' => 'Klant C'],
+                    ['id' => 'co-4', 'name' => 'Klant D'],
+                ],
+                'page' => ['totalPages' => 1],
+            ]),
+            'https://api.pax8.com/v1/subscriptions*' => Http::response([
+                'content' => [],
+                'page' => ['totalPages' => 1],
+            ]),
+        ]);
+
+        $report = app(Pax8Sync::class)->run();
+
+        $this->assertSame(4, $report->companiesCreated);
+        $this->assertSame(0, $report->contractsCreated);
+        $this->assertSame(4, Company::query()->count());
+        $this->assertTrue(Company::query()->where('source_id', 'co-2')->exists());
+    }
+
+    public function test_catalog_import_then_nightly_refreshes_cost(): void
+    {
+        Http::fake(function (Request $request) {
+            $url = $request->url();
+            if (str_ends_with($url, '/v1/token')) {
+                return Http::response(['access_token' => 'tok', 'expires_in' => 3600]);
+            }
+            if (str_contains($url, '/products/') && str_ends_with($url, '/pricing')) {
+                return Http::response([
+                    'content' => [[
+                        'billingTerm' => 'Monthly',
+                        'currencyCode' => 'EUR',
+                        'rates' => [['partnerBuyRate' => 12.4, 'suggestedRetailPrice' => 22.8]],
+                    ]],
+                ]);
+            }
+            if (preg_match('#/products/prod-m365$#', $url)) {
+                return Http::response([
+                    'id' => 'prod-m365',
+                    'name' => 'Microsoft 365 Business Premium',
+                    'vendorName' => 'Microsoft',
+                    'sku' => 'CFQ7TTC0LFLX',
+                ]);
+            }
+            if (str_contains($url, '/products')) {
+                return Http::response([
+                    'content' => [[
+                        'id' => 'prod-m365',
+                        'name' => 'Microsoft 365 Business Premium',
+                        'vendorName' => 'Microsoft',
+                        'sku' => 'CFQ7TTC0LFLX',
+                    ]],
+                    'page' => ['totalPages' => 1],
+                ]);
+            }
+            if (str_contains($url, '/companies')) {
+                return Http::response(['content' => [], 'page' => ['totalPages' => 1]]);
+            }
+            if (str_contains($url, '/subscriptions')) {
+                return Http::response(['content' => [], 'page' => ['totalPages' => 1]]);
+            }
+
+            return Http::response(['error' => 'unexpected '.$url], 500);
+        });
+
+        $hits = app(Pax8Client::class)->searchProducts('Microsoft 365 Business', 'Microsoft');
+        $this->assertSame('prod-m365', $hits[0]['id']);
+
+        $product = app(Pax8Sync::class)->importProduct('prod-m365');
+        $this->assertSame('Microsoft 365 Business Premium', $product->name);
+        $this->assertEquals(12.4, (float) $product->default_cost_price);
+        $this->assertEquals(22.8, (float) $product->default_sale_price);
+
+        $product->update(['default_cost_price' => 9, 'default_sale_price' => 30]);
+
+        $report = app(Pax8Sync::class)->run();
+        $product->refresh();
+
+        $this->assertSame(1, $report->productsUpserted);
+        $this->assertEquals(12.4, (float) $product->default_cost_price);
+        $this->assertEquals(30.0, (float) $product->default_sale_price);
+        $this->assertSame(0, $report->contractsCreated);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Distributors\Pax8\Pax8Client;
 use App\Distributors\Pax8\Pax8Sync as Pax8SyncService;
+use App\Models\Product;
 use App\Support\PlatformSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -17,6 +18,7 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Collection;
 use Throwable;
 
 class Pax8Sync extends Page implements HasSchemas
@@ -39,6 +41,15 @@ class Pax8Sync extends Page implements HasSchemas
 
     /** @var array<string, mixed> */
     public array $data = [];
+
+    public string $catalogQuery = 'Microsoft 365 Business';
+
+    public string $catalogVendor = 'Microsoft';
+
+    /** @var list<array<string, mixed>> */
+    public array $catalogHits = [];
+
+    public ?string $catalogError = null;
 
     public static function getNavigationLabel(): string
     {
@@ -127,6 +138,62 @@ class Pax8Sync extends Page implements HasSchemas
         return filled($error) ? (string) $error : null;
     }
 
+    public function searchCatalog(): void
+    {
+        $this->catalogError = null;
+        $query = trim($this->catalogQuery);
+        if ($query === '') {
+            $this->catalogHits = [];
+
+            return;
+        }
+
+        try {
+            $this->catalogHits = app(Pax8Client::class)->searchProducts(
+                $query,
+                filled($this->catalogVendor) ? $this->catalogVendor : null,
+            );
+        } catch (Throwable $e) {
+            $this->catalogHits = [];
+            $this->catalogError = $e->getMessage();
+        }
+    }
+
+    public function importCatalogProduct(string $productId): void
+    {
+        try {
+            $product = app(Pax8SyncService::class)->importProduct($productId);
+            Notification::make()
+                ->title(__('Product imported'))
+                ->body($product->name.' · € '.number_format((float) $product->default_cost_price, 2))
+                ->success()
+                ->send();
+            $this->searchCatalog();
+        } catch (Throwable $e) {
+            Notification::make()->title(__('Import failed'))->body($e->getMessage())->danger()->send();
+        }
+    }
+
+    /**
+     * @return Collection<int, Product>
+     */
+    public function importedProducts(): Collection
+    {
+        return Product::query()
+            ->with('vendor')
+            ->where('source', Pax8Client::SOURCE)
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function isImported(string $productId): bool
+    {
+        return Product::query()
+            ->where('source', Pax8Client::SOURCE)
+            ->where('source_id', $productId)
+            ->exists();
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -147,8 +214,8 @@ class Pax8Sync extends Page implements HasSchemas
             Action::make('sync')
                 ->label(__('Sync now'))
                 ->requiresConfirmation()
-                ->modalHeading(__('Sync Pax8 subscriptions?'))
-                ->modalDescription(__('Imports companies, products, inkoopprijzen and subscriptions. Existing sale prices are kept.'))
+                ->modalHeading(__('Sync Pax8 now?'))
+                ->modalDescription(__('Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.'))
                 ->action(function (): void {
                     try {
                         $report = app(Pax8SyncService::class)->run();
