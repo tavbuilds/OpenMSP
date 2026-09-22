@@ -126,5 +126,17 @@
   "Products updated": "Produtos atualizados",
   "Contracts created": "Contratos criados",
   "Contracts updated": "Contratos atualizados",
-  "Prices updated": "Preços atualizados"
+  "Prices updated": "Preços atualizados",
+  "Catalog search": "Pesquisa de catálogo",
+  "Product imported": "Produto importado",
+  "Import failed": "Falha na importação",
+  "Imported": "Importado",
+  "Import": "Importar",
+  "Imported Pax8 products": "Produtos Pax8 importados",
+  "Sync Pax8 now?": "Sincronizar Pax8 agora?",
+  "Search": "Pesquisar",
+  "Connect your Pax8 partner account. OpenMSP pulls companies, catalog products you pick, partner cost (inkoop) and subscriptions. Your own sale prices are not overwritten.": "Ligue a Pax8. A OpenMSP importa clientes, produtos escolhidos, custo e subscrições. Os preços de venda ficam.",
+  "Search the Pax8 catalog and import the Microsoft 365 (or other) products you sell. Nightly sync keeps their inkoopprijs current.": "Pesquise o catálogo Pax8 e importe os Microsoft 365 que vende. A sync noturna mantém o custo.",
+  "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Pesquise no Pax8 (ex. “Microsoft 365 Business”) e importe só os SKUs pretendidos.",
+  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importa clientes, atualiza preços de catálogo e subscrições. Os preços de venda mantêm-se."
 }

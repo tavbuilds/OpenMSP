@@ -126,5 +126,17 @@
   "Products updated": "Tuotteita päivitetty",
   "Contracts created": "Sopimuksia luotu",
   "Contracts updated": "Sopimuksia päivitetty",
-  "Prices updated": "Hintoja päivitetty"
+  "Prices updated": "Hintoja päivitetty",
+  "Catalog search": "Luettelihaku",
+  "Product imported": "Tuote tuotu",
+  "Import failed": "Tuonti epäonnistui",
+  "Imported": "Tuotu",
+  "Import": "Tuo",
+  "Imported Pax8 products": "Tuodut Pax8-tuotteet",
+  "Sync Pax8 now?": "Synkronoi Pax8 nyt?",
+  "Search": "Hae",
+  "Connect your Pax8 partner account. OpenMSP pulls companies, catalog products you pick, partner cost (inkoop) and subscriptions. Your own sale prices are not overwritten.": "Yhdistä Pax8. OpenMSP hakee asiakkaat, valitut tuotteet, ostohinnan ja tilaukset. Myyntihintoja ei ylikirjoiteta.",
+  "Search the Pax8 catalog and import the Microsoft 365 (or other) products you sell. Nightly sync keeps their inkoopprijs current.": "Hae Pax8-luettelosta ja tuo myymäsi Microsoft 365 -tuotteet. Yösynk pitää ostohinnan ajan tasalla.",
+  "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Hae Pax8:sta (esim. “Microsoft 365 Business”) ja tuo vain haluamasi SKU:t.",
+  "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Hakee asiakkaat, päivittää luettelohinnat ja tilaukset. Myyntihinnat säilyvät."
 }

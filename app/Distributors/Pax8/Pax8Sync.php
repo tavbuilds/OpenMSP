@@ -18,6 +18,12 @@ class Pax8Sync
 {
     public function __construct(private Pax8Client $client) {}
 
+    /** @var array<string, true> */
+    private array $seenCompanies = [];
+
+    /** @var array<string, true> */
+    private array $seenProducts = [];
+
     public function testConnection(): string
     {
         $this->client->token();
@@ -28,8 +34,29 @@ class Pax8Sync
     public function run(): SyncReport
     {
         $report = new SyncReport;
+        $this->seenCompanies = [];
+        $this->seenProducts = [];
+
         $companies = $this->indexById($this->client->companies());
+        foreach ($companies as $row) {
+            try {
+                if (strtolower((string) ($row['status'] ?? 'active')) === 'deleted') {
+                    continue;
+                }
+                $this->upsertCompany($row, $report);
+            } catch (Throwable $e) {
+                $report->addError('Company '.($row['id'] ?? '').': '.$e->getMessage());
+            }
+        }
+
         $productCache = [];
+        foreach (Product::query()->where('source', Pax8Client::SOURCE)->whereNotNull('source_id')->get() as $existing) {
+            try {
+                $this->upsertProduct((string) $existing->source_id, [], $productCache, $report);
+            } catch (Throwable $e) {
+                $report->addError('Product '.$existing->source_id.': '.$e->getMessage());
+            }
+        }
 
         foreach ($this->client->subscriptions() as $row) {
             try {
@@ -49,6 +76,14 @@ class Pax8Sync
         }
 
         return $report;
+    }
+
+    public function importProduct(string $productId): Product
+    {
+        $report = new SyncReport;
+        $cache = [];
+
+        return $this->upsertProduct($productId, [], $cache, $report);
     }
 
     /**
@@ -152,12 +187,20 @@ class Pax8Sync
         if ($match) {
             $match->fill(array_filter($fields, fn ($v) => $v !== null && $v !== ''));
             $match->save();
-            $report->companiesMatched++;
+            if ($id === '' || ! isset($this->seenCompanies[$id])) {
+                $report->companiesMatched++;
+                if ($id !== '') {
+                    $this->seenCompanies[$id] = true;
+                }
+            }
 
             return $match;
         }
 
         $created = Company::query()->create($fields);
+        if ($id !== '') {
+            $this->seenCompanies[$id] = true;
+        }
         $report->companiesCreated++;
 
         return $created;
@@ -215,11 +258,17 @@ class Pax8Sync
             if ($saleWas <= 0 && $pricing['sale']) {
                 $match->default_sale_price = $pricing['sale'];
             }
-            if ($match->isDirty('default_cost_price')) {
-                $report->pricesUpdated++;
-            }
+            $dirtyCost = $match->isDirty('default_cost_price');
             $match->save();
-            $report->productsUpserted++;
+            if ($productId === '' || ! isset($this->seenProducts[$productId])) {
+                $report->productsUpserted++;
+                if ($dirtyCost) {
+                    $report->pricesUpdated++;
+                }
+                if ($productId !== '') {
+                    $this->seenProducts[$productId] = true;
+                }
+            }
             $cache[$productId] = $match;
 
             return $match;
@@ -229,6 +278,7 @@ class Pax8Sync
         $created = Product::query()->create($fields);
         $report->productsUpserted++;
         if ($productId !== '') {
+            $this->seenProducts[$productId] = true;
             $cache[$productId] = $created;
         }
 
