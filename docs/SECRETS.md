@@ -95,8 +95,9 @@ Stripe Dashboard (test and live).
 
 ## Demo login
 
-`APP_DEMO_LOGIN=true` creates the view-only `test` / `test` account on an
-empty database (see the README). Leave it `false` on a real MSP install.
+`APP_DEMO_LOGIN=true` creates the view-only demo account on an empty database:
+sign in with `test@demo.local` / `test` (see the README). Leave it `false` on a
+real MSP install.
 Passed through compose so Coolify/Portainer env actually reaches the app.
 
 ## Filament 2FA (TOTP)
