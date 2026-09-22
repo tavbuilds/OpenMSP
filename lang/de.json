@@ -140,12 +140,12 @@
   "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importiert Firmen, aktualisiert Katalogpreise und Abos. Verkaufspreise bleiben.",
   "Search": "Suchen",
   "Pax8 price options": "Pax8-Preisoptionen",
-  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Alle Commitment- und Abrechnungsvarianten aus Pax8. Die Katalogtabelle zeigt den Monatspreis bei monatlicher Abrechnung (1-Jahres-Commitment wenn vorhanden).",
   "Commitment": "Commitment",
   "Billing": "Abrechnung",
   "Price": "Preis",
   "Min/max": "Min/max",
   "List price": "Listenpreis",
   "Monthly list price (:term)": "Monatlicher Listenpreis (:term)",
-  "Sum of components": "Summe der Komponenten"
+  "Sum of components": "Summe der Komponenten",
+  "Sellable rates Pax8 assigns to this partner (Flat). Trials and other pricing models are omitted. The catalog table uses 1-year / monthly when that exists.": "Verkaufbare Tarife, die Pax8 diesem Partner zuweist (Flat). Trials und andere Preismodelle entfallen. Die Katalogtabelle nutzt 1 Jahr / monatlich, wenn vorhanden."
 }

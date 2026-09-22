@@ -292,6 +292,19 @@ class Pax8SyncTest extends TestCase
                             'commitmentTerm' => 'Monthly',
                             'commitmentTermInMonths' => 1,
                             'unitOfMeasurement' => 'User',
+                            'type' => 'Volume',
+                            'currencyCode' => 'EUR',
+                            'rates' => [[
+                                'partnerBuyRate' => 16.3680,
+                                'suggestedRetailPrice' => 18.60,
+                                'startQuantityRange' => 0,
+                            ]],
+                        ],
+                        [
+                            'billingTerm' => 'Monthly',
+                            'commitmentTerm' => 'Monthly',
+                            'commitmentTermInMonths' => 1,
+                            'unitOfMeasurement' => 'User',
                             'type' => 'Flat',
                             'currencyCode' => 'EUR',
                             'rates' => [[
@@ -299,6 +312,16 @@ class Pax8SyncTest extends TestCase
                                 'suggestedRetailPrice' => 22.87,
                                 'startQuantityRange' => 1,
                                 'endQuantityRange' => 300,
+                            ]],
+                        ],
+                        [
+                            'billingTerm' => 'Trial',
+                            'commitmentTerm' => 'Monthly',
+                            'commitmentTermInMonths' => 1,
+                            'type' => 'Flat',
+                            'rates' => [[
+                                'partnerBuyRate' => 0,
+                                'suggestedRetailPrice' => 0,
                             ]],
                         ],
                         [
@@ -313,6 +336,19 @@ class Pax8SyncTest extends TestCase
                                 'suggestedRetailPrice' => 20.01,
                                 'startQuantityRange' => 1,
                                 'endQuantityRange' => 300,
+                            ]],
+                        ],
+                        [
+                            'billingTerm' => 'Annual',
+                            'commitmentTerm' => '1-Year',
+                            'commitmentTermInMonths' => 12,
+                            'unitOfMeasurement' => 'User',
+                            'type' => 'Volume',
+                            'currencyCode' => 'EUR',
+                            'rates' => [[
+                                'partnerBuyRate' => 196.4160,
+                                'suggestedRetailPrice' => 223.20,
+                                'startQuantityRange' => 0,
                             ]],
                         ],
                         [
@@ -349,6 +385,9 @@ class Pax8SyncTest extends TestCase
         $this->assertSame(3, $product->priceOptions()->count());
         $this->assertEquals(17.6088, (float) $product->default_cost_price);
         $this->assertEquals(20.01, (float) $product->default_sale_price);
+        $this->assertFalse($product->priceOptions->contains(fn ($o) => (float) $o->cost_price === 16.3680));
+        $this->assertFalse($product->priceOptions->contains(fn ($o) => (float) $o->cost_price === 0.0));
+        $this->assertFalse($product->priceOptions->contains(fn ($o) => (float) $o->cost_price === 196.4160));
         $this->assertSame(BillingCycle::Monthly, $product->billing_cycle);
 
         $default = $product->defaultPriceOption();
