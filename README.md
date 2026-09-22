@@ -63,7 +63,7 @@ customer machines) · **not a CMDB** (no racks or CI graphs) · **not invoicing*
 
 Poke at the real thing — no install:
 
-**[demo.openmsp.eu](https://demo.openmsp.eu)** · username `test` · password `test`
+**[demo.openmsp.eu](https://demo.openmsp.eu)** · `test@demo.local` · password `test`
 
 That account is **view-only** and the data resets. On your own install there is
 **no default login at all** — the first screen creates your administrator and
