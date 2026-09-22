@@ -140,12 +140,12 @@
   "Search Pax8 (for example “Microsoft 365 Business”) and import only the SKUs you want. Those stay on the nightly price sync.": "Cerca in Pax8 (es. “Microsoft 365 Business”) e importa solo gli SKU voluti.",
   "Imports companies, refreshes imported catalog prices, and upserts subscriptions. Existing sale prices are kept.": "Importa clienti, aggiorna prezzi catalogo e abbonamenti. I prezzi di vendita restano.",
   "Pax8 price options": "Opzioni prezzo Pax8",
-  "All commitment and billing combinations from Pax8. The catalog table uses the monthly price for monthly products (1-year commitment when available).": "Tutte le combinazioni di impegno e fatturazione Pax8. La tabella mostra il prezzo mensile per gli abbonamenti mensili.",
   "Commitment": "Impegno",
   "Billing": "Fatturazione",
   "Price": "Prezzo",
   "Min/max": "Min/max",
   "List price": "Prezzo di listino",
   "Monthly list price (:term)": "Prezzo mensile (:term)",
-  "Sum of components": "Somma dei componenti"
+  "Sum of components": "Somma dei componenti",
+  "Sellable rates Pax8 assigns to this partner (Flat). Trials and other pricing models are omitted. The catalog table uses 1-year / monthly when that exists.": "Tariffe vendibili che Pax8 assegna a questo partner (Flat). Trial e altri modelli sono omessi. La tabella usa 1 anno / mensile se presente."
 }
