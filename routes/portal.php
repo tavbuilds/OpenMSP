@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Portal\AutoCollectController;
 use App\Http\Controllers\Portal\DashboardController;
+use App\Http\Controllers\Portal\DomainController;
 use App\Http\Controllers\Portal\InvoiceController;
 use App\Http\Controllers\Portal\LoginController;
 use App\Http\Middleware\EnsurePortalAuthenticated;
@@ -22,6 +23,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
         Route::get('/services/{contract}/auto-collect', AutoCollectController::class)->name('auto-collect');
         Route::get('/services/{contract}/auto-collect/success', [AutoCollectController::class, 'success'])->name('auto-collect.success');
+
+        Route::get('/domains', DomainController::class)->name('domains');
 
         Route::get('/invoices', [InvoiceController::class, 'index'])->name('invoices');
         Route::get('/invoices/{invoice}/download', [InvoiceController::class, 'download'])->name('invoices.download');

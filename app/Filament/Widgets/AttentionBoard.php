@@ -38,6 +38,12 @@ class AttentionBoard extends Widget
                 'tone' => 'warning',
             ],
             [
+                'key' => 'domains',
+                'label' => __('Domains'),
+                'widget' => UpcomingDomainExpiries::class,
+                'tone' => 'warning',
+            ],
+            [
                 'key' => 'notice',
                 'label' => __('Notice deadlines'),
                 'widget' => UpcomingNoticeDeadlines::class,
