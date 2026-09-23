@@ -39,6 +39,11 @@ class Company extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    public function domains(): HasMany
+    {
+        return $this->hasMany(Domain::class);
+    }
+
     public function endpoints(): HasMany
     {
         return $this->hasMany(Endpoint::class);
