@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\EndpointKind;
 use App\Enums\EndpointSource;
 use App\Models\Concerns\Auditable;
+use App\Models\Concerns\WarnsBeforeExpiry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -12,14 +13,7 @@ use Illuminate\Support\Str;
 class Endpoint extends Model
 {
     use Auditable;
-
-    /** @var array<int, string> */
-    public const OFFSET_FLAGS = [
-        30 => 'notify_30',
-        14 => 'notify_14',
-        7 => 'notify_7',
-        1 => 'notify_1',
-    ];
+    use WarnsBeforeExpiry;
 
     protected $fillable = [
         'company_id', 'name', 'kind', 'hostname', 'url', 'expires_at',
@@ -95,18 +89,6 @@ class Endpoint extends Model
         return url('/hooks/endpoints/'.$this->webhook_token);
     }
 
-    /** Signed days until expiry (negative = already expired). Null if unknown. */
-    public function daysUntilExpiry(): ?int
-    {
-        if (! $this->expires_at) {
-            return null;
-        }
-
-        return (int) round(
-            now()->startOfDay()->diffInDays($this->expires_at->copy()->startOfDay(), false)
-        );
-    }
-
     public function computeStatus(): string
     {
         $days = $this->daysUntilExpiry();
@@ -143,56 +125,10 @@ class Endpoint extends Model
         };
     }
 
-    /**
-     * Tightest due notification for today: expired, or 1/7/14/30 if that toggle is on
-     * and that offset was not yet sent this expiry-cycle.
-     *
-     * @return 'expired'|int|null
-     */
-    public function dueNotification(): int|string|null
+    /** Every reminder also refreshes the status shown in the table. */
+    protected function expiryNotificationExtras(): array
     {
-        $days = $this->daysUntilExpiry();
-        if ($days === null) {
-            return null;
-        }
-
-        $sent = array_map('intval', $this->sent_offsets ?? []);
-
-        if ($days <= 0) {
-            return $this->notify_expired && $this->expired_notified_at === null
-                ? 'expired'
-                : null;
-        }
-
-        $tightest = null;
-        foreach (self::OFFSET_FLAGS as $offset => $flag) {
-            if ($days <= $offset && $this->{$flag} && ! in_array($offset, $sent, true)) {
-                $tightest = $offset;
-            }
-        }
-
-        return $tightest;
-    }
-
-    public function markNotified(int|string $which): void
-    {
-        if ($which === 'expired') {
-            $this->forceFill(['expired_notified_at' => now(), 'last_status' => $this->computeStatus()])->save();
-
-            return;
-        }
-
-        $sent = array_map('intval', $this->sent_offsets ?? []);
-        $which = (int) $which;
-        foreach (array_keys(self::OFFSET_FLAGS) as $offset) {
-            if ($offset >= $which) {
-                $sent[] = $offset;
-            }
-        }
-        $this->forceFill([
-            'sent_offsets' => array_values(array_unique($sent)),
-            'last_status' => $this->computeStatus(),
-        ])->save();
+        return ['last_status' => $this->computeStatus()];
     }
 
     /**
@@ -219,8 +155,7 @@ class Endpoint extends Model
             $fill['hostname'] = $parsed['hostname'];
         }
         if ($resetCycle) {
-            $fill['sent_offsets'] = [];
-            $fill['expired_notified_at'] = null;
+            $fill = [...$fill, ...$this->freshExpiryCycle()];
         }
 
         $this->forceFill($fill);

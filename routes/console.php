@@ -19,10 +19,18 @@ Schedule::command('endpoints:send-expiry-reminders')
     ->dailyAt('08:05')
     ->timezone($tz);
 
+Schedule::command('domains:send-expiry-reminders')
+    ->dailyAt('08:07')
+    ->timezone($tz);
+
 Schedule::command('planning:send-deadline-reminders')
     ->dailyAt('08:10')
     ->timezone($tz);
 
 Schedule::command('pax8:sync')
     ->dailyAt('06:30')
+    ->timezone($tz);
+
+Schedule::command('openprovider:sync')
+    ->dailyAt('06:45')
     ->timezone($tz);

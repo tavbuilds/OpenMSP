@@ -9,6 +9,7 @@ use App\Filament\Resources\Companies\Pages\ListCompanies;
 use App\Filament\Resources\Companies\Pages\ViewCompany;
 use App\Filament\Resources\Companies\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\Companies\RelationManagers\ContractsRelationManager;
+use App\Filament\Resources\Companies\RelationManagers\DomainsRelationManager;
 use App\Filament\Resources\Companies\RelationManagers\EndpointsRelationManager;
 use App\Filament\Resources\Companies\RelationManagers\PlannedTasksRelationManager;
 use App\Filament\Resources\Companies\Schemas\CompanyForm;
@@ -78,6 +79,7 @@ class CompanyResource extends Resource
         return [
             ContactsRelationManager::class,
             ContractsRelationManager::class,
+            DomainsRelationManager::class,
             EndpointsRelationManager::class,
             PlannedTasksRelationManager::class,
         ];

@@ -27,16 +27,17 @@ class ContractForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(1)
             ->components([
-                Section::make('Customer & service')->columns(Breakpoints::TWO)->schema(self::customerServiceComponents()),
-                Section::make('Price & quantity')->columns(Breakpoints::THREE)->schema(self::prijsQuantityComponents()),
-                Section::make('Term & renewal')->columns(Breakpoints::THREE)->schema(self::looptijdComponents()),
-                Section::make('Auto-collect')
+                Section::make(__('Customer & service'))->columns(Breakpoints::THREE)->schema(self::customerServiceComponents()),
+                Section::make(__('Price & quantity'))->columns(Breakpoints::THREE)->schema(self::prijsQuantityComponents()),
+                Section::make(__('Term & renewal'))->columns(Breakpoints::THREE)->schema(self::looptijdComponents()),
+                Section::make(__('Auto-collect'))
                     ->description(__('Read-only. Customers enable this in the portal (iDEAL → SEPA).'))
                     ->columns(Breakpoints::TWO)
                     ->collapsed()
                     ->schema(self::incassoComponents()),
-                Section::make('License keys & notes')->columns(1)->collapsed()->schema(self::licentiesComponents()),
+                Section::make(__('License keys & notes'))->columns(1)->collapsed()->schema(self::licentiesComponents()),
             ]);
     }
 
