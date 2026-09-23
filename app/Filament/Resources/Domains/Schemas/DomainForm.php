@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Domains\Schemas;
 
+use App\Enums\DomainSource;
 use App\Models\Domain;
 use App\Support\Breakpoints;
 use Filament\Forms\Components\DatePicker;
@@ -45,7 +46,13 @@ class DomainForm
 
                         Toggle::make('auto_renew')
                             ->label(__('Auto-renew'))
-                            ->inline(false),
+                            ->inline(false)
+                            // The registrar owns this for a synced domain, via
+                            // its own value plus the account default.
+                            ->disabled(fn (?Domain $record) => $record?->source === DomainSource::OpenProvider)
+                            ->helperText(fn (?Domain $record) => $record?->source === DomainSource::OpenProvider
+                                ? __('Set at Openprovider: :value', ['value' => $record->autoRenewLabel()])
+                                : null),
                     ]),
 
                 Section::make(__('Notes'))

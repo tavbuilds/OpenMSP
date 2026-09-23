@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Ορατό στον πελάτη μόνο αν το ενεργοποιήσετε. Απενεργοποιημένο από προεπιλογή.",
   "Waiting for a customer": "Αναμονή για πελάτη",
   "Without a customer": "Χωρίς πελάτη",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Τα διαπιστευτήριά σας για τον πίνακα ελέγχου του Openprovider. Το Openprovider απαιτεί επίσης η διεύθυνση IP αυτού του διακομιστή να είναι στη λευκή λίστα στο Account → Security."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Τα διαπιστευτήριά σας για τον πίνακα ελέγχου του Openprovider. Το Openprovider απαιτεί επίσης η διεύθυνση IP αυτού του διακομιστή να είναι στη λευκή λίστα στο Account → Security.",
+  "Account default": "Προεπιλογή λογαριασμού",
+  "Account default (on)": "Προεπιλογή λογαριασμού (ενεργό)",
+  "Account default (off)": "Προεπιλογή λογαριασμού (ανενεργό)",
+  "Auto-renew at registrar": "Αυτόματη ανανέωση στον καταχωρητή",
+  "Auto-renew re-read on :count domain(s).": "Η αυτόματη ανανέωση επανυπολογίστηκε σε :count τομέα/τομείς.",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "Η αλλαγή εφαρμόζεται αμέσως σε κάθε τομέα που ακολουθεί την προεπιλογή του λογαριασμού· δεν χρειάζεται συγχρονισμός.",
+  "Does not renew automatically": "Δεν ανανεώνεται αυτόματα",
+  "Renews automatically": "Ανανεώνεται αυτόματα",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Το Openprovider απαντά «on», «off» ή «default» ανά τομέα. Το «default» ακολουθεί μια ρύθμιση του λογαριασμού που το API τους δεν εκθέτει — πείτε μας ποια είναι η δική σας.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Το Openprovider δεν επέστρεψε τιμή για αυτές τις καταλήξεις. Βρίσκονται στον κατάλογο χωρίς τιμή αγοράς — συμπληρώστε τη χειροκίνητα αν χρειάζεστε το περιθώριο.",
+  "Openprovider settings saved": "Οι ρυθμίσεις Openprovider αποθηκεύτηκαν",
+  "Set at Openprovider: :value": "Ορίζεται στο Openprovider: :value",
+  "What “default” means on your account": "Τι σημαίνει «default» στον λογαριασμό σας"
 }
