@@ -489,6 +489,18 @@
         color: var(--warning-100);
     }
 
+    /*
+     * Sign-in screens: the six one-time-code boxes are one object under a
+     * centred heading, not a field that starts at the card's left edge.
+     * Scoped to the signed-out layout — inside the panel the same input sits
+     * in an ordinary labelled form, where left is right.
+     */
+    .fi-simple-layout .fi-one-time-code-input-ctn {
+        /* The row is only as wide as the six boxes, so centring its contents
+           does nothing — the row itself has to move. */
+        margin-inline: auto;
+    }
+
     /* Language picker in the topbar and on the signed-out screens. */
     .omsp-locale {
         border: 1px solid var(--gray-300);
