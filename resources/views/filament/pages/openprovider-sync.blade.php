@@ -39,6 +39,13 @@
                             <dd>{{ $report['tld_prices_updated'] ?? 0 }}</dd>
                         </div>
                     </dl>
+
+                    @if (! empty($report['extensions_without_price']))
+                        <p class="omsp-prose">
+                            {{ __('Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.') }}
+                            <strong>.{{ implode(', .', $report['extensions_without_price']) }}</strong>
+                        </p>
+                    @endif
                 @endif
 
                 @if ($this->lastError())

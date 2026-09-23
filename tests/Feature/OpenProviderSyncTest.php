@@ -74,10 +74,10 @@ class OpenProviderSyncTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function tldRow(float $reseller = 6.5, float $product = 11.0): array
+    private function tldRow(float $reseller = 6.5, float $product = 11.0, string $name = 'nl'): array
     {
         return [
-            'name' => 'nl',
+            'name' => $name,
             'prices' => [
                 'renew_price' => [
                     'reseller' => ['currency' => 'EUR', 'price' => $reseller],
@@ -210,6 +210,104 @@ class OpenProviderSyncTest extends TestCase
         $product->refresh();
         $this->assertEquals(7.25, (float) $product->default_cost_price);
         $this->assertEquals(19.95, (float) $product->default_sale_price);
+    }
+
+    /**
+     * "default" is the common case and it meant "off" here, which quietly
+     * reported almost every domain as not renewing.
+     */
+    public function test_the_account_default_decides_what_default_means(): void
+    {
+        PlatformSettings::set(PlatformSettings::OPENPROVIDER_DEFAULT_AUTORENEW, '1');
+
+        $this->fake([[$this->domainRow(['autorenew' => 'default'])]]);
+        app(OpenProviderSync::class)->run();
+
+        $domain = Domain::query()->firstOrFail();
+        $this->assertSame('default', $domain->auto_renew_source);
+        $this->assertTrue($domain->auto_renew);
+
+        PlatformSettings::set(PlatformSettings::OPENPROVIDER_DEFAULT_AUTORENEW, '0');
+        Domain::reapplyAutoRenewDefault();
+
+        $this->assertFalse($domain->fresh()->auto_renew);
+        // The registrar's own word is untouched by our reading of it.
+        $this->assertSame('default', $domain->fresh()->auto_renew_source);
+    }
+
+    public function test_on_and_off_are_taken_literally_whatever_the_account_default(): void
+    {
+        PlatformSettings::set(PlatformSettings::OPENPROVIDER_DEFAULT_AUTORENEW, '0');
+
+        $this->fake([[
+            $this->domainRow(['id' => 1, 'domain' => ['name' => 'aan', 'extension' => 'nl'], 'autorenew' => 'on']),
+            $this->domainRow(['id' => 2, 'domain' => ['name' => 'uit', 'extension' => 'nl'], 'autorenew' => 'off']),
+        ]]);
+        app(OpenProviderSync::class)->run();
+
+        $this->assertTrue(Domain::query()->where('name', 'aan.nl')->firstOrFail()->auto_renew);
+        $this->assertFalse(Domain::query()->where('name', 'uit.nl')->firstOrFail()->auto_renew);
+
+        // Flipping the account default leaves both alone: neither follows it.
+        PlatformSettings::set(PlatformSettings::OPENPROVIDER_DEFAULT_AUTORENEW, '1');
+        $this->assertSame(0, Domain::reapplyAutoRenewDefault());
+    }
+
+    /**
+     * Openprovider's array filters are `collectionFormat: multi`. Laravel's
+     * default `extensions[0]=nl` is not the filter they read, so the answer
+     * had nothing to do with the question.
+     */
+    public function test_the_extension_filter_is_sent_as_repeated_keys(): void
+    {
+        $this->fake(
+            [[
+                $this->domainRow(['id' => 1, 'domain' => ['name' => 'een', 'extension' => 'nl']]),
+                $this->domainRow(['id' => 2, 'domain' => ['name' => 'twee', 'extension' => 'com']]),
+            ]],
+            [[$this->tldRow(name: 'nl'), $this->tldRow(name: 'com')]],
+        );
+        app(OpenProviderSync::class)->run();
+
+        Http::assertSent(function ($request): bool {
+            if (! str_contains($request->url(), '/tlds')) {
+                return false;
+            }
+
+            return str_contains($request->url(), 'extensions=nl')
+                && str_contains($request->url(), 'extensions=com')
+                && ! str_contains($request->url(), 'extensions%5B');
+        });
+    }
+
+    /**
+     * The catalog should mirror the portfolio, not whatever the price call
+     * happened to answer — an extension with no price still needs somewhere
+     * for its domains to point.
+     */
+    public function test_every_extension_reaches_the_catalog_even_without_a_price(): void
+    {
+        $this->fake(
+            [[
+                $this->domainRow(['id' => 1, 'domain' => ['name' => 'een', 'extension' => 'nl']]),
+                $this->domainRow(['id' => 2, 'domain' => ['name' => 'twee', 'extension' => 'pt']]),
+            ]],
+            // Openprovider prices .nl and says nothing about .pt.
+            [[$this->tldRow(6.5, 11.0, 'nl')]],
+        );
+
+        $report = app(OpenProviderSync::class)->run();
+
+        $nl = Product::query()->where('source_id', 'tld:nl')->firstOrFail();
+        $pt = Product::query()->where('source_id', 'tld:pt')->firstOrFail();
+
+        $this->assertEquals(6.5, (float) $nl->default_cost_price);
+        $this->assertEquals(0.0, (float) $pt->default_cost_price);
+        $this->assertSame(['pt'], $report->extensionsWithoutPrice);
+
+        // Both domains still link to their extension.
+        $this->assertSame($nl->id, Domain::query()->where('name', 'een.nl')->firstOrFail()->product_id);
+        $this->assertSame($pt->id, Domain::query()->where('name', 'twee.pt')->firstOrFail()->product_id);
     }
 
     public function test_a_login_failure_names_the_ip_whitelist(): void

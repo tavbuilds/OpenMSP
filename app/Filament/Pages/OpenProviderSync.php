@@ -8,6 +8,7 @@ use App\Registrars\OpenProvider\OpenProviderSync as OpenProviderSyncService;
 use App\Support\PlatformSettings;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -87,6 +88,19 @@ class OpenProviderSync extends Page implements HasSchemas
                                 : null),
                     ]),
 
+                Section::make(__('Auto-renew'))
+                    ->description(__('Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.'))
+                    ->schema([
+                        Select::make('default_autorenew')
+                            ->label(__('What “default” means on your account'))
+                            ->options([
+                                '1' => __('Renews automatically'),
+                                '0' => __('Does not renew automatically'),
+                            ])
+                            ->selectablePlaceholder(false)
+                            ->helperText(__('Changing this immediately re-reads every domain that follows the account default; no sync needed.')),
+                    ]),
+
                 Section::make(__('Endpoint'))
                     ->description(__('Only change these when Openprovider moves the API. The defaults are the published ones.'))
                     ->collapsed()
@@ -111,11 +125,25 @@ class OpenProviderSync extends Page implements HasSchemas
         }
         PlatformSettings::set(PlatformSettings::OPENPROVIDER_HOST, $data['host'] ?? null);
         PlatformSettings::set(PlatformSettings::OPENPROVIDER_VERSION, $data['version'] ?? null);
+        PlatformSettings::set(
+            PlatformSettings::OPENPROVIDER_DEFAULT_AUTORENEW,
+            ($data['default_autorenew'] ?? '1') === '1' ? '1' : '0',
+        );
+
+        // Domains that follow the account default change meaning with it, so
+        // they are re-read now rather than at the next nightly sync.
+        $reapplied = Domain::reapplyAutoRenewDefault();
 
         app(OpenProviderClient::class)->forgetToken();
         $this->form->fill($this->currentSettings());
 
-        Notification::make()->title(__('Openprovider credentials saved'))->success()->send();
+        Notification::make()
+            ->title(__('Openprovider settings saved'))
+            ->body($reapplied > 0
+                ? __('Auto-renew re-read on :count domain(s).', ['count' => $reapplied])
+                : null)
+            ->success()
+            ->send();
     }
 
     /**
@@ -213,6 +241,7 @@ class OpenProviderSync extends Page implements HasSchemas
             'has_password' => filled(PlatformSettings::get(PlatformSettings::OPENPROVIDER_PASSWORD)),
             'host' => PlatformSettings::get(PlatformSettings::OPENPROVIDER_HOST, OpenProviderClient::DEFAULT_HOST),
             'version' => PlatformSettings::get(PlatformSettings::OPENPROVIDER_VERSION, OpenProviderClient::DEFAULT_VERSION),
+            'default_autorenew' => PlatformSettings::openProviderDefaultAutoRenew() ? '1' : '0',
         ];
     }
 }

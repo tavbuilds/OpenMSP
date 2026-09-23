@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Yalnızca siz açarsanız müşteriye görünür. Varsayılan olarak kapalı.",
   "Waiting for a customer": "Müşteri bekliyor",
   "Without a customer": "Müşterisiz",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Openprovider kontrol paneli oturum bilgileriniz. Openprovider ayrıca bu sunucunun IP adresinin Account → Security altında izin listesinde olmasını ister."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Openprovider kontrol paneli oturum bilgileriniz. Openprovider ayrıca bu sunucunun IP adresinin Account → Security altında izin listesinde olmasını ister.",
+  "Account default": "Hesap varsayılanı",
+  "Account default (on)": "Hesap varsayılanı (açık)",
+  "Account default (off)": "Hesap varsayılanı (kapalı)",
+  "Auto-renew at registrar": "Kayıt kuruluşunda otomatik yenileme",
+  "Auto-renew re-read on :count domain(s).": ":count alan adı için otomatik yenileme yeniden okundu.",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "Değişiklik, hesap varsayılanını izleyen her alan adına anında uygulanır; eşitleme gerekmez.",
+  "Does not renew automatically": "Otomatik yenilenmez",
+  "Renews automatically": "Otomatik yenilenir",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider her alan adı için “on”, “off” veya “default” yanıtı verir. “Default”, API’lerinin göstermediği bir hesap ayarını izler — sizinkinin ne olduğunu burada belirtin.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider bu uzantılar için fiyat döndürmedi. Katalogda alış fiyatı olmadan duruyorlar — kâr marjına ihtiyacınız varsa elle girin.",
+  "Openprovider settings saved": "Openprovider ayarları kaydedildi",
+  "Set at Openprovider: :value": "Openprovider’da ayarlı: :value",
+  "What “default” means on your account": "Hesabınızda “default” ne anlama geliyor"
 }

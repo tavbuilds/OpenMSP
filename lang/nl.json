@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Alleen zichtbaar voor de klant als u dat aanzet. Standaard uit.",
   "Waiting for a customer": "Wacht op een klant",
   "Without a customer": "Zonder klant",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Uw inloggegevens van het Openprovider-controlepaneel. Openprovider vereist daarnaast dat het IP-adres van deze server op de whitelist staat onder Account → Security."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Uw inloggegevens van het Openprovider-controlepaneel. Openprovider vereist daarnaast dat het IP-adres van deze server op de whitelist staat onder Account → Security.",
+  "Account default": "Accountstandaard",
+  "Account default (on)": "Accountstandaard (aan)",
+  "Account default (off)": "Accountstandaard (uit)",
+  "Auto-renew at registrar": "Auto-renewal bij registrar",
+  "Auto-renew re-read on :count domain(s).": "Auto-renewal opnieuw bepaald voor :count domein(en).",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "Wijzigen past dit direct toe op elk domein dat de accountstandaard volgt; een sync is niet nodig.",
+  "Does not renew automatically": "Verlengt niet automatisch",
+  "Renews automatically": "Verlengt automatisch",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider antwoordt per domein met “on”, “off” of “default”. “Default” volgt een instelling op uw account die hun API niet prijsgeeft, dus vertel ons hier wat die bij u is.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider gaf voor deze extensies geen prijs terug. Ze staan in de catalogus zonder inkoopprijs — vul die met de hand in als u de marge nodig hebt.",
+  "Openprovider settings saved": "Openprovider-instellingen opgeslagen",
+  "Set at Openprovider: :value": "Ingesteld bij Openprovider: :value",
+  "What “default” means on your account": "Wat “default” bij u betekent"
 }

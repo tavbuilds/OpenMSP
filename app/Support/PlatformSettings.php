@@ -60,6 +60,13 @@ class PlatformSettings
 
     public const OPENPROVIDER_VERSION = 'openprovider.version';
 
+    /**
+     * Openprovider's per-domain auto-renew can say "default", which resolves
+     * against an account setting their API does not expose. Only the operator
+     * knows it, so they tell us here.
+     */
+    public const OPENPROVIDER_DEFAULT_AUTORENEW = 'openprovider.default_autorenew';
+
     public const OPENPROVIDER_LAST_SYNC_AT = 'openprovider.last_sync_at';
 
     public const OPENPROVIDER_LAST_SYNC_REPORT = 'openprovider.last_sync_report';
@@ -182,6 +189,12 @@ class PlatformSettings
     public static function resetOnboarding(): void
     {
         self::forget(self::ONBOARDING_COMPLETED);
+    }
+
+    /** What "default" means for auto-renew on this Openprovider account. */
+    public static function openProviderDefaultAutoRenew(): bool
+    {
+        return self::get(self::OPENPROVIDER_DEFAULT_AUTORENEW, '1') === '1';
     }
 
     public static function requireMfa(): bool

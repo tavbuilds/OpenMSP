@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Visibile al cliente solo se lo attivi. Disattivato per impostazione predefinita.",
   "Waiting for a customer": "In attesa di un cliente",
   "Without a customer": "Senza cliente",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Le credenziali del pannello di controllo Openprovider. Openprovider richiede inoltre che l’indirizzo IP di questo server sia in whitelist in Account → Security."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Le credenziali del pannello di controllo Openprovider. Openprovider richiede inoltre che l’indirizzo IP di questo server sia in whitelist in Account → Security.",
+  "Account default": "Predefinito dell’account",
+  "Account default (on)": "Predefinito dell’account (on)",
+  "Account default (off)": "Predefinito dell’account (off)",
+  "Auto-renew at registrar": "Rinnovo automatico presso il registrar",
+  "Auto-renew re-read on :count domain(s).": "Rinnovo automatico rivalutato per :count dominio/i.",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "La modifica si applica subito a ogni dominio che segue il predefinito dell’account; nessuna sincronizzazione necessaria.",
+  "Does not renew automatically": "Non si rinnova automaticamente",
+  "Renews automatically": "Si rinnova automaticamente",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider risponde “on”, “off” o “default” per dominio. “Default” segue un’impostazione dell’account che la loro API non espone: dicci qual è la tua.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider non ha restituito un prezzo per queste estensioni. Sono a catalogo senza prezzo d’acquisto — inseriscilo a mano se ti serve il margine.",
+  "Openprovider settings saved": "Impostazioni Openprovider salvate",
+  "Set at Openprovider: :value": "Impostato su Openprovider: :value",
+  "What “default” means on your account": "Cosa significa “default” sul tuo account"
 }

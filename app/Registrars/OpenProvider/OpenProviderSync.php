@@ -101,7 +101,8 @@ class OpenProviderSync
             'extension' => Str::lower((string) (data_get($row, 'domain.extension') ?: Str::after($name, '.'))),
             'expires_at' => $expires,
             'renewal_date' => $this->date($row['renewal_date'] ?? null),
-            'auto_renew' => $this->autoRenew($row),
+            'auto_renew_source' => $source = $this->autoRenewSource($row),
+            'auto_renew' => Domain::resolveAutoRenew($source),
             'status' => filled($row['status'] ?? null) ? (string) $row['status'] : null,
             'source' => DomainSource::OpenProvider->value,
             'source_id' => $sourceId,
@@ -135,6 +136,11 @@ class OpenProviderSync
      * One catalog product per extension, holding what the renewal costs us.
      * Domains point at it, so a price change lands on every .nl at once.
      *
+     * Driven by the extensions actually in the portfolio, not by what the
+     * price call happens to answer: an extension whose price we cannot get
+     * still belongs in the catalog, priceless, so the domain has somewhere to
+     * point and the gap is visible instead of silent.
+     *
      * @param  list<string>  $extensions
      */
     private function syncTldPrices(array $extensions, DomainSyncReport $report): void
@@ -144,62 +150,78 @@ class OpenProviderSync
             return;
         }
 
-        $vendor = $this->vendor();
-
+        $priced = [];
         foreach ($this->client->tlds($extensions) as $tld) {
             $name = Str::lower(trim((string) ($tld['name'] ?? '')));
-            if ($name === '') {
-                continue;
+            if ($name !== '') {
+                $priced[$name] = $tld;
             }
-
-            $cost = $this->price($tld, 'reseller');
-            $sale = $this->price($tld, 'product');
-            $currency = $this->currency($tld);
-
-            $product = Product::query()
-                ->where('source', OpenProviderClient::SOURCE)
-                ->where('source_id', 'tld:'.$name)
-                ->first();
-
-            $fields = [
-                'vendor_id' => $vendor->id,
-                'sku' => 'tld-'.$name,
-                'type' => ProductType::Service,
-                'billing_cycle' => BillingCycle::Yearly,
-                'currency' => $currency,
-                'active' => true,
-                'source' => OpenProviderClient::SOURCE,
-                'source_id' => 'tld:'.$name,
-            ];
-            if ($cost !== null) {
-                $fields['default_cost_price'] = $cost;
-                $fields['suggested_sale_price'] = $sale;
-            }
-
-            if ($product === null) {
-                $product = Product::query()->create([
-                    ...$fields,
-                    // Stored in the database, so English like every other seeded name.
-                    'name' => '.'.$name.' domain',
-                    // The sale price is the operator's call; seed it with
-                    // Openprovider's retail price and never overwrite it again.
-                    'default_sale_price' => $sale ?? $cost ?? 0,
-                ]);
-                $report->tldPricesUpdated++;
-            } else {
-                $product->fill($fields);
-                if ($product->isDirty('default_cost_price')) {
-                    $report->tldPricesUpdated++;
-                }
-                $product->save();
-            }
-
-            // Only fill an empty link: a deliberate override stays.
-            Domain::query()
-                ->where('extension', $name)
-                ->whereNull('product_id')
-                ->update(['product_id' => $product->id]);
         }
+
+        $vendor = $this->vendor();
+
+        foreach ($extensions as $extension) {
+            $tld = $priced[$extension] ?? null;
+            if ($tld === null) {
+                $report->extensionsWithoutPrice[] = $extension;
+            }
+
+            $this->upsertTldProduct($extension, $tld, $vendor, $report);
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $tld  The registrar's price row, when it gave one.
+     */
+    private function upsertTldProduct(string $extension, ?array $tld, Vendor $vendor, DomainSyncReport $report): void
+    {
+        $cost = $tld !== null ? $this->price($tld, 'reseller') : null;
+        $sale = $tld !== null ? $this->price($tld, 'product') : null;
+
+        $product = Product::query()
+            ->where('source', OpenProviderClient::SOURCE)
+            ->where('source_id', 'tld:'.$extension)
+            ->first();
+
+        $fields = [
+            'vendor_id' => $vendor->id,
+            'sku' => 'tld-'.$extension,
+            'type' => ProductType::Service,
+            'billing_cycle' => BillingCycle::Yearly,
+            'active' => true,
+            'source' => OpenProviderClient::SOURCE,
+            'source_id' => 'tld:'.$extension,
+        ];
+        if ($cost !== null) {
+            $fields['default_cost_price'] = $cost;
+            $fields['suggested_sale_price'] = $sale;
+            $fields['currency'] = $this->currency($tld);
+        }
+
+        if ($product === null) {
+            $product = Product::query()->create([
+                ...$fields,
+                // Stored in the database, so English like every other seeded name.
+                'name' => '.'.$extension.' domain',
+                'currency' => $fields['currency'] ?? 'EUR',
+                // The sale price is the operator's call; seed it with
+                // Openprovider's retail price and never overwrite it again.
+                'default_sale_price' => $sale ?? $cost ?? 0,
+            ]);
+            $report->tldPricesUpdated++;
+        } else {
+            $product->fill($fields);
+            if ($product->isDirty('default_cost_price')) {
+                $report->tldPricesUpdated++;
+            }
+            $product->save();
+        }
+
+        // Only fill an empty link: a deliberate override stays.
+        Domain::query()
+            ->where('extension', $extension)
+            ->whereNull('product_id')
+            ->update(['product_id' => $product->id]);
     }
 
     private function vendor(): Vendor
@@ -276,15 +298,17 @@ class OpenProviderSync
     }
 
     /**
-     * Openprovider sends a string: "on", "off", or "default" (the account
-     * setting). "default" is only knowable per account, so it is not a promise
-     * that the domain renews.
+     * Openprovider sends "on", "off" or "default" per domain. "default" points
+     * at an account-wide setting their API does not expose, so we keep their
+     * word verbatim and let the operator say what it means.
      *
      * @param  array<string, mixed>  $row
      */
-    private function autoRenew(array $row): bool
+    private function autoRenewSource(array $row): string
     {
-        return Str::lower(trim((string) ($row['autorenew'] ?? ''))) === 'on';
+        $value = Str::lower(trim((string) ($row['autorenew'] ?? '')));
+
+        return in_array($value, ['on', 'off', 'default'], true) ? $value : 'default';
     }
 
     private function date(mixed $value): ?string
