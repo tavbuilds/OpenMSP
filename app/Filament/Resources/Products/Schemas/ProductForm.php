@@ -20,11 +20,15 @@ class ProductForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            // One column: the two optional sections are collapsed most of
+            // the time, and in a two-column grid they left a card-sized hole
+            // beside the fields that matter.
+            ->columns(1)
             ->components([
-                Section::make('Product / service')
-                    ->columns(Breakpoints::TWO)
+                Section::make(__('Product / service'))
+                    ->columns(Breakpoints::THREE)
                     ->schema([
-                        TextInput::make('name')->label(__('Name'))->required(),
+                        TextInput::make('name')->label(__('Name'))->required()->columnSpanFull(),
                         TextInput::make('sku')->label(__('SKU')),
                         Select::make('vendor_id')
                             ->label(__('Vendor'))
@@ -39,7 +43,19 @@ class ProductForm
                         Toggle::make('active')->label(__('Active in catalog'))->default(true),
                     ]),
 
-                Section::make('Components (bundle product)')
+                Section::make(__('Default prices'))
+                    ->columns(Breakpoints::FOUR)
+                    ->schema([
+                        TextInput::make('default_cost_price')
+                            ->label(__('Cost price (fixed)'))
+                            ->numeric()->prefix('€')->default(0)->required()
+                            ->helperText(__('Ignored when the product has components (the component sum is used instead).')),
+                        TextInput::make('default_sale_price')->label(__('Sale price'))->numeric()->prefix('€')->default(0)->required(),
+                        Select::make('currency')->label(__('Currency'))->options(['EUR' => 'EUR', 'USD' => 'USD', 'GBP' => 'GBP'])->default('EUR')->required(),
+                        Select::make('billing_cycle')->label(__('Billing cycle'))->options(BillingCycle::class)->default('yearly')->required(),
+                    ]),
+
+                Section::make(__('Components (bundle product)'))
                     ->description(__('Optional. Attach other catalog products as components. This bundle’s cost then becomes the sum of its parts — a component price change flows through everywhere.'))
                     ->collapsed(fn (?Product $record) => ! $record?->isComposite())
                     ->schema([
@@ -76,22 +92,10 @@ class ProductForm
                             ->formatStateUsing(fn (Get $get) => self::computeCost($get)),
                     ]),
 
-                Section::make('Default prices')
-                    ->columns(Breakpoints::THREE)
-                    ->schema([
-                        TextInput::make('default_cost_price')
-                            ->label(__('Cost price (fixed)'))
-                            ->numeric()->prefix('€')->default(0)->required()
-                            ->helperText(__('Ignored when the product has components (the component sum is used instead).')),
-                        TextInput::make('default_sale_price')->label(__('Sale price'))->numeric()->prefix('€')->default(0)->required(),
-                        Select::make('currency')->label(__('Currency'))->options(['EUR' => 'EUR', 'USD' => 'USD', 'GBP' => 'GBP'])->default('EUR')->required(),
-                        Select::make('billing_cycle')->label(__('Billing cycle'))->options(BillingCycle::class)->default('yearly')->required(),
-                    ]),
-
-                Section::make('Description')
+                Section::make(__('Description'))
                     ->collapsed()
                     ->schema([
-                        Textarea::make('description')->label(__('Description'))->columnSpanFull(),
+                        Textarea::make('description')->hiddenLabel()->rows(4)->columnSpanFull(),
                     ]),
             ]);
     }

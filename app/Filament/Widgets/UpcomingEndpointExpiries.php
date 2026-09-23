@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Endpoints\EndpointResource;
+use App\Filament\Widgets\Concerns\CountsAttention;
 use App\Models\Endpoint;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -10,9 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingEndpointExpiries extends BaseWidget
 {
-    protected static ?string $heading = 'Endpoints / certificates (60 days or expired)';
+    use CountsAttention;
 
-    public function getHeading(): ?string
+    public function getTableHeading(): ?string
     {
         return __('Endpoints / certificates (60 days or expired)');
     }
@@ -26,7 +27,7 @@ class UpcomingEndpointExpiries extends BaseWidget
         return Endpoint::query()->whereNotNull('expires_at')->exists();
     }
 
-    protected function getTableQuery(): Builder
+    public static function attentionQuery(): Builder
     {
         return Endpoint::query()
             ->with('company')

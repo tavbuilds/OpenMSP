@@ -20,6 +20,27 @@
        scrollbars stay hidden until you scroll, so the cut-off column reads
        as broken rather than swipeable — give it a permanent thin bar. */
     @media (hover: hover) and (pointer: fine) {
+        /* Same story for a tab strip too wide for a narrow window. */
+        .fi-tabs {
+            scrollbar-width: thin;
+            scrollbar-color: var(--gray-300) transparent;
+        }
+        .fi-tabs::-webkit-scrollbar {
+            height: 0.375rem;
+        }
+        .fi-tabs::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .fi-tabs::-webkit-scrollbar-thumb {
+            background-color: var(--gray-300);
+            border-radius: 999px;
+        }
+        .dark .fi-tabs {
+            scrollbar-color: var(--gray-600) transparent;
+        }
+        .dark .fi-tabs::-webkit-scrollbar-thumb {
+            background-color: var(--gray-600);
+        }
         .fi-ta-content {
             scrollbar-width: thin;
             scrollbar-color: var(--gray-300) transparent;
@@ -521,5 +542,108 @@
         .fi-wi-stats-overview-stats-ctn {
             grid-template-columns: 1fr;
         }
+    }
+
+    /*
+     * Dashboard watchlist deck: a row of tabs over one table at a time.
+     * Alpine hides the rest, so the tab strip has to read as a control on
+     * the page background rather than as a heading on a card.
+     */
+    [x-cloak] {
+        display: none !important;
+    }
+    .omsp-board-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--spacing) * 2);
+        margin-bottom: calc(var(--spacing) * 4);
+    }
+    .omsp-board-tab {
+        display: inline-flex;
+        align-items: center;
+        gap: calc(var(--spacing) * 2);
+        min-height: 2.25rem;
+        padding: 0 calc(var(--spacing) * 3);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--radius-lg);
+        background-color: var(--color-white, #fff);
+        color: var(--gray-700);
+        font-size: var(--text-sm);
+        font-weight: 500;
+        line-height: 1.25rem;
+        cursor: pointer;
+    }
+    .omsp-board-tab:hover {
+        background-color: var(--gray-50);
+    }
+    .omsp-board-tab:focus-visible {
+        outline: 2px solid var(--primary-600);
+        outline-offset: 2px;
+    }
+    .omsp-board-tab-on,
+    .omsp-board-tab-on:hover {
+        border-color: var(--primary-600);
+        background-color: var(--primary-600);
+        color: var(--color-white, #fff);
+    }
+    .dark .omsp-board-tab {
+        border-color: var(--gray-700);
+        background-color: var(--gray-900);
+        color: var(--gray-300);
+    }
+    .dark .omsp-board-tab:hover {
+        background-color: var(--gray-800);
+    }
+    .dark .omsp-board-tab-on,
+    .dark .omsp-board-tab-on:hover {
+        border-color: var(--primary-500);
+        background-color: var(--primary-500);
+        color: var(--gray-950);
+    }
+    /* The count sits on the tab, so it needs a surface of its own on both
+       the resting and the selected tab. */
+    .omsp-board-count {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.375rem;
+        padding: 0 calc(var(--spacing) * 1.5);
+        border-radius: 999px;
+        font-size: var(--text-xs);
+        font-weight: 600;
+        font-variant-numeric: tabular-nums;
+        line-height: 1.25rem;
+    }
+    .omsp-board-count-danger {
+        background-color: var(--danger-100);
+        color: var(--danger-700);
+    }
+    .omsp-board-count-warning {
+        background-color: var(--warning-100);
+        color: var(--warning-700);
+    }
+    .omsp-board-count-primary {
+        background-color: var(--gray-100);
+        color: var(--gray-700);
+    }
+    .omsp-board-tab-on .omsp-board-count {
+        background-color: rgb(255 255 255 / 0.25);
+        color: inherit;
+    }
+    .dark .omsp-board-count-danger {
+        background-color: var(--danger-400);
+        color: var(--gray-950);
+    }
+    .dark .omsp-board-count-warning {
+        background-color: var(--warning-400);
+        color: var(--gray-950);
+    }
+    .dark .omsp-board-count-primary {
+        background-color: var(--gray-700);
+        color: var(--gray-200);
+    }
+    .dark .omsp-board-tab-on .omsp-board-count {
+        background-color: rgb(0 0 0 / 0.15);
+        color: inherit;
     }
 </style>
