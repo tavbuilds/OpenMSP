@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Contracts\ContractResource;
+use App\Filament\Widgets\Concerns\CountsAttention;
 use App\Models\Contract;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingRenewals extends BaseWidget
 {
+    use CountsAttention;
+
     protected static ?int $sort = 5;
 
     public function getTableHeading(): ?string
@@ -25,7 +28,7 @@ class UpcomingRenewals extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected function getTableQuery(): Builder
+    public static function attentionQuery(): Builder
     {
         return Contract::query()
             ->with('company')

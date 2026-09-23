@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Contracts\ContractResource;
+use App\Filament\Widgets\Concerns\CountsAttention;
 use App\Models\Contract;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -10,9 +11,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingNoticeDeadlines extends BaseWidget
 {
-    protected static ?string $heading = 'Notice deadlines (60 days)';
+    use CountsAttention;
 
-    public function getHeading(): ?string
+    public function getTableHeading(): ?string
     {
         return __('Notice deadlines (60 days)');
     }
@@ -26,7 +27,7 @@ class UpcomingNoticeDeadlines extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected function getTableQuery(): Builder
+    public static function attentionQuery(): Builder
     {
         $ids = Contract::query()
             ->withUpcomingRenewalTerm()

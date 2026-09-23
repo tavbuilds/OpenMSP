@@ -13,6 +13,7 @@ use App\Enums\ProductType;
 use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Contract;
+use App\Models\Domain;
 use App\Models\Endpoint;
 use App\Models\Invoice;
 use App\Models\PlannedTask;
@@ -27,6 +28,7 @@ final class DemoData
     {
         return Company::query()->where('is_demo', true)->exists()
             || Vendor::query()->where('is_demo', true)->exists()
+            || Domain::query()->where('is_demo', true)->exists()
             || Endpoint::query()->where('is_demo', true)->exists()
             || PlannedTask::query()->where('is_demo', true)->exists();
     }
@@ -233,6 +235,70 @@ final class DemoData
                 'is_demo' => true,
             ]);
 
+            // Domains are not contracts: no quantity, no sale price of their
+            // own, and the customer link is made here rather than imported.
+            $registrar = Vendor::create([
+                'name' => 'Demo Registrar',
+                'website' => 'https://example.com/registrar',
+                'is_demo' => true,
+            ]);
+            $tldNl = Product::create([
+                'vendor_id' => $registrar->id,
+                'name' => '.example domain',
+                'sku' => 'tld-example',
+                'type' => ProductType::Service,
+                'default_cost_price' => 6.50,
+                'default_sale_price' => 14.95,
+                'currency' => 'EUR',
+                'billing_cycle' => BillingCycle::Yearly,
+                'active' => true,
+                'is_demo' => true,
+            ]);
+
+            Domain::create([
+                'company_id' => $bakkerij->id,
+                'product_id' => $tldNl->id,
+                'name' => 'dezondemo.example',
+                'expires_at' => now()->addDays(24)->toDateString(),
+                'renewal_date' => now()->addDays(24)->toDateString(),
+                'auto_renew' => true,
+                'status' => 'ACT',
+                'notes' => 'Renewal invoice goes to the bakery’s accountant.',
+                'notes_visible_to_customer' => true,
+                'is_demo' => true,
+            ]);
+            Domain::create([
+                'company_id' => $gemeente->id,
+                'product_id' => $tldNl->id,
+                'name' => 'linden-demo.example',
+                'expires_at' => now()->addDays(52)->toDateString(),
+                'renewal_date' => now()->addDays(52)->toDateString(),
+                'auto_renew' => true,
+                'status' => 'ACT',
+                'notes' => 'Transfer away after the new website goes live.',
+                'is_demo' => true,
+            ]);
+            Domain::create([
+                'company_id' => $studio->id,
+                'product_id' => $tldNl->id,
+                'name' => 'studionoord-demo.example',
+                'expires_at' => now()->addDays(9)->toDateString(),
+                'renewal_date' => now()->addDays(9)->toDateString(),
+                'auto_renew' => false,
+                'status' => 'ACT',
+                'is_demo' => true,
+            ]);
+            // Freshly imported and still waiting for someone to say whose it is.
+            Domain::create([
+                'product_id' => $tldNl->id,
+                'name' => 'oudproject-demo.example',
+                'expires_at' => now()->addDays(38)->toDateString(),
+                'renewal_date' => now()->addDays(38)->toDateString(),
+                'auto_renew' => false,
+                'status' => 'ACT',
+                'is_demo' => true,
+            ]);
+
             Endpoint::create([
                 'company_id' => $bakkerij->id,
                 'name' => 'web.dezondemo.example',
@@ -338,6 +404,7 @@ final class DemoData
             }
 
             $deleted += PlannedTask::query()->where('is_demo', true)->delete();
+            $deleted += Domain::query()->where('is_demo', true)->delete();
             $deleted += Endpoint::query()->where('is_demo', true)->delete();
             $deleted += Contract::query()->where('is_demo', true)->delete();
             $deleted += Contact::query()->where('is_demo', true)->delete();

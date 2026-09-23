@@ -297,6 +297,8 @@
             <nav class="nav-primary" aria-label="{{ __('Customer portal') }}">
                 <a class="nav-link" href="{{ route('portal.dashboard') }}"
                    @if ($currentRoute === 'portal.dashboard') aria-current="page" @endif>{{ __('Services') }}</a>
+                <a class="nav-link" href="{{ route('portal.domains') }}"
+                   @if ($currentRoute === 'portal.domains') aria-current="page" @endif>{{ __('Domains') }}</a>
                 <a class="nav-link" href="{{ route('portal.invoices') }}"
                    @if ($currentRoute === 'portal.invoices') aria-current="page" @endif>{{ __('Invoices') }}</a>
             </nav>

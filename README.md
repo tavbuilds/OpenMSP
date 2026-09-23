@@ -35,6 +35,7 @@ and shows you what you actually earn on each line.
 | :--: | :-- | :-- |
 | 📦 | **Contracts & catalog** | Customers, contacts, vendors, products, purchase bundles — with cost, sale and computed margin |
 | ⏰ | **Renewals** | Notice deadlines and upcoming renewals on the dashboard, plus reminder mail to staff and (optionally) the customer |
+| 🌐 | **Domains** | Registered domains with expiry and auto-renew, pulled from Openprovider — assigned to a customer here, with per-domain notes you choose to share |
 | 🔐 | **Certificates** | A webhook per endpoint (Uptime Kuma or generic JSON), or a date you type. Alerts at 30 / 14 / 7 / 1 days |
 | 🗓️ | **Planning** | Moves, migrations and on-site work with deadline, assignee and reminders |
 | 🧾 | **Customer portal** | Magic-link login. Customers see their services and prices — never your cost, margin or license keys |
@@ -91,7 +92,7 @@ mail, Stripe and an API token. Want something to look at? **System → Demo data
 portfolio and wipes it again in one click.
 
 ```bash
-docker compose exec app php artisan test   # 141 tests
+docker compose exec app php artisan test   # 161 tests
 ```
 
 ---
@@ -103,6 +104,7 @@ docker compose exec app php artisan test   # 141 tests
 | **Agent API** | `GET {APP_URL}/api/v1/...` with a Sanctum bearer token → [AGENT.md](AGENT.md) · [OpenAPI spec](openapi/agent-api.yaml) |
 | **MCP server** | `{APP_URL}/mcp`, built in — OAuth or bearer. Set it up under **System → MCP** → [mcp/README.md](mcp/README.md) |
 | **Webhooks** | One unguessable URL per endpoint for certificate monitors → [docs/ENDPOINTS.md](docs/ENDPOINTS.md) |
+| **Openprovider** | Domains and per-TLD purchase prices, on a nightly sync → [docs/DOMAINS.md](docs/DOMAINS.md) |
 
 ---
 
@@ -151,7 +153,9 @@ flowchart LR
 | `scheduler` | Daily reminders at 08:00 in `APP_TIMEZONE` |
 
 Domain: `Company` → `Contract` ← `Product` / `Vendor`. An `Endpoint` may be
-internal (no customer). Margin and annual revenue are computed, never stored.
+internal (no customer). A `Domain` hangs off a `Company` too, but is not a
+contract — it carries an expiry date, not a price. Margin and annual revenue
+are computed, never stored.
 
 Renewal watching covers **quarterly and yearly** contracts: a monthly contract
 can be cancelled every month, so its renewal is not a deadline.
@@ -210,7 +214,7 @@ Before you go live:
 
 ## 📚 Docs
 
-[Onboarding](docs/ONBOARDING.md) · [Deploy](DEPLOY.md) · [Secrets](docs/SECRETS.md) · [Portal](docs/PORTAL.md) · [Endpoints](docs/ENDPOINTS.md) · [Agent API](AGENT.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
+[Onboarding](docs/ONBOARDING.md) · [Deploy](DEPLOY.md) · [Secrets](docs/SECRETS.md) · [Portal](docs/PORTAL.md) · [Endpoints](docs/ENDPOINTS.md) · [Domains](docs/DOMAINS.md) · [Agent API](AGENT.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 ## 🤝 Contributing
 

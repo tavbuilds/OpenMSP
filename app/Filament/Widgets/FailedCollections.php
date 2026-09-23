@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\Contracts\ContractResource;
+use App\Filament\Widgets\Concerns\CountsAttention;
 use App\Models\Contract;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -11,9 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class FailedCollections extends BaseWidget
 {
-    protected static ?string $heading = 'Failed collections';
+    use CountsAttention;
 
-    public function getHeading(): ?string
+    public function getTableHeading(): ?string
     {
         return __('Failed collections');
     }
@@ -27,7 +28,7 @@ class FailedCollections extends BaseWidget
         return Contract::query()->where('stripe_payment_status', 'past_due')->exists();
     }
 
-    protected function getTableQuery(): Builder
+    public static function attentionQuery(): Builder
     {
         return Contract::query()
             ->with('company')

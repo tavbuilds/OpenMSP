@@ -51,6 +51,21 @@ class PlatformSettings
 
     public const PAX8_LAST_ERROR = 'pax8.last_error';
 
+    public const OPENPROVIDER_USERNAME = 'openprovider.username';
+
+    public const OPENPROVIDER_PASSWORD = 'openprovider.password';
+
+    /** Host and version are settings so a future API version is a config change. */
+    public const OPENPROVIDER_HOST = 'openprovider.host';
+
+    public const OPENPROVIDER_VERSION = 'openprovider.version';
+
+    public const OPENPROVIDER_LAST_SYNC_AT = 'openprovider.last_sync_at';
+
+    public const OPENPROVIDER_LAST_SYNC_REPORT = 'openprovider.last_sync_report';
+
+    public const OPENPROVIDER_LAST_ERROR = 'openprovider.last_error';
+
     public const REQUIRE_MFA = 'security.require_mfa';
 
     public const ONBOARDING_COMPLETED = 'onboarding.completed';
@@ -69,6 +84,7 @@ class PlatformSettings
         self::STRIPE_SECRET,
         self::STRIPE_WEBHOOK_SECRET,
         self::PAX8_CLIENT_SECRET,
+        self::OPENPROVIDER_PASSWORD,
     ];
 
     public static function ready(): bool
