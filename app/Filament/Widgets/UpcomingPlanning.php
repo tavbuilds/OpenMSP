@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\PlannedTaskPriority;
 use App\Filament\Resources\PlannedTasks\PlannedTaskResource;
+use App\Filament\Widgets\Concerns\CountsAttention;
 use App\Models\PlannedTask;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -11,9 +12,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class UpcomingPlanning extends BaseWidget
 {
-    protected static ?string $heading = 'Upcoming planning (60 days)';
+    use CountsAttention;
 
-    public function getHeading(): ?string
+    public function getTableHeading(): ?string
     {
         return __('Upcoming planning (60 days)');
     }
@@ -22,7 +23,7 @@ class UpcomingPlanning extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected function getTableQuery(): Builder
+    public static function attentionQuery(): Builder
     {
         $urgent = PlannedTaskPriority::Urgent->value;
         $high = PlannedTaskPriority::High->value;

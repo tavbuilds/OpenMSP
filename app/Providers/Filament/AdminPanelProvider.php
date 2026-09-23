@@ -8,7 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
@@ -50,15 +50,9 @@ class AdminPanelProvider extends PanelProvider
             ->pages([
                 Dashboard::class,
             ])
+            // Discovery registers the watchlist widgets as Livewire components;
+            // the dashboard page picks which of them it actually shows.
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
-            ->widgets([
-                \App\Filament\Widgets\PortfolioStats::class,
-                \App\Filament\Widgets\FailedCollections::class,
-                \App\Filament\Widgets\UpcomingEndpointExpiries::class,
-                \App\Filament\Widgets\UpcomingNoticeDeadlines::class,
-                \App\Filament\Widgets\UpcomingRenewals::class,
-                \App\Filament\Widgets\UpcomingPlanning::class,
-            ])
             ->renderHook(
                 PanelsRenderHook::HEAD_END,
                 fn () => view('filament.hooks.responsive'),
