@@ -30,6 +30,22 @@ refreshed.
 
 An unassigned domain appears nowhere in the customer portal.
 
+## Auto-renew
+
+Openprovider answers one of three things per domain: `on`, `off`, or
+`default`. The first two are literal. `default` follows a setting on your
+Openprovider account that their API does not expose — so OpenMSP stores their
+word verbatim and asks you what it means, under **Catalog → Openprovider →
+Auto-renew**.
+
+The default here is *renews automatically*, which is the common Openprovider
+setup. Change it and every domain that follows the account default is re-read
+immediately; no sync needed. Domains that said `on` or `off` are unaffected,
+because they never followed the account setting.
+
+The domain page shows both: the effective value at the top, and what the
+registrar actually said under **Auto-renew at registrar**.
+
 ## Notes
 
 Each domain has one notes field with a **Show this note in the customer
@@ -51,6 +67,15 @@ The sync fetches Openprovider's price per TLD and writes one catalog product
 per extension (`.nl domain`, `.com domain`, …), with `renew_price.reseller` as
 the cost price. Every domain with that extension points at it, so one price
 change lands on all of them.
+
+The catalog mirrors your portfolio, not the price call: an extension
+Openprovider returns no price for still gets its entry, without a cost price,
+and the sync report names it so you can fill it in by hand.
+
+Their `/tlds` filter is a repeated query parameter (`extensions=nl&
+extensions=com`), not an indexed array. Sent the usual way, the filter is not
+recognised and the answer has nothing to do with the question — which is how
+a portfolio of ten extensions once produced two catalog entries.
 
 **Your sale price is yours.** It is seeded once from Openprovider's retail
 price and never overwritten again.

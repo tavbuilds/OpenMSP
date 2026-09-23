@@ -28,6 +28,9 @@ class OpenProviderClient
     /** Openprovider caps a page at 500 rows. */
     private const PAGE_SIZE = 200;
 
+    /** How many extensions to put in one /tlds call. */
+    private const EXTENSIONS_PER_REQUEST = 50;
+
     public function configured(): bool
     {
         return filled(PlatformSettings::get(PlatformSettings::OPENPROVIDER_USERNAME))
@@ -104,6 +107,10 @@ class OpenProviderClient
     /**
      * TLDs with reseller and product prices.
      *
+     * Asked for in batches: the filter is a repeated query parameter, and a
+     * portfolio with a hundred extensions would otherwise build one very long
+     * URL.
+     *
      * @param  list<string>  $extensions  Without the leading dot, e.g. ['nl', 'com'].
      * @return list<array<string, mixed>>
      */
@@ -114,10 +121,17 @@ class OpenProviderClient
             return [];
         }
 
-        return $this->paginate('tlds', [
-            'with_price' => 'true',
-            'extensions' => $extensions,
-        ]);
+        $out = [];
+        foreach (array_chunk($extensions, self::EXTENSIONS_PER_REQUEST) as $chunk) {
+            foreach ($this->paginate('tlds', [
+                'with_price' => 'true',
+                'extensions' => $chunk,
+            ]) as $tld) {
+                $out[] = $tld;
+            }
+        }
+
+        return $out;
     }
 
     /**
@@ -130,20 +144,18 @@ class OpenProviderClient
         $offset = 0;
 
         do {
-            $response = $this->request()->get($this->url($path), [
+            $url = $this->url($path).'?'.$this->queryString([
                 ...$query,
                 'limit' => self::PAGE_SIZE,
                 'offset' => $offset,
             ]);
 
+            $response = $this->request()->get($url);
+
             if ($response->status() === 401) {
                 // The cached token outlived its welcome; one retry on a fresh one.
                 $this->forgetToken();
-                $response = $this->request()->get($this->url($path), [
-                    ...$query,
-                    'limit' => self::PAGE_SIZE,
-                    'offset' => $offset,
-                ]);
+                $response = $this->request()->get($url);
             }
 
             if ($response->failed()) {
@@ -163,6 +175,30 @@ class OpenProviderClient
         } while ($results !== [] && count($out) < $total);
 
         return $out;
+    }
+
+    /**
+     * Openprovider's array filters are `collectionFormat: multi` — the same
+     * key repeated. Laravel would send `extensions[0]=nl`, which their API
+     * does not recognise as the filter at all, so it quietly answers with
+     * something other than what was asked for.
+     *
+     * @param  array<string, mixed>  $query
+     */
+    private function queryString(array $query): string
+    {
+        $pairs = [];
+
+        foreach ($query as $key => $value) {
+            foreach (is_array($value) ? $value : [$value] as $item) {
+                if ($item === null || $item === '') {
+                    continue;
+                }
+                $pairs[] = rawurlencode($key).'='.rawurlencode((string) $item);
+            }
+        }
+
+        return implode('&', $pairs);
     }
 
     private function request(): PendingRequest

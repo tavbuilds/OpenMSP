@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Näkyy asiakkaalle vain, jos kytket sen päälle. Oletuksena pois.",
   "Waiting for a customer": "Odottaa asiakasta",
   "Without a customer": "Ilman asiakasta",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Openproviderin hallintapaneelin kirjautumistietosi. Openprovider vaatii lisäksi, että tämän palvelimen IP-osoite on sallittujen listalla kohdassa Account → Security."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Openproviderin hallintapaneelin kirjautumistietosi. Openprovider vaatii lisäksi, että tämän palvelimen IP-osoite on sallittujen listalla kohdassa Account → Security.",
+  "Account default": "Tilin oletus",
+  "Account default (on)": "Tilin oletus (päällä)",
+  "Account default (off)": "Tilin oletus (pois)",
+  "Auto-renew at registrar": "Automaattinen uusiminen rekisterinpitäjällä",
+  "Auto-renew re-read on :count domain(s).": "Automaattinen uusiminen tulkittu uudelleen :count verkkotunnukselle.",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "Muutos vaikuttaa heti kaikkiin verkkotunnuksiin, jotka noudattavat tilin oletusta; synkronointia ei tarvita.",
+  "Does not renew automatically": "Ei uusiudu automaattisesti",
+  "Renews automatically": "Uusiutuu automaattisesti",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider vastaa verkkotunnuskohtaisesti “on”, “off” tai “default”. “Default” noudattaa tilin asetusta, jota heidän API:nsa ei kerro — kerro meille omasi.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider ei palauttanut hintaa näille päätteille. Ne ovat luettelossa ilman ostohintaa — täytä se käsin, jos tarvitset katteen.",
+  "Openprovider settings saved": "Openprovider-asetukset tallennettu",
+  "Set at Openprovider: :value": "Asetettu Openproviderissa: :value",
+  "What “default” means on your account": "Mitä “default” tarkoittaa tililläsi"
 }

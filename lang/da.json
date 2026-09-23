@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Kun synlig for kunden, hvis du slår det til. Slået fra som standard.",
   "Waiting for a customer": "Venter på en kunde",
   "Without a customer": "Uden kunde",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Dine loginoplysninger til Openproviders kontrolpanel. Openprovider kræver desuden, at denne servers IP-adresse er whitelistet under Account → Security."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Dine loginoplysninger til Openproviders kontrolpanel. Openprovider kræver desuden, at denne servers IP-adresse er whitelistet under Account → Security.",
+  "Account default": "Kontostandard",
+  "Account default (on)": "Kontostandard (til)",
+  "Account default (off)": "Kontostandard (fra)",
+  "Auto-renew at registrar": "Automatisk fornyelse hos registrator",
+  "Auto-renew re-read on :count domain(s).": "Automatisk fornyelse genberegnet for :count domæne(r).",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "En ændring slår straks igennem på alle domæner, der følger kontostandarden; ingen synkronisering nødvendig.",
+  "Does not renew automatically": "Fornyes ikke automatisk",
+  "Renews automatically": "Fornyes automatisk",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider svarer “on”, “off” eller “default” pr. domæne. “Default” følger en kontoindstilling, deres API ikke oplyser — fortæl os, hvad din er.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider returnerede ingen pris for disse endelser. De ligger i kataloget uden indkøbspris — udfyld den manuelt, hvis du har brug for marginen.",
+  "Openprovider settings saved": "Openprovider-indstillinger gemt",
+  "Set at Openprovider: :value": "Angivet hos Openprovider: :value",
+  "What “default” means on your account": "Hvad “default” betyder på din konto"
 }
