@@ -46,6 +46,7 @@ class DomainsTable
                 IconColumn::make('auto_renew')
                     ->label(__('Auto-renew'))
                     ->boolean()
+                    ->tooltip(fn (Domain $record) => $record->autoRenewLabel())
                     ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 TextColumn::make('cost')
                     ->label(__('Purchase / year'))

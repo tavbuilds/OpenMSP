@@ -561,5 +561,18 @@
   "Visible to the customer only when you say so. Off by default.": "Nur für den Kunden sichtbar, wenn Sie es einschalten. Standardmäßig aus.",
   "Waiting for a customer": "Wartet auf einen Kunden",
   "Without a customer": "Ohne Kunde",
-  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Ihre Zugangsdaten für das Openprovider-Control-Panel. Openprovider verlangt zusätzlich, dass die IP-Adresse dieses Servers unter Account → Security freigeschaltet ist."
+  "Your Openprovider control-panel login. Openprovider also requires this server’s IP address to be whitelisted under Account → Security.": "Ihre Zugangsdaten für das Openprovider-Control-Panel. Openprovider verlangt zusätzlich, dass die IP-Adresse dieses Servers unter Account → Security freigeschaltet ist.",
+  "Account default": "Konto-Standard",
+  "Account default (on)": "Konto-Standard (ein)",
+  "Account default (off)": "Konto-Standard (aus)",
+  "Auto-renew at registrar": "Auto-Renewal beim Registrar",
+  "Auto-renew re-read on :count domain(s).": "Auto-Renewal für :count Domain(s) neu ermittelt.",
+  "Changing this immediately re-reads every domain that follows the account default; no sync needed.": "Eine Änderung wirkt sofort auf jede Domain, die dem Konto-Standard folgt; eine Synchronisierung ist nicht nötig.",
+  "Does not renew automatically": "Verlängert sich nicht automatisch",
+  "Renews automatically": "Verlängert sich automatisch",
+  "Openprovider answers “on”, “off” or “default” per domain. “Default” follows a setting on your account that their API does not expose, so tell us what yours is.": "Openprovider antwortet je Domain mit „on“, „off“ oder „default“. „Default“ folgt einer Kontoeinstellung, die ihre API nicht preisgibt — sagen Sie uns hier, wie Ihre lautet.",
+  "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider lieferte für diese Endungen keinen Preis. Sie stehen ohne Einkaufspreis im Katalog — tragen Sie ihn von Hand nach, wenn Sie die Marge brauchen.",
+  "Openprovider settings saved": "Openprovider-Einstellungen gespeichert",
+  "Set at Openprovider: :value": "Bei Openprovider gesetzt: :value",
+  "What “default” means on your account": "Was „default“ in Ihrem Konto bedeutet"
 }

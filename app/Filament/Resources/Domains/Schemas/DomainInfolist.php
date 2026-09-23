@@ -32,7 +32,11 @@ class DomainInfolist
                             ->state(fn (Domain $record) => $record->daysUntilExpiry() ?? __('—'))
                             ->badge()
                             ->color(fn (Domain $record) => $record->statusColor()),
-                        IconEntry::make('auto_renew')->label(__('Auto-renew'))->boolean(),
+                        TextEntry::make('auto_renew')
+                            ->label(__('Auto-renew'))
+                            ->badge()
+                            ->state(fn (Domain $record) => $record->autoRenewLabel())
+                            ->color(fn (Domain $record) => $record->auto_renew ? 'success' : 'gray'),
                         TextEntry::make('cost')
                             ->label(__('Purchase price / year'))
                             ->state(fn (Domain $record) => $record->costPrice() !== null
@@ -57,6 +61,15 @@ class DomainInfolist
                                     ->placeholder(__('—'))
                                     ->formatStateUsing(fn (Domain $record) => $record->registrarStatusLabel()),
                                 TextEntry::make('renewal_date')->label(__('Renewal date'))->date('M j, Y')->placeholder(__('—')),
+                                TextEntry::make('auto_renew_source')
+                                    ->label(__('Auto-renew at registrar'))
+                                    ->placeholder(__('—'))
+                                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                                        'on' => __('On'),
+                                        'off' => __('Off'),
+                                        'default' => __('Account default'),
+                                        default => $state,
+                                    }),
                                 TextEntry::make('source')->label(__('Source'))->badge(),
                                 TextEntry::make('last_synced_at')
                                     ->label(__('Last synced'))

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\DomainSource;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\WarnsBeforeExpiry;
+use App\Support\PlatformSettings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -25,7 +26,7 @@ class Domain extends Model
 
     protected $fillable = [
         'company_id', 'product_id', 'name', 'extension',
-        'expires_at', 'renewal_date', 'auto_renew', 'status',
+        'expires_at', 'renewal_date', 'auto_renew', 'auto_renew_source', 'status',
         'notes', 'notes_visible_to_customer',
         'source', 'source_id', 'last_synced_at',
         'notify_30', 'notify_14', 'notify_7', 'notify_1', 'notify_expired',
@@ -143,6 +144,50 @@ class Domain extends Model
             'DEL' => __('Deleted'),
             'FAI' => __('Failed'),
             default => $this->status,
+        };
+    }
+
+    /**
+     * Openprovider answers "on", "off" or "default" per domain. "default"
+     * points at an account setting their API does not expose, so the operator
+     * tells us what it means under Catalog → Openprovider.
+     */
+    public static function resolveAutoRenew(?string $source): bool
+    {
+        return match (Str::lower(trim((string) $source))) {
+            'on' => true,
+            'off' => false,
+            // "default", and anything we do not recognise, follows the account.
+            default => PlatformSettings::openProviderDefaultAutoRenew(),
+        };
+    }
+
+    /** Re-reads every synced domain against the current account default. */
+    public static function reapplyAutoRenewDefault(): int
+    {
+        $changed = 0;
+
+        foreach (static::query()->whereNotNull('auto_renew_source')->get() as $domain) {
+            $effective = static::resolveAutoRenew($domain->auto_renew_source);
+            if ($domain->auto_renew !== $effective) {
+                $domain->forceFill(['auto_renew' => $effective])->save();
+                $changed++;
+            }
+        }
+
+        return $changed;
+    }
+
+    /** "On", "Off", or "Account default (on)" — what the registrar told us. */
+    public function autoRenewLabel(): string
+    {
+        return match (Str::lower(trim((string) $this->auto_renew_source))) {
+            'on' => __('On'),
+            'off' => __('Off'),
+            'default' => $this->auto_renew
+                ? __('Account default (on)')
+                : __('Account default (off)'),
+            default => $this->auto_renew ? __('On') : __('Off'),
         };
     }
 
