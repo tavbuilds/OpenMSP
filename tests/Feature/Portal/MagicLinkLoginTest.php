@@ -148,4 +148,115 @@ class MagicLinkLoginTest extends TestCase
 
         $this->assertSame('Sign in to the customer portal — Acme MSP', $mail->subject);
     }
+
+    /**
+     * The mail says the link can be used only once. It could not: a signed
+     * URL stays valid until it expires, so the link in the inbox kept
+     * working for half an hour — after signing out, and for anyone else who
+     * could read that mailbox.
+     */
+    public function test_a_sign_in_link_works_once_and_not_again(): void
+    {
+        $url = $this->requestLink();
+
+        $this->get($url)->assertRedirect(route('portal.dashboard'));
+        $this->get(route('portal.dashboard'))->assertOk();
+
+        $this->post(route('portal.logout'));
+
+        $this->get($url)->assertRedirect(route('portal.login'));
+        $this->get(route('portal.dashboard'))->assertRedirect(route('portal.login'));
+    }
+
+    /** Without signing out either: a second tab is a second use. */
+    public function test_a_second_use_is_refused_while_still_signed_in(): void
+    {
+        $url = $this->requestLink();
+
+        $this->get($url)->assertRedirect(route('portal.dashboard'));
+        $this->post(route('portal.logout'));
+
+        $this->get($url)
+            ->assertRedirect(route('portal.login'))
+            ->assertSessionHasErrors('email');
+    }
+
+    /** Asking for a new link retires the old one, rather than adding to it. */
+    public function test_requesting_a_second_link_kills_the_first(): void
+    {
+        $first = $this->requestLink();
+        $second = $this->requestLink();
+
+        $this->assertNotSame($first, $second);
+
+        $this->get($first)->assertRedirect(route('portal.login'));
+        $this->get($second)->assertRedirect(route('portal.dashboard'));
+    }
+
+    /** Signing out revokes a link that was never opened. */
+    public function test_signing_out_revokes_an_unused_link(): void
+    {
+        $used = $this->requestLink();
+        $this->get($used)->assertRedirect(route('portal.dashboard'));
+
+        $unused = $this->requestLink();
+        $this->post(route('portal.logout'));
+
+        $this->get($unused)->assertRedirect(route('portal.login'));
+    }
+
+    /** A valid signature with somebody else's token is still no entry. */
+    public function test_a_forged_token_on_a_signed_url_is_refused(): void
+    {
+        $contact = $this->portalContact();
+        $url = URL::temporarySignedRoute('portal.magic', now()->addMinutes(30), [
+            'contact' => $contact->id,
+            'token' => str_repeat('a', 64),
+        ]);
+
+        $this->get($url)->assertRedirect(route('portal.login'));
+        $this->get(route('portal.dashboard'))->assertRedirect(route('portal.login'));
+    }
+
+    /** The token is never stored in a form anyone could replay from a dump. */
+    public function test_the_token_is_stored_hashed(): void
+    {
+        $contact = $this->portalContact();
+        $token = $contact->issueMagicLinkToken();
+
+        $this->assertNotSame($token, $contact->fresh()->magic_link_token);
+        $this->assertSame(hash('sha256', $token), $contact->fresh()->magic_link_token);
+    }
+
+    private function portalContact(): Contact
+    {
+        return Contact::query()->firstOrCreate(
+            ['email' => 'ada@alpha.example'],
+            [
+                'company_id' => Company::query()->firstOrCreate(
+                    ['name' => 'Alpha BV'], ['country' => 'NL']
+                )->id,
+                'name' => 'Ada Portal',
+            ],
+        );
+    }
+
+    private function requestLink(): string
+    {
+        Notification::fake();
+        $contact = $this->portalContact();
+
+        $this->post(route('portal.login.request'), ['email' => $contact->email])->assertRedirect();
+
+        $url = null;
+        Notification::assertSentTo($contact, PortalMagicLink::class, function (PortalMagicLink $n) use (&$url): bool {
+            $url = $n->url;
+
+            return true;
+        });
+
+        $this->assertIsString($url);
+
+        return $url;
+    }
 }

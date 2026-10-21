@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Το Openprovider δεν επιστρέφει αυτό το domain από τις :date. Παραμένει εδώ με τον πελάτη, τις σημειώσεις και το ιστορικό του, και δεν στέλνει πλέον υπενθυμίσεις.",
   "Registry expiry": "Λήξη στο μητρώο",
   "Renews": "Ανανεώνεται",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Η ημερομηνία μέχρι την οποία το Openprovider θέλει την ανανέωση — αυτή που ακολουθούν η αντίστροφη μέτρηση και οι υπενθυμίσεις."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Η ημερομηνία μέχρι την οποία το Openprovider θέλει την ανανέωση — αυτή που ακολουθούν η αντίστροφη μέτρηση και οι υπενθυμίσεις.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Αυτός ο σύνδεσμος σύνδεσης έχει ήδη χρησιμοποιηθεί ή έχει λήξει. Ζητήστε νέον."
 }

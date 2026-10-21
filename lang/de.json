@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider liefert diese Domain seit :date nicht mehr zurück. Sie bleibt hier mit Kunde, Notizen und Verlauf und sendet keine Erinnerungen mehr.",
   "Registry expiry": "Ablaufdatum der Registry",
   "Renews": "Verlängert",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Das Datum, zu dem Openprovider die Verlängerung erwartet — darauf laufen der Countdown und die Erinnerungen."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Das Datum, zu dem Openprovider die Verlängerung erwartet — darauf laufen der Countdown und die Erinnerungen.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Dieser Anmeldelink wurde bereits verwendet oder ist abgelaufen. Fordern Sie einen neuen an."
 }

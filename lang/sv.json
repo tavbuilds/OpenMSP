@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider returnerar inte längre den här domänen sedan :date. Den ligger kvar här med sin kund, sina anteckningar och sin historik, och skickar inga påminnelser längre.",
   "Registry expiry": "Utgång i registret",
   "Renews": "Förnyas",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Det datum Openprovider vill ha förnyelsen senast — det som nedräkningen och påminnelserna följer."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Det datum Openprovider vill ha förnyelsen senast — det som nedräkningen och påminnelserna följer.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Den här inloggningslänken är redan använd eller har gått ut. Begär en ny."
 }
