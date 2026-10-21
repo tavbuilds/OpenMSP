@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Setting;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -277,6 +278,23 @@ class PlatformSettings
     /**
      * Overlay DB settings onto runtime config (env remains the fallback).
      */
+    /**
+     * Re-reads the stored settings into a process that is already running.
+     *
+     * applyToConfig() runs once in a service provider, which is right for an
+     * HTTP request and wrong for a queue worker: the worker boots once and
+     * keeps that configuration for hours, so mail settings saved in the UI
+     * afterwards never reach it and every queued mail goes to whichever
+     * mailer it happened to start with. The resolved mailers go too, because
+     * they hold a transport built from the old values.
+     */
+    public static function refresh(): void
+    {
+        self::applyToConfig();
+
+        Mail::forgetMailers();
+    }
+
     public static function applyToConfig(): void
     {
         if (! self::ready()) {
