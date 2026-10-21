@@ -609,6 +609,8 @@
   "Registry expiry": "Kayıtta sona erme",
   "Renews": "Yenilenme",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Openprovider'ın yenilemeyi beklediği tarih — geri sayım ve hatırlatmalar bunu izler.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Bu oturum açma bağlantısı zaten kullanıldı veya süresi doldu. Yenisini isteyin.",
+  "Rejected": "Reddedildi",
   "Add a passkey": "Geçiş anahtarı ekle",
   "Add passkey": "Geçiş anahtarı ekle",
   "Added :date": ":date tarihinde eklendi",
