@@ -45,6 +45,11 @@ Optional in the same example file: `MAIL_*` (SMTP), `STRIPE_*` (portal
 payments), `APP_DEMO_LOGIN`, `APP_TIMEZONE`, locale, log level. SMTP and
 Stripe can also be set after first login under **System → Settings**.
 
+> ⚠️ Those stored settings **win over the environment**: they are applied to
+> the config on every boot. If editing `MAIL_*` or `STRIPE_*` in `.env` seems
+> to change nothing, a value is saved in the UI. Clear it with
+> **Settings → Reset email/Stripe to env**, or just set it there instead.
+
 ## 1) Docker CLI (droplet / any VPS)
 
 ```bash
