@@ -42,17 +42,24 @@ class OpenProviderSync
 
         $rows = $this->client->domains();
         $extensions = [];
+        $seen = [];
 
         foreach ($rows as $row) {
             try {
                 $domain = $this->upsertDomain($row, $report);
-                if ($domain && filled($domain->extension)) {
+                if ($domain === null) {
+                    continue;
+                }
+                $seen[] = $domain->id;
+                if (filled($domain->extension)) {
                     $extensions[] = $domain->extension;
                 }
             } catch (Throwable $e) {
                 $report->addError('Domain '.($row['id'] ?? '?').': '.$e->getMessage());
             }
         }
+
+        $this->markRemoved($seen, $rows !== [], $report);
 
         try {
             $this->syncTldPrices($extensions, $report);
@@ -107,6 +114,8 @@ class OpenProviderSync
             'source' => DomainSource::OpenProvider->value,
             'source_id' => $sourceId,
             'last_synced_at' => now(),
+            // Back on the books: a restored domain is not a removed one.
+            'removed_at' => null,
         ];
 
         if ($existing === null) {
@@ -116,9 +125,13 @@ class OpenProviderSync
             return $created;
         }
 
-        // A renewal pushes the date out; that starts a new reminder cycle,
+        // A renewal pushes the dates out; that starts a new reminder cycle,
         // otherwise last year's mail would keep this one quiet forever.
-        if ($expires !== null && $existing->expires_at?->toDateString() !== $expires) {
+        // Either date moving counts: registrars do not always move both, and
+        // a missed reset is a year of silence on a domain about to lapse.
+        $moved = ($expires !== null && $existing->expires_at?->toDateString() !== $expires)
+            || ($fields['renewal_date'] !== null && $existing->renewal_date?->toDateString() !== $fields['renewal_date']);
+        if ($moved) {
             $fields = [...$fields, ...$existing->freshExpiryCycle()];
         }
 
@@ -130,6 +143,32 @@ class OpenProviderSync
         }
 
         return $existing;
+    }
+
+    /**
+     * Flags the synced domains the registrar stopped returning.
+     *
+     * Never a delete: the customer link, the notes and the reminder history
+     * are ours, and a domain can come back out of quarantine. The row stays,
+     * marked, and drops out of the default list and the reminder run.
+     *
+     * Only runs when the registrar answered with something. An empty answer
+     * is far more likely to be the wrong credentials than an account that
+     * lost every domain overnight, and acting on it would mark the lot.
+     *
+     * @param  list<int>  $seen
+     */
+    private function markRemoved(array $seen, bool $registrarAnswered, DomainSyncReport $report): void
+    {
+        if (! $registrarAnswered) {
+            return;
+        }
+
+        $report->domainsRemoved = Domain::query()
+            ->where('source', DomainSource::OpenProvider->value)
+            ->whereNull('removed_at')
+            ->whereNotIn('id', $seen)
+            ->update(['removed_at' => now()]);
     }
 
     /**

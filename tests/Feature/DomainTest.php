@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Console\Commands\SendDomainExpiryReminders;
+use App\Filament\Resources\Domains\Pages\ListDomains;
 use App\Filament\Widgets\AttentionBoard;
 use App\Filament\Widgets\UpcomingDomainExpiries;
 use App\Models\Company;
@@ -157,6 +158,87 @@ class DomainTest extends TestCase
         Livewire::test(AttentionBoard::class)
             ->assertSee(__('Domains'))
             ->assertDontSee(__('Nothing needs attention in the next 60 days.'));
+    }
+
+    /**
+     * A domain the registrar let go is history, not a job: it drops out of
+     * the list, the watchlist, the customer's tab and the reminder run —
+     * without losing its customer, its notes or its dates.
+     */
+    public function test_a_removed_domain_leaves_the_default_list_but_is_still_findable(): void
+    {
+        $this->domain('nogsteeds.nl');
+        $this->domain('weggegooid.nl', ['removed_at' => now()]);
+
+        PlatformSettings::markOnboardingComplete();
+        $this->actingAs(User::factory()->admin()->create());
+
+        Livewire::test(ListDomains::class)
+            // The filter opens on "Current", so the list says what it is
+            // showing rather than silently leaving rows out.
+            ->assertSet('tableFilters.lifecycle.value', 'present')
+            ->assertCanSeeTableRecords(Domain::query()->where('name', 'nogsteeds.nl')->get())
+            ->assertCanNotSeeTableRecords(Domain::query()->where('name', 'weggegooid.nl')->get())
+            ->filterTable('lifecycle', 'removed')
+            ->assertCanSeeTableRecords(Domain::query()->where('name', 'weggegooid.nl')->get())
+            ->assertCanNotSeeTableRecords(Domain::query()->where('name', 'nogsteeds.nl')->get())
+            ->filterTable('lifecycle', 'all')
+            ->assertCanSeeTableRecords(Domain::query()->get());
+    }
+
+    public function test_a_removed_domain_gets_no_more_reminders(): void
+    {
+        Notification::fake();
+        User::factory()->admin()->create();
+
+        $this->domain('weggegooid.nl', [
+            'expires_at' => now()->subDays(50)->toDateString(),
+            'removed_at' => now(),
+        ]);
+
+        $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
+
+        Notification::assertNothingSent();
+    }
+
+    public function test_a_removed_domain_is_off_the_watchlist_and_out_of_the_portal(): void
+    {
+        $this->domain('weggegooid.nl', [
+            'expires_at' => now()->addDays(10)->toDateString(),
+            'removed_at' => now(),
+        ]);
+
+        $this->assertSame(0, UpcomingDomainExpiries::attentionCount());
+
+        $this->actingAs($this->contact(), 'portal')
+            ->get(route('portal.domains'))
+            ->assertOk()
+            ->assertDontSee('weggegooid.nl');
+    }
+
+    /** Red is for something to do; a domain we no longer hold is not that. */
+    public function test_a_removed_domain_is_not_shown_as_an_emergency(): void
+    {
+        $domain = $this->domain('weggegooid.nl', [
+            'expires_at' => now()->subDays(50)->toDateString(),
+            'removed_at' => now(),
+        ]);
+
+        $this->assertSame('removed', $domain->expiryStatus());
+        $this->assertSame('gray', $domain->statusColor());
+        $this->assertSame(__('No longer at the registrar'), $domain->statusLabel());
+    }
+
+    public function test_the_detail_page_says_why_a_domain_is_gone(): void
+    {
+        $domain = $this->domain('weggegooid.nl', ['removed_at' => now()]);
+
+        PlatformSettings::markOnboardingComplete();
+        $this->actingAs(User::factory()->admin()->create());
+
+        $this->get('/admin/domains/'.$domain->getKey())
+            ->assertOk()
+            ->assertSee(__('No longer at the registrar since'));
     }
 
     public function test_the_admin_domain_list_and_detail_render(): void

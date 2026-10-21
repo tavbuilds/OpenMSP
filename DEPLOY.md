@@ -155,11 +155,34 @@ From the shell instead:
 docker compose -f docker-compose.prod.yml exec app php artisan tinker --execute="Mail::raw('OpenMSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('OpenMSP SMTP test'));"
 ```
 
-Reminders (`contracts:send-renewal-reminders`, certificate and planning
-commands) use the same `MAIL_*`. The queue worker has those variables too —
-and note that a working test only proves the mail server is reachable: if
-reminders still do not arrive, check that the `queue` container is running,
-since every notification is queued.
+### A passing test does not mean mail works
+
+The test sends inside the request. **Everything else this platform sends —
+portal sign-in links, renewal and expiry reminders — is queued**, so it goes
+out of the `queue` container instead. The two can disagree, and when they do
+the test is the one that lies.
+
+If the test arrives and a sign-in link does not, check the worker:
+
+```bash
+docker compose -f docker-compose.prod.yml ps queue
+docker compose -f docker-compose.prod.yml exec app php artisan queue:monitor default
+docker compose -f docker-compose.prod.yml exec app php artisan queue:failed
+docker compose -f docker-compose.prod.yml logs --tail=50 queue
+```
+
+Jobs piling up in the first two mean no worker is running. **System →
+Settings → Email** says the same thing in the interface when it sees work
+that has been waiting more than five minutes.
+
+Mail that was queued while the settings were wrong is in
+`storage/logs/laravel.log` inside the `queue` container, not in anyone's
+inbox. Those jobs are done and will not be resent — ask for a new sign-in
+link once the worker is healthy.
+
+Settings saved in the interface reach the worker on its next job, so there is
+nothing to restart after changing them. Settings changed in `.env` still need
+`docker compose -f docker-compose.prod.yml up -d` to take effect.
 
 ## 2FA
 
