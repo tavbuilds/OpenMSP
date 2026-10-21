@@ -24,8 +24,12 @@ return [
 
     'providers' => [
         'users' => [
-            'driver' => 'eloquent',
+            // Resolves a user from a passkey assertion, and falls back to the
+            // password when the request is an ordinary sign-in. Both methods
+            // stay open: a lost device must not lock an operator out.
+            'driver' => 'eloquent-webauthn',
             'model' => env('AUTH_MODEL', User::class),
+            'password_fallback' => true,
         ],
         'contacts' => [
             'driver' => 'eloquent',
