@@ -505,7 +505,6 @@
   ":company — the domain names we manage for you.": ":company — de domænenavne, vi administrerer for dig.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count domæne(r) er endnu ikke tildelt en kunde. Indtil da vises de ikke i kundeportalen.",
   ":count domain(s) now belong to this customer.": ":count domæne(r) tilhører nu denne kunde.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created nye, :updated opdateret, :unassigned uden kunde.",
   "API host": "API-vært",
   "API version": "API-version",
   "Add domain": "Tilføj domæne",
@@ -588,5 +587,17 @@
   "Test email failed": "Testmail mislykkedes",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Sendt til :address. Kommer den ikke frem, så tjek spamfilteret samt SPF og DKIM for afsenderdomænet.",
   "Nothing was sent": "Der blev ikke sendt noget",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Maileren står på Log, så beskeden gik til logfilen i stedet for mailserveren. Vælg SMTP for at sende rigtigt."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Maileren står på Log, så beskeden gik til logfilen i stedet for mailserveren. Vælg SMTP for at sende rigtigt.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created nye, :updated opdateret, :removed ikke længere hos registratoren, :unassigned uden kunde.",
+  "All": "Alle",
+  "At the registrar": "Hos registratoren",
+  "Current": "Aktuelle",
+  "Gone since": "Væk siden",
+  "No longer at the registrar": "Ikke længere hos registratoren",
+  "No longer at the registrar since": "Ikke længere hos registratoren siden",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Openprovider returnerer ikke længere disse domæner, så de er markeret i stedet for slettet — kundetilknytningen og noterne bliver. Filtrér domænelisten på \"Ikke længere hos registratoren\" for at se dem.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider har ikke returneret dette domæne siden :date. Det bliver stående her med sin kunde, sine noter og sin historik og sender ikke flere påmindelser.",
+  "Registry expiry": "Udløb i registret",
+  "Renews": "Fornyes",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Den dato, Openprovider vil have fornyelsen senest — den, nedtællingen og påmindelserne følger."
 }

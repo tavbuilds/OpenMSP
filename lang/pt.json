@@ -505,7 +505,6 @@
   ":company — the domain names we manage for you.": ":company — os nomes de domínio que gerimos para si.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count domínio(s) ainda não estão atribuídos a um cliente. Até lá ficam fora do portal do cliente.",
   ":count domain(s) now belong to this customer.": ":count domínio(s) pertencem agora a este cliente.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created novos, :updated atualizados, :unassigned sem cliente.",
   "API host": "Host da API",
   "API version": "Versão da API",
   "Add domain": "Adicionar domínio",
@@ -588,5 +587,17 @@
   "Test email failed": "Falha no e-mail de teste",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Enviado para :address. Se não chegar, verifique a pasta de spam e o SPF e DKIM do domínio remetente.",
   "Nothing was sent": "Não foi enviado nada",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "O mailer está definido como Log, por isso a mensagem foi para o ficheiro de registo em vez do servidor de e-mail. Escolha SMTP para enviar a sério."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "O mailer está definido como Log, por isso a mensagem foi para o ficheiro de registo em vez do servidor de e-mail. Escolha SMTP para enviar a sério.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created novos, :updated atualizados, :removed já não estão no registrador, :unassigned sem cliente.",
+  "All": "Todos",
+  "At the registrar": "No registrador",
+  "Current": "Atuais",
+  "Gone since": "Ausente desde",
+  "No longer at the registrar": "Já não está no registrador",
+  "No longer at the registrar since": "Já não está no registrador desde",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "O Openprovider já não devolve estes domínios, pelo que foram marcados em vez de eliminados — a ligação ao cliente e as notas mantêm-se. Filtre a lista de domínios por «Já não está no registrador» para os ver.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "O Openprovider já não devolve este domínio desde :date. Fica aqui com o seu cliente, notas e histórico, e já não envia lembretes.",
+  "Registry expiry": "Expiração no registo",
+  "Renews": "Renova",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "A data em que o Openprovider quer a renovação — aquela que a contagem decrescente e os lembretes usam."
 }

@@ -505,7 +505,6 @@
   ":company — the domain names we manage for you.": ":company — die Domainnamen, die wir für Sie verwalten.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count Domain(s) sind noch keinem Kunden zugeordnet. Bis dahin erscheinen sie nicht im Kundenportal.",
   ":count domain(s) now belong to this customer.": ":count Domain(s) gehören jetzt zu diesem Kunden.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created neu, :updated aktualisiert, :unassigned ohne Kunde.",
   "API host": "API-Host",
   "API version": "API-Version",
   "Add domain": "Domain hinzufügen",
@@ -588,5 +587,17 @@
   "Test email failed": "Test-E-Mail fehlgeschlagen",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "An :address gesendet. Kommt sie nicht an, prüfen Sie den Spam-Ordner sowie SPF und DKIM der sendenden Domain.",
   "Nothing was sent": "Es wurde nichts gesendet",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Der Mailer steht auf Log, die Nachricht ging also in die Logdatei statt an den Mailserver. Wählen Sie SMTP, um wirklich zu senden."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Der Mailer steht auf Log, die Nachricht ging also in die Logdatei statt an den Mailserver. Wählen Sie SMTP, um wirklich zu senden.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created neu, :updated aktualisiert, :removed nicht mehr beim Registrar, :unassigned ohne Kunde.",
+  "All": "Alle",
+  "At the registrar": "Beim Registrar",
+  "Current": "Aktuell",
+  "Gone since": "Weg seit",
+  "No longer at the registrar": "Nicht mehr beim Registrar",
+  "No longer at the registrar since": "Nicht mehr beim Registrar seit",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Openprovider liefert diese Domains nicht mehr zurück, daher wurden sie markiert statt gelöscht — die Kundenzuordnung und die Notizen bleiben. Filtern Sie die Domainliste nach „Nicht mehr beim Registrar“, um sie zu sehen.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider liefert diese Domain seit :date nicht mehr zurück. Sie bleibt hier mit Kunde, Notizen und Verlauf und sendet keine Erinnerungen mehr.",
+  "Registry expiry": "Ablaufdatum der Registry",
+  "Renews": "Verlängert",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Das Datum, zu dem Openprovider die Verlängerung erwartet — darauf laufen der Countdown und die Erinnerungen."
 }

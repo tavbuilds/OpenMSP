@@ -3,11 +3,13 @@
 namespace App\Filament\Resources\Companies\RelationManagers;
 
 use App\Filament\Resources\Domains\DomainResource;
+use App\Models\Domain;
 use Filament\Actions\CreateAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class DomainsRelationManager extends RelationManager
@@ -30,11 +32,18 @@ class DomainsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('name')
-            ->defaultSort('expires_at', 'asc')
+            ->defaultSort(fn (Builder $query, string $direction) => $query->orderByDue($direction))
+            // Not a filter here: this tab answers "what does this customer
+            // have", and what they no longer have belongs on the domain list.
+            ->modifyQueryUsing(fn (Builder $query) => $query->present())
             ->recordUrl(fn ($record) => DomainResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('name')->label(__('Domain name'))->weight('bold'),
-                TextColumn::make('expires_at')->label(__('Expires'))->date('M j, Y')->placeholder(__('—')),
+                TextColumn::make('due')
+                    ->label(__('Renews'))
+                    ->state(fn (Domain $record) => $record->expiryDate())
+                    ->date('M j, Y')
+                    ->placeholder(__('—')),
                 TextColumn::make('days')
                     ->label(__('Days'))
                     ->state(fn ($record) => $record->daysUntilExpiry())

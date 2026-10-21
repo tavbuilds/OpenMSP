@@ -505,7 +505,6 @@
   ":company — the domain names we manage for you.": ":company — τα ονόματα τομέα που διαχειριζόμαστε για εσάς.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count τομέας/τομείς δεν έχουν ακόμη αντιστοιχιστεί σε πελάτη. Μέχρι τότε δεν εμφανίζονται στην πύλη πελατών.",
   ":count domain(s) now belong to this customer.": ":count τομέας/τομείς ανήκουν τώρα σε αυτόν τον πελάτη.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created νέα, :updated ενημερωμένα, :unassigned χωρίς πελάτη.",
   "API host": "Κεντρικός υπολογιστής API",
   "API version": "Έκδοση API",
   "Add domain": "Προσθήκη τομέα",
@@ -588,5 +587,17 @@
   "Test email failed": "Το δοκιμαστικό email απέτυχε",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Στάλθηκε στο :address. Αν δεν φτάσει, ελέγξτε τον φάκελο ανεπιθύμητων καθώς και τα SPF και DKIM του τομέα αποστολής.",
   "Nothing was sent": "Δεν στάλθηκε τίποτα",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Ο mailer είναι ρυθμισμένος σε Log, οπότε το μήνυμα πήγε στο αρχείο καταγραφής αντί στον διακομιστή αλληλογραφίας. Επιλέξτε SMTP για πραγματική αποστολή."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Ο mailer είναι ρυθμισμένος σε Log, οπότε το μήνυμα πήγε στο αρχείο καταγραφής αντί στον διακομιστή αλληλογραφίας. Επιλέξτε SMTP για πραγματική αποστολή.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created νέα, :updated ενημερωμένα, :removed δεν υπάρχουν πλέον στον καταχωρητή, :unassigned χωρίς πελάτη.",
+  "All": "Όλα",
+  "At the registrar": "Στον καταχωρητή",
+  "Current": "Τρέχοντα",
+  "Gone since": "Έφυγε από",
+  "No longer at the registrar": "Δεν υπάρχει πλέον στον καταχωρητή",
+  "No longer at the registrar since": "Δεν υπάρχει πλέον στον καταχωρητή από",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Το Openprovider δεν επιστρέφει πλέον αυτά τα domain, γι' αυτό επισημάνθηκαν αντί να διαγραφούν — η σύνδεση με τον πελάτη και οι σημειώσεις παραμένουν. Φιλτράρετε τη λίστα domain με «Δεν υπάρχει πλέον στον καταχωρητή» για να τα δείτε.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Το Openprovider δεν επιστρέφει αυτό το domain από τις :date. Παραμένει εδώ με τον πελάτη, τις σημειώσεις και το ιστορικό του, και δεν στέλνει πλέον υπενθυμίσεις.",
+  "Registry expiry": "Λήξη στο μητρώο",
+  "Renews": "Ανανεώνεται",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Η ημερομηνία μέχρι την οποία το Openprovider θέλει την ανανέωση — αυτή που ακολουθούν η αντίστροφη μέτρηση και οι υπενθυμίσεις."
 }

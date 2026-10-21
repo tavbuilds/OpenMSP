@@ -505,7 +505,6 @@
   ":company — the domain names we manage for you.": ":company — sizin için yönettiğimiz alan adları.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count alan adı henüz bir müşteriye atanmadı. O zamana kadar müşteri portalında görünmez.",
   ":count domain(s) now belong to this customer.": ":count alan adı artık bu müşteriye ait.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created yeni, :updated güncellendi, :unassigned müşterisiz.",
   "API host": "API sunucusu",
   "API version": "API sürümü",
   "Add domain": "Alan adı ekle",
@@ -588,5 +587,17 @@
   "Test email failed": "Test e-postası başarısız",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Şu adrese gönderildi: :address. Ulaşmazsa spam klasörünü ve gönderen alan adının SPF ve DKIM kayıtlarını kontrol edin.",
   "Nothing was sent": "Hiçbir şey gönderilmedi",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer “Log” olarak ayarlı, bu yüzden ileti posta sunucusuna değil günlük dosyasına gitti. Gerçekten göndermek için SMTP seçin."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer “Log” olarak ayarlı, bu yüzden ileti posta sunucusuna değil günlük dosyasına gitti. Gerçekten göndermek için SMTP seçin.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created yeni, :updated güncellendi, :removed artık kayıt kuruluşunda değil, :unassigned müşterisiz.",
+  "All": "Tümü",
+  "At the registrar": "Kayıt kuruluşunda",
+  "Current": "Güncel",
+  "Gone since": "Şu tarihten beri yok",
+  "No longer at the registrar": "Artık kayıt kuruluşunda değil",
+  "No longer at the registrar since": "Artık kayıt kuruluşunda değil, şu tarihten beri",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Openprovider bu alan adlarını artık döndürmüyor, bu yüzden silinmek yerine işaretlendiler — müşteri bağlantısı ve notlar kalıyor. Görmek için alan adı listesini \"Artık kayıt kuruluşunda değil\" ile filtreleyin.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider bu alan adını :date tarihinden beri döndürmüyor. Müşterisi, notları ve geçmişiyle burada kalır ve artık hatırlatma göndermez.",
+  "Registry expiry": "Kayıtta sona erme",
+  "Renews": "Yenilenme",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Openprovider'ın yenilemeyi beklediği tarih — geri sayım ve hatırlatmalar bunu izler."
 }

@@ -18,9 +18,11 @@ class DomainController extends Controller
     {
         $contact = Auth::guard('portal')->user();
 
+        // A domain the registrar let go is not one the customer still has.
         $domains = Domain::query()
             ->where('company_id', $contact->company_id)
-            ->orderBy('expires_at')
+            ->present()
+            ->orderByDue()
             ->orderBy('name')
             ->get();
 
