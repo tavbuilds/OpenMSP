@@ -609,5 +609,6 @@
   "Registry expiry": "Utgång i registret",
   "Renews": "Förnyas",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Det datum Openprovider vill ha förnyelsen senast — det som nedräkningen och påminnelserna följer.",
-  "This sign-in link has already been used or has expired. Request a new one.": "Den här inloggningslänken är redan använd eller har gått ut. Begär en ny."
+  "This sign-in link has already been used or has expired. Request a new one.": "Den här inloggningslänken är redan använd eller har gått ut. Begär en ny.",
+  "Rejected": "Avvisad"
 }

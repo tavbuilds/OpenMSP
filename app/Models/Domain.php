@@ -195,11 +195,37 @@ class Domain extends Model
 
         return match (Str::upper($this->status)) {
             'ACT' => __('Active'),
-            'PEN', 'REQ' => __('Pending'),
+            'PEN', 'REQ', 'PRE' => __('Pending'),
             'RGP', 'SCH' => __('Quarantine'),
             'DEL' => __('Deleted'),
             'FAI' => __('Failed'),
+            'REJ' => __('Rejected'),
             default => $this->status,
+        };
+    }
+
+    /**
+     * What that status means at a glance.
+     *
+     * Every domain used to wear the same blue badge, which told an operator
+     * scanning the list nothing: a live domain and one in quarantine looked
+     * identical. Green is fine, amber is in progress, red needs doing
+     * something about.
+     *
+     * A code we do not recognise stays grey rather than being guessed at —
+     * a wrong colour on a status is worse than no colour.
+     */
+    public function registrarStatusColor(): string
+    {
+        if ($this->isRemoved()) {
+            return 'gray';
+        }
+
+        return match (Str::upper((string) $this->status)) {
+            'ACT' => 'success',
+            'PEN', 'REQ', 'PRE', 'SCH' => 'warning',
+            'RGP', 'DEL', 'FAI', 'REJ' => 'danger',
+            default => 'gray',
         };
     }
 

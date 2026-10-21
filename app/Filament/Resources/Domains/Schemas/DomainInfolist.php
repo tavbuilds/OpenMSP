@@ -71,6 +71,7 @@ class DomainInfolist
                                     ->label(__('Registrar status'))
                                     ->badge()
                                     ->placeholder(__('—'))
+                                    ->color(fn (Domain $record) => $record->registrarStatusColor())
                                     ->formatStateUsing(fn (Domain $record) => $record->registrarStatusLabel()),
                                 TextEntry::make('renewal_date')
                                     ->label(__('Renewal date'))

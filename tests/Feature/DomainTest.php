@@ -241,6 +241,49 @@ class DomainTest extends TestCase
             ->assertSee(__('No longer at the registrar since'));
     }
 
+    /**
+     * Every domain wore the same blue badge, so a live one and one in
+     * quarantine read identically in a list you are scanning.
+     */
+    public function test_the_registrar_status_is_coloured_by_what_it_means(): void
+    {
+        $cases = [
+            'ACT' => 'success',
+            'PEN' => 'warning',
+            'REQ' => 'warning',
+            'PRE' => 'warning',
+            'SCH' => 'warning',
+            'RGP' => 'danger',
+            'DEL' => 'danger',
+            'FAI' => 'danger',
+            'REJ' => 'danger',
+        ];
+
+        foreach ($cases as $code => $colour) {
+            $domain = $this->domain(strtolower($code).'.nl', ['status' => $code]);
+
+            $this->assertSame($colour, $domain->registrarStatusColor(), "status {$code}");
+        }
+    }
+
+    /** A code we have never seen is not worth guessing a colour for. */
+    public function test_an_unknown_registrar_status_stays_grey(): void
+    {
+        $domain = $this->domain('onbekend.nl', ['status' => 'XYZ']);
+
+        $this->assertSame('gray', $domain->registrarStatusColor());
+        // ...and still shows the registrar's own word for it.
+        $this->assertSame('XYZ', $domain->registrarStatusLabel());
+    }
+
+    /** A domain we no longer hold is history, whatever it last said. */
+    public function test_a_removed_domain_is_grey_whatever_its_last_status(): void
+    {
+        $domain = $this->domain('weg.nl', ['status' => 'ACT', 'removed_at' => now()]);
+
+        $this->assertSame('gray', $domain->registrarStatusColor());
+    }
+
     public function test_the_admin_domain_list_and_detail_render(): void
     {
         $domain = $this->domain('klantnaam.nl');

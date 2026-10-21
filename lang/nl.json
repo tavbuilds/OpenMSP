@@ -609,5 +609,6 @@
   "Registry expiry": "Verloopdatum registry",
   "Renews": "Verlengt",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "De datum waarop Openprovider de verlenging wil — waar de aftelling en de herinneringen op lopen.",
-  "This sign-in link has already been used or has expired. Request a new one.": "Deze inloglink is al gebruikt of is verlopen. Vraag een nieuwe aan."
+  "This sign-in link has already been used or has expired. Request a new one.": "Deze inloglink is al gebruikt of is verlopen. Vraag een nieuwe aan.",
+  "Rejected": "Afgewezen"
 }

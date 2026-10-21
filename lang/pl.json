@@ -609,5 +609,6 @@
   "Registry expiry": "Wygaśnięcie w rejestrze",
   "Renews": "Odnawia się",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Data, na którą Openprovider oczekuje odnowienia — to na niej opierają się licznik i przypomnienia.",
-  "This sign-in link has already been used or has expired. Request a new one.": "Ten link logowania został już użyty lub wygasł. Poproś o nowy."
+  "This sign-in link has already been used or has expired. Request a new one.": "Ten link logowania został już użyty lub wygasł. Poproś o nowy.",
+  "Rejected": "Odrzucony"
 }
