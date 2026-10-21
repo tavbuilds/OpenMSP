@@ -2,13 +2,19 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\Login;
+use App\Filament\Auth\MultiFactor\PasskeyAuthentication;
+use App\Filament\Auth\SetupAccount;
+use App\Filament\Pages\Dashboard;
+use App\Http\Middleware\EnsureAccountSetup;
+use App\Http\Middleware\EnsureOnboarding;
+use App\Http\Middleware\SetLocale;
 use App\Support\PlatformSettings;
 use Filament\Auth\MultiFactor\App\AppAuthentication;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use App\Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\View\PanelsRenderHook;
@@ -33,14 +39,18 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(fn (): ?string => PlatformSettings::faviconUrl())
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth('full')
-            ->login(\App\Filament\Auth\Login::class)
-            ->registration(\App\Filament\Auth\SetupAccount::class)
+            ->login(Login::class)
+            ->registration(SetupAccount::class)
             ->profile()
             ->databaseNotifications()
             ->multiFactorAuthentication([
                 AppAuthentication::make()
                     ->recoverable()
                     ->brandName(PlatformSettings::name()),
+                // A passkey counts as the second factor; without this,
+                // requiring 2FA would send a passkey user to set up an
+                // authenticator app and never let them past it.
+                PasskeyAuthentication::make(),
             ], isRequired: fn (): bool => PlatformSettings::requireMfa())
             ->colors([
                 'primary' => PlatformSettings::filamentPrimary(),
@@ -65,6 +75,10 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::TOPBAR_END,
                 fn () => view('filament.hooks.language-switcher'),
             )
+            ->renderHook(
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => view('filament.hooks.passkey-login'),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -75,9 +89,9 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \App\Http\Middleware\SetLocale::class,
-                \App\Http\Middleware\EnsureAccountSetup::class,
-                \App\Http\Middleware\EnsureOnboarding::class,
+                SetLocale::class,
+                EnsureAccountSetup::class,
+                EnsureOnboarding::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

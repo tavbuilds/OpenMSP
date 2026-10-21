@@ -184,7 +184,12 @@ Settings saved in the interface reach the worker on its next job, so there is
 nothing to restart after changing them. Settings changed in `.env` still need
 `docker compose -f docker-compose.prod.yml up -d` to take effect.
 
-## 2FA
+## 2FA and passkeys
 
-Optional TOTP from **Profile**. To require it for every panel user:
-**System → Settings**. Sanctum API tokens are unaffected.
+Optional TOTP from **Profile**, and passkeys from **System → Passkeys**. To
+require a second factor for every panel user: **System → Settings**. A
+passkey satisfies that requirement; Sanctum API tokens are unaffected.
+
+Passkeys need HTTPS and a stable hostname — a key is bound to the domain it
+was created on, so one made on `msp.example.com` will not work over an IP
+address. See `docs/PASSKEYS.md`.

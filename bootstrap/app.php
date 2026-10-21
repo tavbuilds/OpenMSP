@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->group(base_path('routes/mcp.php'));
             require base_path('routes/oauth.php');
+            Route::middleware('web')
+                ->group(base_path('routes/passkeys.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
@@ -38,7 +40,15 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request) => $request->is('api/*') || $request->is('mcp') || $request->is('oauth/token') || $request->is('oauth/register'),
+            // The passkey ceremonies are fetch() endpoints on a session, not
+            // pages. Without them here a validation failure answers with an
+            // HTML redirect, and the script that asked for JSON reports a
+            // parse error instead of what actually went wrong.
+            fn (Request $request) => $request->is('api/*')
+                || $request->is('mcp')
+                || $request->is('oauth/token')
+                || $request->is('oauth/register')
+                || $request->is('admin/passkeys/*'),
         );
         $exceptions->respond(function ($response, Throwable $e, Request $request) {
             if ($request->is('mcp') && $response->getStatusCode() === 401) {
