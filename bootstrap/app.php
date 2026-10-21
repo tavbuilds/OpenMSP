@@ -20,6 +20,8 @@ return Application::configure(basePath: dirname(__DIR__))
             Route::middleware('api')
                 ->group(base_path('routes/mcp.php'));
             require base_path('routes/oauth.php');
+            Route::middleware('web')
+                ->group(base_path('routes/passkeys.php'));
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
