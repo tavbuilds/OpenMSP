@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider gaf voor deze extensies geen prijs terug. Ze staan in de catalogus zonder inkoopprijs — vul die met de hand in als u de marge nodig hebt.",
   "Openprovider settings saved": "Openprovider-instellingen opgeslagen",
   "Set at Openprovider: :value": "Ingesteld bij Openprovider: :value",
-  "What “default” means on your account": "Wat “default” bij u betekent"
+  "What “default” means on your account": "Wat “default” bij u betekent",
+  ":platform: test email": ":platform: testmail",
+  "This is a test message from :platform.": "Dit is een testbericht van :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Leest u dit, dan werkt uitgaande mail: verlengingsherinneringen, vervalwaarschuwingen en magische links voor het portaal komen aan.",
+  "Sent at :time.": "Verzonden op :time.",
+  "Send test email": "Testmail versturen",
+  "Send a test email": "Een testmail versturen",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Gebruikt de e-mailinstellingen zoals ze nu op het scherm staan, opgeslagen of niet. Wordt direct verstuurd, niet via de wachtrij.",
+  "Send": "Versturen",
+  "Send to": "Versturen naar",
+  "Test email sent": "Testmail verstuurd",
+  "Test email failed": "Testmail mislukt",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Verstuurd naar :address. Komt hij niet aan, kijk dan in de spammap en controleer SPF en DKIM van het verzendende domein.",
+  "Nothing was sent": "Er is niets verstuurd",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "De mailer staat op Log, dus het bericht ging naar het logbestand in plaats van naar de mailserver. Kies SMTP om echt te versturen."
 }

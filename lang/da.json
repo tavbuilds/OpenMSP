@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider returnerede ingen pris for disse endelser. De ligger i kataloget uden indkøbspris — udfyld den manuelt, hvis du har brug for marginen.",
   "Openprovider settings saved": "Openprovider-indstillinger gemt",
   "Set at Openprovider: :value": "Angivet hos Openprovider: :value",
-  "What “default” means on your account": "Hvad “default” betyder på din konto"
+  "What “default” means on your account": "Hvad “default” betyder på din konto",
+  ":platform: test email": ":platform: testmail",
+  "This is a test message from :platform.": "Dette er en testbesked fra :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Læser du dette, virker udgående mail: fornyelsespåmindelser, udløbsadvarsler og magiske links til portalen når frem.",
+  "Sent at :time.": "Sendt :time.",
+  "Send test email": "Send testmail",
+  "Send a test email": "Send en testmail",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Bruger e-mailindstillingerne, som de står på skærmen — gemt eller ej. Sendes med det samme, ikke via køen.",
+  "Send": "Send",
+  "Send to": "Send til",
+  "Test email sent": "Testmail sendt",
+  "Test email failed": "Testmail mislykkedes",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Sendt til :address. Kommer den ikke frem, så tjek spamfilteret samt SPF og DKIM for afsenderdomænet.",
+  "Nothing was sent": "Der blev ikke sendt noget",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Maileren står på Log, så beskeden gik til logfilen i stedet for mailserveren. Vælg SMTP for at sende rigtigt."
 }

@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider n’a renvoyé aucun prix pour ces extensions. Elles figurent au catalogue sans prix d’achat — saisissez-le à la main si vous avez besoin de la marge.",
   "Openprovider settings saved": "Paramètres Openprovider enregistrés",
   "Set at Openprovider: :value": "Défini chez Openprovider : :value",
-  "What “default” means on your account": "Ce que « default » signifie sur votre compte"
+  "What “default” means on your account": "Ce que « default » signifie sur votre compte",
+  ":platform: test email": ":platform : e-mail de test",
+  "This is a test message from :platform.": "Ceci est un message de test envoyé par :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Si vous lisez ceci, l’envoi d’e-mails fonctionne : rappels de renouvellement, alertes d’expiration et liens magiques du portail arriveront bien.",
+  "Sent at :time.": "Envoyé le :time.",
+  "Send test email": "Envoyer un e-mail de test",
+  "Send a test email": "Envoyer un e-mail de test",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Utilise les paramètres e-mail tels qu’ils apparaissent à l’écran, enregistrés ou non. Envoi immédiat, sans passer par la file d’attente.",
+  "Send": "Envoyer",
+  "Send to": "Envoyer à",
+  "Test email sent": "E-mail de test envoyé",
+  "Test email failed": "Échec de l’e-mail de test",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Envoyé à :address. S’il n’arrive pas, vérifiez le dossier spam ainsi que les SPF et DKIM du domaine d’envoi.",
+  "Nothing was sent": "Rien n’a été envoyé",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Le mailer est réglé sur Log : le message est allé dans le fichier journal, pas au serveur de messagerie. Choisissez SMTP pour envoyer réellement."
 }

@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider ei palauttanut hintaa näille päätteille. Ne ovat luettelossa ilman ostohintaa — täytä se käsin, jos tarvitset katteen.",
   "Openprovider settings saved": "Openprovider-asetukset tallennettu",
   "Set at Openprovider: :value": "Asetettu Openproviderissa: :value",
-  "What “default” means on your account": "Mitä “default” tarkoittaa tililläsi"
+  "What “default” means on your account": "Mitä “default” tarkoittaa tililläsi",
+  ":platform: test email": ":platform: testiviesti",
+  "This is a test message from :platform.": "Tämä on testiviesti palvelusta :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Jos luet tämän, lähtevä sähköposti toimii: uusimismuistutukset, vanhenemisvaroitukset ja portaalin taikalinkit tulevat perille.",
+  "Sent at :time.": "Lähetetty :time.",
+  "Send test email": "Lähetä testiviesti",
+  "Send a test email": "Lähetä testiviesti",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Käyttää näytöllä olevia sähköpostiasetuksia, tallennettuina tai ei. Lähetetään heti, ei jonon kautta.",
+  "Send": "Lähetä",
+  "Send to": "Vastaanottaja",
+  "Test email sent": "Testiviesti lähetetty",
+  "Test email failed": "Testiviesti epäonnistui",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Lähetetty osoitteeseen :address. Jos viesti ei saavu, tarkista roskapostikansio sekä lähettävän verkkotunnuksen SPF ja DKIM.",
+  "Nothing was sent": "Mitään ei lähetetty",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Lähettäjäksi on valittu Log, joten viesti meni lokitiedostoon eikä postipalvelimelle. Valitse SMTP, jotta viesti lähtee oikeasti."
 }

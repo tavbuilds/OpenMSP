@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider bu uzantılar için fiyat döndürmedi. Katalogda alış fiyatı olmadan duruyorlar — kâr marjına ihtiyacınız varsa elle girin.",
   "Openprovider settings saved": "Openprovider ayarları kaydedildi",
   "Set at Openprovider: :value": "Openprovider’da ayarlı: :value",
-  "What “default” means on your account": "Hesabınızda “default” ne anlama geliyor"
+  "What “default” means on your account": "Hesabınızda “default” ne anlama geliyor",
+  ":platform: test email": ":platform: test e-postası",
+  "This is a test message from :platform.": "Bu, :platform tarafından gönderilen bir test mesajıdır.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Bunu okuyorsanız giden e-posta çalışıyor: yenileme hatırlatmaları, süre dolum uyarıları ve portal sihirli bağlantıları ulaşacak.",
+  "Sent at :time.": "Gönderim: :time.",
+  "Send test email": "Test e-postası gönder",
+  "Send a test email": "Bir test e-postası gönder",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "E-posta ayarlarını ekranda göründükleri haliyle kullanır, kaydedilmiş olsun ya da olmasın. Kuyruğa girmeden hemen gönderilir.",
+  "Send": "Gönder",
+  "Send to": "Alıcı",
+  "Test email sent": "Test e-postası gönderildi",
+  "Test email failed": "Test e-postası başarısız",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Şu adrese gönderildi: :address. Ulaşmazsa spam klasörünü ve gönderen alan adının SPF ve DKIM kayıtlarını kontrol edin.",
+  "Nothing was sent": "Hiçbir şey gönderilmedi",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer “Log” olarak ayarlı, bu yüzden ileti posta sunucusuna değil günlük dosyasına gitti. Gerçekten göndermek için SMTP seçin."
 }

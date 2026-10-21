@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider gav inget pris för dessa ändelser. De ligger i katalogen utan inköpspris — fyll i det för hand om du behöver marginalen.",
   "Openprovider settings saved": "Openprovider-inställningar sparade",
   "Set at Openprovider: :value": "Inställt hos Openprovider: :value",
-  "What “default” means on your account": "Vad ”default” betyder på ditt konto"
+  "What “default” means on your account": "Vad ”default” betyder på ditt konto",
+  ":platform: test email": ":platform: testmeddelande",
+  "This is a test message from :platform.": "Det här är ett testmeddelande från :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Läser du det här fungerar utgående e-post: förnyelsepåminnelser, utgångsvarningar och magiska länkar till portalen kommer fram.",
+  "Sent at :time.": "Skickat :time.",
+  "Send test email": "Skicka testmeddelande",
+  "Send a test email": "Skicka ett testmeddelande",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Använder e-postinställningarna som de står på skärmen, sparade eller inte. Skickas direkt, inte via kön.",
+  "Send": "Skicka",
+  "Send to": "Skicka till",
+  "Test email sent": "Testmeddelande skickat",
+  "Test email failed": "Testmeddelandet misslyckades",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Skickat till :address. Om det inte kommer fram, kolla skräpposten samt SPF och DKIM för avsändardomänen.",
+  "Nothing was sent": "Inget skickades",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "E-postklienten står på Log, så meddelandet hamnade i loggfilen i stället för hos e-postservern. Välj SMTP för att skicka på riktigt."
 }

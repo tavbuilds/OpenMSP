@@ -45,6 +45,11 @@ Optional in the same example file: `MAIL_*` (SMTP), `STRIPE_*` (portal
 payments), `APP_DEMO_LOGIN`, `APP_TIMEZONE`, locale, log level. SMTP and
 Stripe can also be set after first login under **System → Settings**.
 
+> ⚠️ Those stored settings **win over the environment**: they are applied to
+> the config on every boot. If editing `MAIL_*` or `STRIPE_*` in `.env` seems
+> to change nothing, a value is saved in the UI. Clear it with
+> **Settings → Reset email/Stripe to env**, or just set it there instead.
+
 ## 1) Docker CLI (droplet / any VPS)
 
 ```bash
@@ -138,12 +143,23 @@ docker compose -f docker-compose.prod.yml exec db pg_dump -U msp msp > openmsp-$
 
 ## SMTP test
 
+**System → Settings → Email → Send test email.** It uses the values on
+screen, saved or not, so you can check credentials before committing them,
+and it sends straight away rather than through the queue. A failure shows
+the mail server's own message; with the mailer on `log` it says plainly that
+nothing left the machine.
+
+From the shell instead:
+
 ```bash
 docker compose -f docker-compose.prod.yml exec app php artisan tinker --execute="Mail::raw('OpenMSP SMTP test', fn (\$m) => \$m->to('you@example.com')->subject('OpenMSP SMTP test'));"
 ```
 
 Reminders (`contracts:send-renewal-reminders`, certificate and planning
-commands) use the same `MAIL_*`. The queue worker has those variables too.
+commands) use the same `MAIL_*`. The queue worker has those variables too —
+and note that a working test only proves the mail server is reachable: if
+reminders still do not arrive, check that the `queue` container is running,
+since every notification is queued.
 
 ## 2FA
 

@@ -25,7 +25,7 @@ Registration then closes; create further accounts under **System → Users**.
 After the first sign-in (admin/manager only):
 
 1. **Branding** — platform name, primary color, logo, and favicon (admin, login, portal).
-2. **Email** — `log` until SMTP is ready; change later under Settings.
+2. **Email** — `log` until SMTP is ready; change later under Settings, and use **Send test email** there to check it.
 3. **Stripe** — optional, for portal auto-collect.
 4. **API token** — optional first Sanctum token (shown once).
 

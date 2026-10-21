@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider lieferte für diese Endungen keinen Preis. Sie stehen ohne Einkaufspreis im Katalog — tragen Sie ihn von Hand nach, wenn Sie die Marge brauchen.",
   "Openprovider settings saved": "Openprovider-Einstellungen gespeichert",
   "Set at Openprovider: :value": "Bei Openprovider gesetzt: :value",
-  "What “default” means on your account": "Was „default“ in Ihrem Konto bedeutet"
+  "What “default” means on your account": "Was „default“ in Ihrem Konto bedeutet",
+  ":platform: test email": ":platform: Test-E-Mail",
+  "This is a test message from :platform.": "Dies ist eine Testnachricht von :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Wenn Sie das lesen, funktioniert der Mailversand: Verlängerungserinnerungen, Ablaufwarnungen und Magic Links für das Portal kommen an.",
+  "Sent at :time.": "Gesendet am :time.",
+  "Send test email": "Test-E-Mail senden",
+  "Send a test email": "Eine Test-E-Mail senden",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Verwendet die E-Mail-Einstellungen so, wie sie gerade auf dem Bildschirm stehen — gespeichert oder nicht. Wird sofort gesendet, nicht über die Warteschlange.",
+  "Send": "Senden",
+  "Send to": "Senden an",
+  "Test email sent": "Test-E-Mail gesendet",
+  "Test email failed": "Test-E-Mail fehlgeschlagen",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "An :address gesendet. Kommt sie nicht an, prüfen Sie den Spam-Ordner sowie SPF und DKIM der sendenden Domain.",
+  "Nothing was sent": "Es wurde nichts gesendet",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Der Mailer steht auf Log, die Nachricht ging also in die Logdatei statt an den Mailserver. Wählen Sie SMTP, um wirklich zu senden."
 }
