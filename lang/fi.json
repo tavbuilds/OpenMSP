@@ -609,5 +609,6 @@
   "Registry expiry": "Vanheneminen rekisterissä",
   "Renews": "Uusitaan",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Päivä, jolloin Openprovider haluaa uusinnan — sitä laskuri ja muistutukset seuraavat.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Tämä kirjautumislinkki on jo käytetty tai se on vanhentunut. Pyydä uusi.",
   "Rejected": "Hylätty"
 }
