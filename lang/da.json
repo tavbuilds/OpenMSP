@@ -609,6 +609,8 @@
   "Registry expiry": "Udløb i registret",
   "Renews": "Fornyes",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Den dato, Openprovider vil have fornyelsen senest — den, nedtællingen og påmindelserne følger.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Dette login-link er allerede brugt eller udløbet. Bed om et nyt.",
+  "Rejected": "Afvist",
   ":name runs on its own now.": ":name kører nu for sig selv.",
   "A contract that holds several services. Add them afterwards; they keep their own prices.": "En kontrakt, der indeholder flere ydelser. Du tilføjer dem bagefter; de beholder deres egne priser.",
   "Add one, or combine existing contracts into this one from the contract list.": "Tilføj en, eller saml eksisterende kontrakter her fra kontraktlisten.",

@@ -609,6 +609,8 @@
   "Registry expiry": "Expiration au registre",
   "Renews": "Renouvelle le",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "La date à laquelle Openprovider attend le renouvellement — celle que suivent le compte à rebours et les rappels.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Ce lien de connexion a déjà été utilisé ou a expiré. Demandez-en un nouveau.",
+  "Rejected": "Refusé",
   ":name runs on its own now.": ":name fonctionne maintenant seul.",
   "A contract that holds several services. Add them afterwards; they keep their own prices.": "Un contrat qui contient plusieurs services. Vous les ajoutez ensuite ; ils gardent leurs propres prix.",
   "Add one, or combine existing contracts into this one from the contract list.": "Ajoutez-en un, ou regroupez ici des contrats existants depuis la liste des contrats.",

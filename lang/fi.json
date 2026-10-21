@@ -609,6 +609,8 @@
   "Registry expiry": "Vanheneminen rekisterissä",
   "Renews": "Uusitaan",
   "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Päivä, jolloin Openprovider haluaa uusinnan — sitä laskuri ja muistutukset seuraavat.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Tämä kirjautumislinkki on jo käytetty tai se on vanhentunut. Pyydä uusi.",
+  "Rejected": "Hylätty",
   ":name runs on its own now.": ":name jatkaa nyt omillaan.",
   "A contract that holds several services. Add them afterwards; they keep their own prices.": "Sopimus, joka sisältää useita palveluita. Lisäät ne jälkikäteen; ne säilyttävät omat hintansa.",
   "Add one, or combine existing contracts into this one from the contract list.": "Lisää yksi, tai yhdistä tähän olemassa olevia sopimuksia sopimuslistalta.",

@@ -22,8 +22,25 @@ The portal follows the same language rules as admin (browser, then English).
 
 - Model: `Contact` (Authenticatable), guard `portal` (separate from Filament `web`)
 - Request link: `POST /portal/login` (throttled)
-- Consume: signed URL `GET /portal/magic/{contact}` (30 minutes)
+- Consume: signed URL `GET /portal/magic/{contact}?token=…` (30 minutes, **one use**)
 - SMTP must work (`MAIL_*`) — locally `MAIL_MAILER=log` prints the link in `storage/logs`
+
+### One use means one use
+
+The signature only fixes the expiry. On its own a signed link keeps working
+until it runs out, however many times it is opened — so the link in an inbox
+was a second key for half an hour, which matters most for the shared
+`info@` mailboxes these links are often sent to.
+
+The link therefore carries a token, signed along with the URL and stored
+hashed on the contact. Opening the link spends it, in a single conditional
+update so a mail scanner that fetches the link first and the human clicking
+it second cannot both get in. Requesting a new link replaces the token, and
+signing out clears it, so a link still sitting in the inbox stops working.
+
+A consequence worth knowing: a link-prefetching mail scanner will burn the
+link before the recipient clicks it, and they will have to ask for another.
+That is the cost of the promise the email makes.
 
 ### Try the magic link locally
 
