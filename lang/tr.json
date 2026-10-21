@@ -474,7 +474,6 @@
   "Welcome to :name. This is the first setup step. Next you choose the platform name and optionally email, Stripe, and an API token.": ":name platformuna hoş geldiniz. Bu, kurulumun ilk adımı. Ardından platform adını ve isterseniz e-posta, Stripe ve bir API jetonunu seçeceksiniz.",
   "With an email address this person can sign in to the customer portal via magic link.": "Bir e-posta adresiyle bu kişi müşteri portalına sihirli bağlantı ile giriş yapabilir.",
   "Yes": "Evet",
-  "empty = STARTTLS (587); smtps = 465": "boş = STARTTLS (587); smtps = 465",
   "off": "kapalı",
   "— (fixed cost)": "— (sabit maliyet)",
   "Current site": "Mevcut konum",
@@ -588,5 +587,12 @@
   "Test email failed": "Test e-postası başarısız",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Şu adrese gönderildi: :address. Ulaşmazsa spam klasörünü ve gönderen alan adının SPF ve DKIM kayıtlarını kontrol edin.",
   "Nothing was sent": "Hiçbir şey gönderilmedi",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer “Log” olarak ayarlı, bu yüzden ileti posta sunucusuna değil günlük dosyasına gitti. Gerçekten göndermek için SMTP seçin."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer “Log” olarak ayarlı, bu yüzden ileti posta sunucusuna değil günlük dosyasına gitti. Gerçekten göndermek için SMTP seçin.",
+  "Encryption": "Şifreleme",
+  "From the environment (MAIL_SCHEME)": "Ortamdan (MAIL_SCHEME)",
+  "STARTTLS — usually port 587": "STARTTLS — genellikle 587 numaralı bağlantı noktası",
+  "SSL/TLS — usually port 465": "SSL/TLS — genellikle 465 numaralı bağlantı noktası",
+  "SSL/TLS normally runs on port 465.": "SSL/TLS normalde 465 numaralı bağlantı noktasını kullanır.",
+  "Port 465 normally needs SSL/TLS, not STARTTLS.": "465 numaralı bağlantı noktası normalde STARTTLS değil SSL/TLS gerektirir.",
+  "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Bunda kayıtlı parola kullanıldı, çünkü parola alanı boş. Başka bir parolayı denemek için parolayı yazın."
 }

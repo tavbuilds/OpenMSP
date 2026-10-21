@@ -51,6 +51,38 @@ class MailTesterTest extends TestCase
         $this->assertSame('stored-secret', $resolved['mail.mailers.smtp.password']);
     }
 
+    /**
+     * Symfony takes "smtp" and "smtps". Everyone calls 465 "SSL", types that,
+     * and gets a failed send with an error that reads like a bug.
+     */
+    public function test_the_encryption_scheme_is_translated_to_what_symfony_accepts(): void
+    {
+        $this->assertSame('smtps', PlatformSettings::normaliseMailScheme('SSL'));
+        $this->assertSame('smtps', PlatformSettings::normaliseMailScheme('smtps'));
+        $this->assertSame('smtp', PlatformSettings::normaliseMailScheme('TLS'));
+        $this->assertSame('smtp', PlatformSettings::normaliseMailScheme('starttls'));
+        $this->assertNull(PlatformSettings::normaliseMailScheme(''));
+        $this->assertNull(PlatformSettings::normaliseMailScheme('null'));
+        // Not an allow-list: a scheme we have not heard of still gets through.
+        $this->assertSame('future-scheme', PlatformSettings::normaliseMailScheme('future-scheme'));
+
+        $resolved = MailTester::resolveConfig([
+            'mail_mailer' => 'smtp',
+            'mail_scheme' => 'SSL',
+        ]);
+        $this->assertSame('smtps', $resolved['mail.mailers.smtp.scheme']);
+    }
+
+    /** A value stored before the field became a list must not break a send. */
+    public function test_a_stored_ssl_scheme_is_translated_when_applied_to_the_config(): void
+    {
+        PlatformSettings::set(PlatformSettings::MAIL_SCHEME, 'ssl');
+
+        PlatformSettings::applyToConfig();
+
+        $this->assertSame('smtps', config('mail.mailers.smtp.scheme'));
+    }
+
     public function test_it_knows_when_nothing_actually_leaves_the_server(): void
     {
         config(['mail.default' => 'smtp']);
