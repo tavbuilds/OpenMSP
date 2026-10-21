@@ -10,6 +10,9 @@ final class DomainSyncReport
 
     public int $domainsUnassigned = 0;
 
+    /** Synced domains the registrar no longer returns. Marked, never deleted. */
+    public int $domainsRemoved = 0;
+
     public int $tldPricesUpdated = 0;
 
     /**
@@ -37,6 +40,7 @@ final class DomainSyncReport
             'domains_created' => $this->domainsCreated,
             'domains_updated' => $this->domainsUpdated,
             'domains_unassigned' => $this->domainsUnassigned,
+            'domains_removed' => $this->domainsRemoved,
             'tld_prices_updated' => $this->tldPricesUpdated,
             'extensions_without_price' => array_values(array_unique($this->extensionsWithoutPrice)),
             'errors' => $this->errors,

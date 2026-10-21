@@ -504,7 +504,6 @@
   ":company — the domain names we manage for you.": ":company — verkkotunnukset, joita hallinnoimme puolestasi.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count verkkotunnusta ei ole vielä liitetty asiakkaaseen. Siihen asti ne eivät näy asiakasportaalissa.",
   ":count domain(s) now belong to this customer.": ":count verkkotunnusta kuuluu nyt tälle asiakkaalle.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created uutta, :updated päivitetty, :unassigned ilman asiakasta.",
   "API host": "API-palvelin",
   "API version": "API-versio",
   "Add domain": "Lisää verkkotunnus",
@@ -597,5 +596,17 @@
   "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Tässä käytettiin tallennettua salasanaa, koska salasanakenttä on tyhjä. Kirjoita salasana, jos haluat testata toista.",
   ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": ":count jonotyö epäonnistui. Se, mitä niiden piti lähettää, ei mennyt perille eikä sitä yritetä uudelleen itsestään.",
   "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Kukaan ei käsittele jonoa: :count työtä odottaa, vanhin :since. Kirjautumislinkit ja muistutukset kulkevat jonon kautta, joten niitä ei toimiteta — vaikka alla oleva testi onnistuisi.",
-  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Tämä lähti suoraan. Jonoa ei käsitellä, joten kirjautumislinkkejä ja muistutuksia ei edelleenkään toimiteta."
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Tämä lähti suoraan. Jonoa ei käsitellä, joten kirjautumislinkkejä ja muistutuksia ei edelleenkään toimiteta.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created uutta, :updated päivitetty, :removed ei enää rekisterinpitäjällä, :unassigned ilman asiakasta.",
+  "All": "Kaikki",
+  "At the registrar": "Rekisterinpitäjällä",
+  "Current": "Nykyiset",
+  "Gone since": "Poistunut",
+  "No longer at the registrar": "Ei enää rekisterinpitäjällä",
+  "No longer at the registrar since": "Ei enää rekisterinpitäjällä alkaen",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Openprovider ei enää palauta näitä verkkotunnuksia, joten ne merkittiin poistamisen sijaan — asiakasliitos ja muistiinpanot säilyvät. Suodata verkkotunnusluettelo arvolla ”Ei enää rekisterinpitäjällä” nähdäksesi ne.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider ei ole palauttanut tätä verkkotunnusta :date jälkeen. Se jää tänne asiakkaansa, muistiinpanojensa ja historiansa kanssa eikä lähetä enää muistutuksia.",
+  "Registry expiry": "Vanheneminen rekisterissä",
+  "Renews": "Uusitaan",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Päivä, jolloin Openprovider haluaa uusinnan — sitä laskuri ja muistutukset seuraavat."
 }

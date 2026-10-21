@@ -504,7 +504,6 @@
   ":company — the domain names we manage for you.": ":company — de domännamn vi hanterar åt dig.",
   ":count domain(s) are not assigned to a customer yet. They stay out of the customer portal until they are.": ":count domän(er) är ännu inte tilldelade en kund. Till dess visas de inte i kundportalen.",
   ":count domain(s) now belong to this customer.": ":count domän(er) tillhör nu denna kund.",
-  ":created new, :updated updated, :unassigned without a customer.": ":created nya, :updated uppdaterade, :unassigned utan kund.",
   "API host": "API-värd",
   "API version": "API-version",
   "Add domain": "Lägg till domän",
@@ -597,5 +596,17 @@
   "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Det sparade lösenordet användes, eftersom lösenordsfältet är tomt. Skriv in lösenordet för att testa ett annat.",
   ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": ":count köjobb misslyckades. Det de skulle skicka kom inte fram och försöks inte igen av sig självt.",
   "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Ingen arbetar av kön: :count jobb väntar, det äldsta sedan :since. Inloggningslänkar och påminnelser går via kön och levereras därför inte — inte ens om testet nedan lyckas.",
-  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Den här gick direkt. Kön arbetas inte av, så inloggningslänkar och påminnelser levereras fortfarande inte."
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Den här gick direkt. Kön arbetas inte av, så inloggningslänkar och påminnelser levereras fortfarande inte.",
+  ":created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.": ":created nya, :updated uppdaterade, :removed inte längre hos registraren, :unassigned utan kund.",
+  "All": "Alla",
+  "At the registrar": "Hos registraren",
+  "Current": "Aktuella",
+  "Gone since": "Borta sedan",
+  "No longer at the registrar": "Inte längre hos registraren",
+  "No longer at the registrar since": "Inte längre hos registraren sedan",
+  "Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on \"No longer at the registrar\" to see them.": "Openprovider returnerar inte längre dessa domäner, så de har markerats i stället för att tas bort — kundkopplingen och anteckningarna finns kvar. Filtrera domänlistan på \"Inte längre hos registraren\" för att se dem.",
+  "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider returnerar inte längre den här domänen sedan :date. Den ligger kvar här med sin kund, sina anteckningar och sin historik, och skickar inga påminnelser längre.",
+  "Registry expiry": "Utgång i registret",
+  "Renews": "Förnyas",
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Det datum Openprovider vill ha förnyelsen senast — det som nedräkningen och påminnelserna följer."
 }

@@ -2,6 +2,8 @@
 
 namespace App\Models\Concerns;
 
+use Carbon\CarbonInterface;
+
 /**
  * Reminders at 30/14/7/1 days and once on the day itself.
  *
@@ -20,15 +22,25 @@ trait WarnsBeforeExpiry
         1 => 'notify_1',
     ];
 
+    /**
+     * The date the countdown runs to. Overridable: a registrar may publish a
+     * date to act on that is not the same as the date printed on the record.
+     */
+    public function expiryDate(): ?CarbonInterface
+    {
+        return $this->expires_at;
+    }
+
     /** Signed days until expiry (negative = already expired). Null if unknown. */
     public function daysUntilExpiry(): ?int
     {
-        if (! $this->expires_at) {
+        $date = $this->expiryDate();
+        if (! $date) {
             return null;
         }
 
         return (int) round(
-            now()->startOfDay()->diffInDays($this->expires_at->copy()->startOfDay(), false)
+            now()->startOfDay()->diffInDays($date->copy()->startOfDay(), false)
         );
     }
 

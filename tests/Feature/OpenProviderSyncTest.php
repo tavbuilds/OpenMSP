@@ -177,6 +177,117 @@ class OpenProviderSyncTest extends TestCase
         $this->assertNull($domain->expired_notified_at);
     }
 
+    /**
+     * Nothing is ever deleted, so a domain that quietly dropped off the
+     * account used to sit in the list forever with last year's date.
+     */
+    public function test_a_domain_the_registrar_stops_returning_is_marked_not_deleted(): void
+    {
+        $company = Company::create(['name' => 'Klant BV', 'country' => 'NL']);
+        $this->fake([
+            [$this->domainRow(), $this->domainRow(['id' => 4712, 'domain' => ['name' => 'tweede', 'extension' => 'nl']])],
+            [$this->domainRow()],
+        ]);
+
+        app(OpenProviderSync::class)->run();
+        Domain::query()->where('name', 'tweede.nl')->update([
+            'company_id' => $company->id,
+            'notes' => 'Let go on purpose.',
+        ]);
+
+        $report = app(OpenProviderSync::class)->run();
+
+        $gone = Domain::query()->where('name', 'tweede.nl')->firstOrFail();
+        $this->assertNotNull($gone->removed_at);
+        $this->assertTrue($gone->isRemoved());
+        // The reason not to delete: this is ours, not the registrar's.
+        $this->assertSame($company->id, $gone->company_id);
+        $this->assertSame('Let go on purpose.', $gone->notes);
+        $this->assertSame(1, $report->domainsRemoved);
+
+        $kept = Domain::query()->where('name', 'klantnaam.nl')->firstOrFail();
+        $this->assertNull($kept->removed_at);
+    }
+
+    /** Out of quarantine and back on the account: not a new domain. */
+    public function test_a_domain_that_comes_back_is_unmarked(): void
+    {
+        $this->fake([
+            [$this->domainRow()],
+            [],
+            [$this->domainRow()],
+        ]);
+
+        app(OpenProviderSync::class)->run();
+        // An empty answer is not evidence of an empty account, so this run
+        // must change nothing at all.
+        app(OpenProviderSync::class)->run();
+        $this->assertNull(Domain::query()->firstOrFail()->removed_at);
+
+        app(OpenProviderSync::class)->run();
+        $this->assertNull(Domain::query()->firstOrFail()->removed_at);
+    }
+
+    /**
+     * Wrong credentials answer with nothing. Marking the whole portfolio gone
+     * on the strength of that would be worse than doing nothing.
+     */
+    public function test_an_empty_answer_never_marks_the_portfolio_removed(): void
+    {
+        $this->fake([[$this->domainRow()], []]);
+
+        app(OpenProviderSync::class)->run();
+        $report = app(OpenProviderSync::class)->run();
+
+        $this->assertSame(0, $report->domainsRemoved);
+        $this->assertNull(Domain::query()->firstOrFail()->removed_at);
+    }
+
+    /** A domain typed in by hand is not Openprovider's to take away. */
+    public function test_a_manual_domain_is_left_alone_when_the_registrar_answers(): void
+    {
+        Domain::query()->create(['name' => 'handmatig.nl']);
+
+        $this->fake([[$this->domainRow()]]);
+        $report = app(OpenProviderSync::class)->run();
+
+        $this->assertSame(0, $report->domainsRemoved);
+        $this->assertNull(Domain::query()->where('name', 'handmatig.nl')->firstOrFail()->removed_at);
+    }
+
+    /**
+     * Openprovider publishes two dates and says of expiration_date that it
+     * "is not the primary reference for domain expiration".
+     */
+    public function test_the_countdown_runs_to_the_renewal_date(): void
+    {
+        $this->fake([[$this->domainRow([
+            'expiration_date' => '2026-12-01 00:00:00',
+            'renewal_date' => '2026-11-01 00:00:00',
+        ])]]);
+
+        app(OpenProviderSync::class)->run();
+
+        $domain = Domain::query()->firstOrFail();
+        $this->assertSame('2026-11-01', $domain->expiryDate()?->toDateString());
+        $this->assertSame(
+            (int) round(now()->startOfDay()->diffInDays($domain->renewal_date->startOfDay(), false)),
+            $domain->daysUntilExpiry(),
+        );
+    }
+
+    /** Without a renewal date — a hand-typed domain — the expiry stands in. */
+    public function test_the_countdown_falls_back_to_the_expiry_date(): void
+    {
+        $domain = Domain::query()->create([
+            'name' => 'handmatig.nl',
+            'expires_at' => now()->addDays(10)->toDateString(),
+        ]);
+
+        $this->assertSame($domain->expires_at->toDateString(), $domain->expiryDate()?->toDateString());
+        $this->assertSame(10, $domain->daysUntilExpiry());
+    }
+
     public function test_extension_prices_land_in_the_catalog_and_link_to_domains(): void
     {
         $this->fake([[$this->domainRow()]], [[$this->tldRow(6.5, 11.0)]]);

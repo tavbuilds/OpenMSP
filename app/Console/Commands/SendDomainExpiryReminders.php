@@ -29,7 +29,14 @@ class SendDomainExpiryReminders extends Command
 
         $sent = 0;
 
-        foreach (Domain::query()->with('company')->whereNotNull('expires_at')->get() as $domain) {
+        // A domain the registrar no longer lists is nothing to chase.
+        $due = Domain::query()
+            ->with('company')
+            ->present()
+            ->whereRaw(Domain::ACTIONABLE_DATE.' is not null')
+            ->get();
+
+        foreach ($due as $domain) {
             $which = $domain->dueNotification();
             if ($which === null) {
                 continue;

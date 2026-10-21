@@ -20,18 +20,30 @@ class DomainInfolist
         return $schema
             ->columns(1)
             ->components([
+                // One line at the top, only when it applies: without it a
+                // removed domain reads like any other, just quieter.
+                TextEntry::make('removed_notice')
+                    ->hiddenLabel()
+                    ->columnSpanFull()
+                    ->visible(fn (Domain $record) => $record->isRemoved())
+                    ->state(fn (Domain $record) => __('Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.', [
+                        'date' => $record->removed_at?->isoFormat('LL'),
+                    ])),
+
                 Section::make(__('Key figures'))
                     ->columns(Breakpoints::FOUR)
                     ->schema([
-                        TextEntry::make('expires_at')
-                            ->label(__('Expires'))
+                        TextEntry::make('due')
+                            ->label(__('Renews'))
+                            ->state(fn (Domain $record) => $record->expiryDate())
                             ->date('M j, Y')
                             ->placeholder(__('—')),
                         TextEntry::make('days')
                             ->label(__('Days'))
                             ->state(fn (Domain $record) => $record->daysUntilExpiry() ?? __('—'))
                             ->badge()
-                            ->color(fn (Domain $record) => $record->statusColor()),
+                            ->color(fn (Domain $record) => $record->statusColor())
+                            ->helperText(fn (Domain $record) => $record->statusLabel()),
                         TextEntry::make('auto_renew')
                             ->label(__('Auto-renew'))
                             ->badge()
@@ -60,7 +72,15 @@ class DomainInfolist
                                     ->badge()
                                     ->placeholder(__('—'))
                                     ->formatStateUsing(fn (Domain $record) => $record->registrarStatusLabel()),
-                                TextEntry::make('renewal_date')->label(__('Renewal date'))->date('M j, Y')->placeholder(__('—')),
+                                TextEntry::make('renewal_date')
+                                    ->label(__('Renewal date'))
+                                    ->date('M j, Y')
+                                    ->placeholder(__('—'))
+                                    ->helperText(__('The date Openprovider wants the renewal by — what the countdown and the reminders use.')),
+                                TextEntry::make('expires_at')
+                                    ->label(__('Registry expiry'))
+                                    ->date('M j, Y')
+                                    ->placeholder(__('—')),
                                 TextEntry::make('auto_renew_source')
                                     ->label(__('Auto-renew at registrar'))
                                     ->placeholder(__('—'))
@@ -75,6 +95,10 @@ class DomainInfolist
                                     ->label(__('Last synced'))
                                     ->dateTime('M j, Y H:i')
                                     ->placeholder(__('Never')),
+                                TextEntry::make('removed_at')
+                                    ->label(__('No longer at the registrar since'))
+                                    ->dateTime('M j, Y H:i')
+                                    ->visible(fn (Domain $record) => $record->isRemoved()),
                             ]),
 
                         Tab::make(__('Notes'))
