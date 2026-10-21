@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Support\Breakpoints;
+use App\Support\MailTester;
 use App\Support\PlatformSettings;
 use App\Support\UserAdministration;
 use BackedEnum;
@@ -22,6 +23,8 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\Str;
+use Throwable;
 
 class ManageSettings extends Page implements HasSchemas
 {
@@ -155,6 +158,10 @@ class ManageSettings extends Page implements HasSchemas
                             ->label(__('MAIL_SCHEME'))
                             ->placeholder(__('empty = STARTTLS (587); smtps = 465'))
                             ->visible(fn (Get $get) => $get('mail_mailer') === 'smtp'),
+                    ])
+                    // Sits with the fields it tests, not on the page toolbar.
+                    ->footerActions([
+                        $this->sendTestEmailAction(),
                     ]),
                 Section::make('Stripe')
                     ->description(__('Customer portal iDEAL → SEPA. Empty secrets keep using env values.'))
@@ -216,6 +223,66 @@ class ManageSettings extends Page implements HasSchemas
                 ->label(__('Save'))
                 ->action('save'),
         ];
+    }
+
+    /**
+     * The one thing the email section could not tell you before: whether any
+     * of this actually works. Runs against the values on screen, so you can
+     * check them before saving, and sends immediately rather than through
+     * the queue — a queued test only proves the job was accepted.
+     */
+    public function sendTestEmailAction(): Action
+    {
+        return Action::make('sendTestEmail')
+            ->label(__('Send test email'))
+            ->icon('heroicon-o-paper-airplane')
+            ->color('gray')
+            ->modalHeading(__('Send a test email'))
+            ->modalDescription(__('Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.'))
+            ->modalSubmitActionLabel(__('Send'))
+            ->schema([
+                TextInput::make('to')
+                    ->label(__('Send to'))
+                    ->email()
+                    ->required()
+                    ->default(fn () => auth()->user()?->email),
+            ])
+            ->action(function (array $data): void {
+                $settings = $this->data;
+
+                try {
+                    MailTester::send($data['to'], $settings);
+                } catch (Throwable $e) {
+                    Notification::make()
+                        ->title(__('Test email failed'))
+                        ->body(Str::limit($e->getMessage(), 500))
+                        ->danger()
+                        // The message is the whole point; do not time it out.
+                        ->persistent()
+                        ->send();
+
+                    return;
+                }
+
+                if (MailTester::writesToLogOnly($settings)) {
+                    Notification::make()
+                        ->title(__('Nothing was sent'))
+                        ->body(__('The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.'))
+                        ->warning()
+                        ->persistent()
+                        ->send();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title(__('Test email sent'))
+                    ->body(__('Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.', [
+                        'address' => $data['to'],
+                    ]))
+                    ->success()
+                    ->send();
+            });
     }
 
     public function clearMailSecretsAction(): Action

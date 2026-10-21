@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "O Openprovider não devolveu preço para estas extensões. Estão no catálogo sem preço de compra — introduza-o à mão se precisar da margem.",
   "Openprovider settings saved": "Definições do Openprovider guardadas",
   "Set at Openprovider: :value": "Definido no Openprovider: :value",
-  "What “default” means on your account": "O que significa “default” na sua conta"
+  "What “default” means on your account": "O que significa “default” na sua conta",
+  ":platform: test email": ":platform: e-mail de teste",
+  "This is a test message from :platform.": "Esta é uma mensagem de teste de :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Se está a ler isto, o envio de e-mail funciona: lembretes de renovação, avisos de expiração e magic links do portal vão chegar.",
+  "Sent at :time.": "Enviado em :time.",
+  "Send test email": "Enviar e-mail de teste",
+  "Send a test email": "Enviar um e-mail de teste",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Usa as definições de e-mail tal como estão no ecrã, guardadas ou não. Enviado de imediato, sem passar pela fila.",
+  "Send": "Enviar",
+  "Send to": "Enviar para",
+  "Test email sent": "E-mail de teste enviado",
+  "Test email failed": "Falha no e-mail de teste",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Enviado para :address. Se não chegar, verifique a pasta de spam e o SPF e DKIM do domínio remetente.",
+  "Nothing was sent": "Não foi enviado nada",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "O mailer está definido como Log, por isso a mensagem foi para o ficheiro de registo em vez do servidor de e-mail. Escolha SMTP para enviar a sério."
 }
