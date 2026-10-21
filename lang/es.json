@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider ya no devuelve este dominio desde el :date. Se conserva aquí con su cliente, sus notas y su historial, y ya no envía recordatorios.",
   "Registry expiry": "Caducidad en el registro",
   "Renews": "Se renueva",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "La fecha en la que Openprovider espera la renovación: la que usan la cuenta atrás y los recordatorios."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "La fecha en la que Openprovider espera la renovación: la que usan la cuenta atrás y los recordatorios.",
+  "This sign-in link has already been used or has expired. Request a new one.": "Este enlace de acceso ya se ha usado o ha caducado. Solicita uno nuevo."
 }

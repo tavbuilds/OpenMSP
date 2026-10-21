@@ -51,16 +51,23 @@ class LoginController extends Controller
         $message = __('If this email is on file, you will receive a sign-in link shortly.');
 
         if ($contact && $contact->canUsePortal()) {
-            $expires = now()->addMinutes(30);
+            $minutes = Contact::MAGIC_LINK_MINUTES;
+
+            // The signature only fixes the expiry; on its own the link keeps
+            // working until then, however many times it is opened. The token
+            // is what makes it one use, and it is signed along with the URL.
             $url = URL::temporarySignedRoute(
                 'portal.magic',
-                $expires,
-                ['contact' => $contact->id]
+                now()->addMinutes($minutes),
+                [
+                    'contact' => $contact->id,
+                    'token' => $contact->issueMagicLinkToken(),
+                ]
             );
 
             // The contact has no stored language, so send the mail in the one
             // they are reading the portal in right now.
-            $contact->notify((new PortalMagicLink($url, 30))->locale(app()->getLocale()));
+            $contact->notify((new PortalMagicLink($url, $minutes))->locale(app()->getLocale()));
         }
 
         return back()->with('status', $message);
@@ -78,6 +85,15 @@ class LoginController extends Controller
             abort(403);
         }
 
+        // One use. A link that was already spent, or that belongs to an
+        // older request, is as good as expired — which is what the mail
+        // said it would be.
+        if (! $contact->consumeMagicLinkToken($request->query('token'))) {
+            return redirect()
+                ->route('portal.login')
+                ->withErrors(['email' => __('This sign-in link has already been used or has expired. Request a new one.')]);
+        }
+
         Auth::guard('portal')->login($contact, remember: true);
         $request->session()->regenerate();
 
@@ -88,6 +104,10 @@ class LoginController extends Controller
 
     public function logout(Request $request): RedirectResponse
     {
+        // Signing out means signing out, including from any link still
+        // sitting in the inbox.
+        Auth::guard('portal')->user()?->revokeMagicLinkToken();
+
         Auth::guard('portal')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
