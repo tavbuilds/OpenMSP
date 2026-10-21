@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\AutoCollectController;
+use App\Http\Controllers\Portal\ContractController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\DomainController;
 use App\Http\Controllers\Portal\InvoiceController;
@@ -23,6 +24,8 @@ Route::prefix('portal')->name('portal.')->group(function () {
 
         Route::get('/services/{contract}/auto-collect', AutoCollectController::class)->name('auto-collect');
         Route::get('/services/{contract}/auto-collect/success', [AutoCollectController::class, 'success'])->name('auto-collect.success');
+
+        Route::get('/contracts/{contract}', ContractController::class)->name('contracts.show');
 
         Route::get('/domains', DomainController::class)->name('domains');
 

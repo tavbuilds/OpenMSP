@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\Contracts\Schemas;
 
+use App\Filament\Resources\Contracts\ContractResource;
+use App\Models\Contract;
 use App\Support\Breakpoints;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
@@ -30,7 +32,9 @@ class ContractInfolist
                 Section::make(__('Key figures'))
                     ->columns(Breakpoints::FOUR)
                     ->schema([
-                        TextEntry::make('total_sale')->label(__('Total sale'))->money('EUR'),
+                        TextEntry::make('total_sale')
+                            ->label(fn (Contract $record) => $record->isGroup() ? __('Total sale (all services)') : __('Total sale'))
+                            ->money('EUR'),
                         TextEntry::make('margin_eur')
                             ->label(__('Margin €'))
                             ->money('EUR')
@@ -59,6 +63,12 @@ class ContractInfolist
                                 TextEntry::make('type')->label(__('Type'))->badge(),
                                 TextEntry::make('reference')->label(__('Reference'))->placeholder(__('—')),
                                 TextEntry::make('status')->label(__('Status'))->badge(),
+                                TextEntry::make('parent.name')
+                                    ->label(__('Part of contract'))
+                                    ->visible(fn (Contract $record) => $record->isInGroup())
+                                    ->url(fn (Contract $record) => $record->parent
+                                        ? ContractResource::getUrl('view', ['record' => $record->parent])
+                                        : null),
                             ]),
 
                         Tab::make(__('Term & renewal'))
@@ -71,10 +81,16 @@ class ContractInfolist
                                 TextEntry::make('notice_period_days')->label(__('Notice period (days)')),
                                 IconEntry::make('auto_renew')->label(__('Auto-renew'))->boolean(),
                                 TextEntry::make('next_invoice_date')->label(__('Next invoice'))->date('M j, Y')->placeholder(__('—')),
+                                TextEntry::make('group_note')
+                                    ->hiddenLabel()
+                                    ->columnSpanFull()
+                                    ->visible(fn (Contract $record) => $record->isInGroup())
+                                    ->state(__('These dates come from the contract this service belongs to.')),
                                 IconEntry::make('notify_renewals')->label(__('Customer email for this license'))->boolean(),
                             ]),
 
                         Tab::make(__('Price & quantity'))
+                            ->visible(fn (Contract $record) => ! $record->isGroup())
                             ->icon(Heroicon::OutlinedCurrencyEuro)
                             ->columns(Breakpoints::THREE)
                             ->schema([

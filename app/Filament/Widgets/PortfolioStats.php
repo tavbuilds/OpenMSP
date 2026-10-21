@@ -23,9 +23,16 @@ class PortfolioStats extends BaseWidget
     {
         $active = Contract::where('status', ContractStatus::Active->value)->get();
 
-        $arr = $active->sum(fn (Contract $c) => $c->annual_revenue);
-        $annualMargin = $active->sum(fn (Contract $c) => $c->annual_margin);
+        // Money comes off the services: a collection has no price of its
+        // own, so counting both would be right only by accident.
+        $billable = $active->filter(fn (Contract $c) => ! $c->isGroup());
+        $arr = $billable->sum(fn (Contract $c) => $c->annual_revenue);
+        $annualMargin = $billable->sum(fn (Contract $c) => $c->annual_margin);
         $mrr = $arr / 12;
+
+        // ...but the count is of contracts as an operator means them: a
+        // collection is one contract, not one plus everything in it.
+        $activeCount = $active->filter(fn (Contract $c) => ! $c->isInGroup())->count();
 
         $upcoming = Contract::query()
             ->withUpcomingRenewalTerm()
@@ -33,7 +40,7 @@ class PortfolioStats extends BaseWidget
             ->count();
 
         return [
-            Stat::make(__('Active contracts'), $active->count())
+            Stat::make(__('Active contracts'), $activeCount)
                 ->description(__('Active licenses & contracts'))
                 ->color('primary'),
 

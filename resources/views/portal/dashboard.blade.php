@@ -14,7 +14,15 @@
         @foreach ($services as $service)
             <article class="card stack-card">
                 <h2>{{ $service->name }}</h2>
-                @if ($service->quantity > 1)
+                @if ($service->isGroup())
+                    <div class="muted cell-sub">
+                        <a href="{{ route('portal.contracts.show', $service) }}">{{ trans_choice(
+                            '{0} No services yet|{1} :count service in this contract|[2,*] :count services in this contract',
+                            $service->services->count(),
+                            ['count' => $service->services->count()],
+                        ) }}</a>
+                    </div>
+                @elseif ($service->quantity > 1)
                     <div class="muted cell-sub">{{ __('Quantity: :count', ['count' => $service->quantity]) }}</div>
                 @endif
 
@@ -66,9 +74,18 @@
                 @foreach ($services as $service)
                     <tr>
                         <td>
-                            <strong>{{ $service->name }}</strong>
-                            @if ($service->quantity > 1)
-                                <div class="muted cell-sub">{{ __('Quantity: :count', ['count' => $service->quantity]) }}</div>
+                            @if ($service->isGroup())
+                                <strong><a href="{{ route('portal.contracts.show', $service) }}">{{ $service->name }}</a></strong>
+                                <div class="muted cell-sub">{{ trans_choice(
+                                    '{0} No services yet|{1} :count service in this contract|[2,*] :count services in this contract',
+                                    $service->services->count(),
+                                    ['count' => $service->services->count()],
+                                ) }}</div>
+                            @else
+                                <strong>{{ $service->name }}</strong>
+                                @if ($service->quantity > 1)
+                                    <div class="muted cell-sub">{{ __('Quantity: :count', ['count' => $service->quantity]) }}</div>
+                                @endif
                             @endif
                         </td>
                         <td class="num">
