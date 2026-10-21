@@ -588,5 +588,8 @@
   "Test email failed": "Testmeddelandet misslyckades",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Skickat till :address. Om det inte kommer fram, kolla skräpposten samt SPF och DKIM för avsändardomänen.",
   "Nothing was sent": "Inget skickades",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "E-postklienten står på Log, så meddelandet hamnade i loggfilen i stället för hos e-postservern. Välj SMTP för att skicka på riktigt."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "E-postklienten står på Log, så meddelandet hamnade i loggfilen i stället för hos e-postservern. Välj SMTP för att skicka på riktigt.",
+  ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": ":count köjobb misslyckades. Det de skulle skicka kom inte fram och försöks inte igen av sig självt.",
+  "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Ingen arbetar av kön: :count jobb väntar, det äldsta sedan :since. Inloggningslänkar och påminnelser går via kön och levereras därför inte — inte ens om testet nedan lyckas.",
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Den här gick direkt. Kön arbetas inte av, så inloggningslänkar och påminnelser levereras fortfarande inte."
 }

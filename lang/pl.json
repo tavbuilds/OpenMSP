@@ -588,5 +588,8 @@
   "Test email failed": "Wiadomość testowa nie powiodła się",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Wysłano na :address. Jeśli nie dotrze, sprawdź folder spam oraz rekordy SPF i DKIM domeny nadawcy.",
   "Nothing was sent": "Nic nie zostało wysłane",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer jest ustawiony na Log, więc wiadomość trafiła do pliku dziennika zamiast na serwer pocztowy. Wybierz SMTP, aby wysyłać naprawdę."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer jest ustawiony na Log, więc wiadomość trafiła do pliku dziennika zamiast na serwer pocztowy. Wybierz SMTP, aby wysyłać naprawdę.",
+  ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": "Nie powiodło się :count zadań w kolejce. To, co miały wysłać, nie dotarło i nie zostanie ponowione samo z siebie.",
+  "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Nikt nie obsługuje kolejki: czeka :count zadań, najstarsze od :since. Linki logowania i przypomnienia idą przez kolejkę, więc nie są dostarczane — nawet jeśli test poniżej się powiedzie.",
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Ta wyszła bezpośrednio. Kolejka nie jest obsługiwana, więc linki logowania i przypomnienia nadal nie są dostarczane."
 }

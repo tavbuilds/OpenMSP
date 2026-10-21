@@ -588,5 +588,8 @@
   "Test email failed": "Το δοκιμαστικό email απέτυχε",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Στάλθηκε στο :address. Αν δεν φτάσει, ελέγξτε τον φάκελο ανεπιθύμητων καθώς και τα SPF και DKIM του τομέα αποστολής.",
   "Nothing was sent": "Δεν στάλθηκε τίποτα",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Ο mailer είναι ρυθμισμένος σε Log, οπότε το μήνυμα πήγε στο αρχείο καταγραφής αντί στον διακομιστή αλληλογραφίας. Επιλέξτε SMTP για πραγματική αποστολή."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Ο mailer είναι ρυθμισμένος σε Log, οπότε το μήνυμα πήγε στο αρχείο καταγραφής αντί στον διακομιστή αλληλογραφίας. Επιλέξτε SMTP για πραγματική αποστολή.",
+  ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": "Απέτυχαν :count εργασίες στην ουρά. Ό,τι επρόκειτο να σταλεί δεν έφτασε και δεν θα επαναληφθεί από μόνο του.",
+  "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Κανείς δεν επεξεργάζεται την ουρά: :count εργασίες περιμένουν, η παλαιότερη από :since. Οι σύνδεσμοι σύνδεσης και οι υπενθυμίσεις περνούν από την ουρά, οπότε δεν παραδίδονται — ακόμη κι αν πετύχει η δοκιμή παρακάτω.",
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Αυτό έφυγε απευθείας. Η ουρά δεν επεξεργάζεται, οπότε οι σύνδεσμοι σύνδεσης και οι υπενθυμίσεις εξακολουθούν να μην παραδίδονται."
 }

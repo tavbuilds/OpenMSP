@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Support\Breakpoints;
 use App\Support\MailTester;
 use App\Support\PlatformSettings;
+use App\Support\QueueHealth;
 use App\Support\UserAdministration;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -136,6 +138,23 @@ class ManageSettings extends Page implements HasSchemas
                     ->description(__('Leave blank to fall back to environment variables (MAIL_*).'))
                     ->columns(Breakpoints::TWO)
                     ->schema([
+                        // The test below sends inside this request; everything
+                        // else the platform sends goes through the queue. When
+                        // the worker is down those two disagree, and only this
+                        // says so.
+                        Text::make(fn () => __('Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.', [
+                            'count' => QueueHealth::pending(),
+                            'since' => QueueHealth::oldestPendingAt()?->diffForHumans(),
+                        ]))
+                            ->color('danger')
+                            ->columnSpanFull()
+                            ->visible(fn () => QueueHealth::looksStalled()),
+                        Text::make(fn () => __(':count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.', [
+                            'count' => QueueHealth::failed(),
+                        ]))
+                            ->color('warning')
+                            ->columnSpanFull()
+                            ->visible(fn () => QueueHealth::failed() > 0),
                         Select::make('mail_mailer')
                             ->label(__('Mailer'))
                             ->options([
@@ -275,11 +294,19 @@ class ManageSettings extends Page implements HasSchemas
                     return;
                 }
 
+                $body = __('Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.', [
+                    'address' => $data['to'],
+                ]);
+
+                // A green test here says the settings are right, not that the
+                // platform can mail: everything else goes through the queue.
+                if (QueueHealth::looksStalled()) {
+                    $body .= ' '.__('This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.');
+                }
+
                 Notification::make()
                     ->title(__('Test email sent'))
-                    ->body(__('Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.', [
-                        'address' => $data['to'],
-                    ]))
+                    ->body($body)
                     ->success()
                     ->send();
             });
