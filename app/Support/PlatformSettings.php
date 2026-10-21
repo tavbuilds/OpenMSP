@@ -192,6 +192,25 @@ class PlatformSettings
         self::forget(self::ONBOARDING_COMPLETED);
     }
 
+    /**
+     * Symfony accepts exactly "smtp" and "smtps". Everyone else in the world
+     * calls port 465 "SSL" and port 587 "TLS", and typing either produces a
+     * failed send with an error most people read as a bug. Translate.
+     */
+    public static function normaliseMailScheme(mixed $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return match ($value) {
+            '' , 'null' => null,
+            'ssl', 'smtps' => 'smtps',
+            'tls', 'starttls', 'smtp' => 'smtp',
+            // Anything else goes through untouched: a future scheme should
+            // not be silently swallowed by this list.
+            default => $value,
+        };
+    }
+
     /** What "default" means for auto-renew on this Openprovider account. */
     public static function openProviderDefaultAutoRenew(): bool
     {
@@ -312,6 +331,9 @@ class PlatformSettings
             self::MAIL_SCHEME => 'mail.mailers.smtp.scheme',
         ] as $key => $configKey) {
             $value = self::get($key);
+            if ($key === self::MAIL_SCHEME) {
+                $value = self::normaliseMailScheme($value);
+            }
             if (filled($value)) {
                 config([$configKey => $value]);
             }
