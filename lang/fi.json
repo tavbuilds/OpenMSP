@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider ei ole palauttanut tätä verkkotunnusta :date jälkeen. Se jää tänne asiakkaansa, muistiinpanojensa ja historiansa kanssa eikä lähetä enää muistutuksia.",
   "Registry expiry": "Vanheneminen rekisterissä",
   "Renews": "Uusitaan",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Päivä, jolloin Openprovider haluaa uusinnan — sitä laskuri ja muistutukset seuraavat."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Päivä, jolloin Openprovider haluaa uusinnan — sitä laskuri ja muistutukset seuraavat.",
+  "Rejected": "Hylätty"
 }

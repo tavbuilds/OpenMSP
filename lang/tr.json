@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider bu alan adını :date tarihinden beri döndürmüyor. Müşterisi, notları ve geçmişiyle burada kalır ve artık hatırlatma göndermez.",
   "Registry expiry": "Kayıtta sona erme",
   "Renews": "Yenilenme",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Openprovider'ın yenilemeyi beklediği tarih — geri sayım ve hatırlatmalar bunu izler."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "Openprovider'ın yenilemeyi beklediği tarih — geri sayım ve hatırlatmalar bunu izler.",
+  "Rejected": "Reddedildi"
 }

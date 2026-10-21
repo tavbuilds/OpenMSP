@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "Openprovider geeft dit domein sinds :date niet meer terug. Het blijft hier staan met zijn klant, notities en historie, en stuurt geen herinneringen meer.",
   "Registry expiry": "Verloopdatum registry",
   "Renews": "Verlengt",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "De datum waarop Openprovider de verlenging wil — waar de aftelling en de herinneringen op lopen."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "De datum waarop Openprovider de verlenging wil — waar de aftelling en de herinneringen op lopen.",
+  "Rejected": "Afgewezen"
 }

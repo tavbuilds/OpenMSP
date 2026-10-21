@@ -608,5 +608,6 @@
   "Openprovider stopped returning this domain on :date. It is kept here with its customer, notes and history, and no longer sends reminders.": "O Openprovider já não devolve este domínio desde :date. Fica aqui com o seu cliente, notas e histórico, e já não envia lembretes.",
   "Registry expiry": "Expiração no registo",
   "Renews": "Renova",
-  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "A data em que o Openprovider quer a renovação — aquela que a contagem decrescente e os lembretes usam."
+  "The date Openprovider wants the renewal by — what the countdown and the reminders use.": "A data em que o Openprovider quer a renovação — aquela que a contagem decrescente e os lembretes usam.",
+  "Rejected": "Rejeitado"
 }
