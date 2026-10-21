@@ -14,6 +14,7 @@ use App\Filament\Widgets\UpcomingPlanning;
 use App\Filament\Widgets\UpcomingRenewals;
 use App\Models\Company;
 use App\Models\Contract;
+use App\Models\Endpoint;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -93,6 +94,17 @@ class DashboardBoardTest extends TestCase
     public function test_watchlist_headings_are_translated(): void
     {
         $this->app->setLocale('nl');
+
+        // Two of these hide themselves when there is nothing to show, and
+        // since Filament 4.15 a hidden widget does not instantiate under
+        // test at all. Give them something so the heading exists to check.
+        $this->renewingContract('Past due')->forceFill(['stripe_payment_status' => 'past_due'])->save();
+        Endpoint::create([
+            'company_id' => Company::query()->firstOrFail()->id,
+            'name' => 'cert.klant.nl',
+            'type' => 'certificate',
+            'expires_at' => now()->addDays(10)->toDateString(),
+        ]);
 
         $headings = [
             FailedCollections::class => 'Failed collections',
