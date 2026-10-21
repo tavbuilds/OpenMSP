@@ -474,7 +474,6 @@
   "Welcome to :name. This is the first setup step. Next you choose the platform name and optionally email, Stripe, and an API token.": "Välkommen till :name. Det här är första steget i konfigurationen. Sedan väljer du plattformsnamn och eventuellt e-post, Stripe och ett API-token.",
   "With an email address this person can sign in to the customer portal via magic link.": "Med en e-postadress kan den här personen logga in i kundportalen via en magisk länk.",
   "Yes": "Ja",
-  "empty = STARTTLS (587); smtps = 465": "tomt = STARTTLS (587); smtps = 465",
   "off": "av",
   "— (fixed cost)": "— (fast kostnad)",
   "Current site": "Nuvarande plats",
@@ -588,5 +587,12 @@
   "Test email failed": "Testmeddelandet misslyckades",
   "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Skickat till :address. Om det inte kommer fram, kolla skräpposten samt SPF och DKIM för avsändardomänen.",
   "Nothing was sent": "Inget skickades",
-  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "E-postklienten står på Log, så meddelandet hamnade i loggfilen i stället för hos e-postservern. Välj SMTP för att skicka på riktigt."
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "E-postklienten står på Log, så meddelandet hamnade i loggfilen i stället för hos e-postservern. Välj SMTP för att skicka på riktigt.",
+  "Encryption": "Kryptering",
+  "From the environment (MAIL_SCHEME)": "Från miljön (MAIL_SCHEME)",
+  "STARTTLS — usually port 587": "STARTTLS — vanligtvis port 587",
+  "SSL/TLS — usually port 465": "SSL/TLS — vanligtvis port 465",
+  "SSL/TLS normally runs on port 465.": "SSL/TLS använder normalt port 465.",
+  "Port 465 normally needs SSL/TLS, not STARTTLS.": "Port 465 kräver normalt SSL/TLS, inte STARTTLS.",
+  "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Det sparade lösenordet användes, eftersom lösenordsfältet är tomt. Skriv in lösenordet för att testa ett annat."
 }
