@@ -6,6 +6,7 @@ use App\Filament\Resources\Contracts\Pages\CreateContract;
 use App\Filament\Resources\Contracts\Pages\EditContract;
 use App\Filament\Resources\Contracts\Pages\ListContracts;
 use App\Filament\Resources\Contracts\Pages\ViewContract;
+use App\Filament\Resources\Contracts\RelationManagers\ServicesRelationManager;
 use App\Filament\Resources\Contracts\Schemas\ContractForm;
 use App\Filament\Resources\Contracts\Schemas\ContractInfolist;
 use App\Filament\Resources\Contracts\Tables\ContractsTable;
@@ -63,7 +64,11 @@ class ContractResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            // Only renders for a collection; a single service has nothing
+            // inside it. See ServicesRelationManager::canViewForRecord().
+            ServicesRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

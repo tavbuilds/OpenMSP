@@ -5,14 +5,16 @@ namespace App\Filament\Resources\Contracts\Schemas;
 use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\ProductType;
+use App\Models\Contract;
 use App\Models\Product;
 use App\Support\Breakpoints;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -30,8 +32,24 @@ class ContractForm
             ->columns(1)
             ->components([
                 Section::make(__('Customer & service'))->columns(Breakpoints::THREE)->schema(self::customerServiceComponents()),
-                Section::make(__('Price & quantity'))->columns(Breakpoints::THREE)->schema(self::prijsQuantityComponents()),
-                Section::make(__('Term & renewal'))->columns(Breakpoints::THREE)->schema(self::looptijdComponents()),
+
+                // A collection has no product and no price of its own: it
+                // totals what is inside it. Showing empty price fields on
+                // one would invite somebody to fill them in.
+                Section::make(__('Price & quantity'))
+                    ->columns(Breakpoints::THREE)
+                    ->visible(fn (?Contract $record) => ! ($record?->isGroup() ?? false))
+                    ->schema(self::prijsQuantityComponents()),
+
+                Section::make(__('Term & renewal'))
+                    ->columns(Breakpoints::THREE)
+                    ->description(fn (?Contract $record) => $record?->isGroup()
+                        ? __('This term applies to every service in this contract.')
+                        : ($record?->isInGroup()
+                            ? __('Decided by the contract this service belongs to. Open that contract to change it.')
+                            : null))
+                    ->schema(self::looptijdComponents()),
+
                 Section::make(__('Auto-collect'))
                     ->description(__('Read-only. Customers enable this in the portal (iDEAL → SEPA).'))
                     ->columns(Breakpoints::TWO)
@@ -41,7 +59,7 @@ class ContractForm
             ]);
     }
 
-    /** @return array<int, \Filament\Schemas\Components\Component> */
+    /** @return array<int, Component> */
     public static function customerServiceComponents(): array
     {
         return [
@@ -111,7 +129,7 @@ class ContractForm
         ];
     }
 
-    /** @return array<int, \Filament\Schemas\Components\Component> */
+    /** @return array<int, Component> */
     public static function prijsQuantityComponents(): array
     {
         return [
@@ -199,27 +217,36 @@ class ContractForm
         ];
     }
 
-    /** @return array<int, \Filament\Schemas\Components\Component> */
+    /** @return array<int, Component> */
     public static function looptijdComponents(): array
     {
+        // Inside a collection the term is not this service's to set: it
+        // comes from the contract it belongs to, and letting it be edited
+        // here would make the two disagree until the next sync.
+        $ledByGroup = fn (?Contract $record): bool => $record?->isInGroup() ?? false;
+
         return [
             DatePicker::make('start_date')
                 ->label(__('Start date'))
                 ->default(now())
+                ->disabled($ledByGroup)
                 ->required(),
 
             DatePicker::make('renewal_date')
-                ->label(__('Renewal / end date')),
+                ->label(__('Renewal / end date'))
+                ->disabled($ledByGroup),
 
             TextInput::make('notice_period_days')
                 ->label(__('Notice period (days)'))
                 ->numeric()
                 ->default(30)
+                ->disabled($ledByGroup)
                 ->required(),
 
             Toggle::make('auto_renew')
                 ->label(__('Auto-renew'))
-                ->default(true),
+                ->default(true)
+                ->disabled($ledByGroup),
 
             Toggle::make('notify_renewals')
                 ->label(__('Customer email for this license'))
@@ -241,7 +268,7 @@ class ContractForm
      * Stripe auto-collect is customer-driven via /portal. Admin fields are read-only
      * so operators can see status without accidentally flipping the mandate.
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function incassoComponents(): array
     {
@@ -272,7 +299,7 @@ class ContractForm
         ];
     }
 
-    /** @return array<int, \Filament\Schemas\Components\Component> */
+    /** @return array<int, Component> */
     public static function licentiesComponents(): array
     {
         return [
