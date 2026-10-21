@@ -57,6 +57,18 @@ final class MailTester
         }
     }
 
+    /**
+     * Whether the send fell back to the stored password because the field was
+     * left blank. A 535 means nothing until you know which password was tried.
+     *
+     * @param  array<string, mixed>  $settings
+     */
+    public static function usedStoredPassword(array $settings = []): bool
+    {
+        return blank($settings['mail_password'] ?? null)
+            && filled(PlatformSettings::get(PlatformSettings::MAIL_PASSWORD));
+    }
+
     /** Whether this send only writes to the log, rather than leaving the server. */
     public static function writesToLogOnly(array $settings = []): bool
     {
@@ -79,6 +91,9 @@ final class MailTester
 
         foreach (self::OVERRIDES as $field => $configKey) {
             $value = $settings[$field] ?? null;
+            if ($field === 'mail_scheme') {
+                $value = PlatformSettings::normaliseMailScheme($value);
+            }
             if (filled($value)) {
                 $resolved[$configKey] = $value;
             }
