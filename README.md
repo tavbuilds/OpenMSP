@@ -214,7 +214,7 @@ Before you go live:
 
 ## 📚 Docs
 
-[Onboarding](docs/ONBOARDING.md) · [Deploy](DEPLOY.md) · [Secrets](docs/SECRETS.md) · [Portal](docs/PORTAL.md) · [Endpoints](docs/ENDPOINTS.md) · [Domains](docs/DOMAINS.md) · [Passkeys](docs/PASSKEYS.md) · [Agent API](AGENT.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
+[Onboarding](docs/ONBOARDING.md) · [Deploy](DEPLOY.md) · [Secrets](docs/SECRETS.md) · [Portal](docs/PORTAL.md) · [Endpoints](docs/ENDPOINTS.md) · [Contracts](docs/CONTRACTS.md) · [Domains](docs/DOMAINS.md) · [Passkeys](docs/PASSKEYS.md) · [Agent API](AGENT.md) · [Security](SECURITY.md) · [Contributing](CONTRIBUTING.md)
 
 ## 🤝 Contributing
 

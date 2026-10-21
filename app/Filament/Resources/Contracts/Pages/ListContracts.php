@@ -2,10 +2,19 @@
 
 namespace App\Filament\Resources\Contracts\Pages;
 
+use App\Enums\BillingCycle;
+use App\Enums\ContractStatus;
+use App\Enums\ProductType;
 use App\Filament\Resources\Contracts\ContractResource;
+use App\Models\Company;
+use App\Models\Contract;
 use App\Support\CsvExporter;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\Pages\ListRecords;
 
 class ListContracts extends ListRecords
@@ -47,6 +56,58 @@ class ListContracts extends ListRecords
                         'renewal_date', 'notice_deadline', 'auto_renew', 'collection', 'customer_email',
                     ], $rows);
                 }),
+            // An empty collection you then fill, for the case where the
+            // services do not exist yet. Combining existing ones is a bulk
+            // action on the table below.
+            Action::make('createGroup')
+                ->label(__('New contract (collection)'))
+                ->icon('heroicon-o-rectangle-stack')
+                ->color('gray')
+                ->visible(fn () => auth()->user()?->canManageContracts() ?? false)
+                ->modalHeading(__('New contract (collection)'))
+                ->modalDescription(__('A contract that holds several services. Add them afterwards; they keep their own prices.'))
+                ->modalSubmitActionLabel(__('Create'))
+                ->schema([
+                    Select::make('company_id')
+                        ->label(__('Company'))
+                        ->options(fn () => Company::query()->orderBy('name')->pluck('name', 'id'))
+                        ->searchable()
+                        ->required(),
+                    TextInput::make('name')
+                        ->label(__('Contract name'))
+                        ->placeholder(__('Website hosting & domains'))
+                        ->required()
+                        ->maxLength(120),
+                    Select::make('billing_cycle')
+                        ->label(__('Billing cycle'))
+                        ->options(BillingCycle::class)
+                        ->default(BillingCycle::Yearly->value)
+                        ->required(),
+                    DatePicker::make('start_date')->label(__('Start date'))->default(now()),
+                    DatePicker::make('renewal_date')->label(__('Renewal date')),
+                    TextInput::make('notice_period_days')
+                        ->label(__('Notice period (days)'))
+                        ->numeric()
+                        ->default(0)
+                        ->minValue(0),
+                    Toggle::make('auto_renew')->label(__('Renews automatically'))->default(true),
+                ])
+                ->action(function (array $data) {
+                    $group = Contract::query()->create([
+                        ...$data,
+                        'is_group' => true,
+                        'type' => ProductType::Service,
+                        'quantity' => 1,
+                        'cost_price' => null,
+                        'sale_price' => null,
+                        'currency' => 'EUR',
+                        'status' => ContractStatus::Active,
+                        'notify_renewals' => true,
+                    ]);
+
+                    return redirect(ContractResource::getUrl('view', ['record' => $group]));
+                }),
+
             CreateAction::make(),
         ];
     }

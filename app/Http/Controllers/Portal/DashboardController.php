@@ -16,9 +16,13 @@ class DashboardController extends Controller
         $contact = Auth::guard('portal')->user();
         $companyId = $contact->company_id;
 
+        // A contract that holds services is listed as one line, not as its
+        // parts: that is how the customer was sold it.
         $services = Contract::query()
             ->where('company_id', $companyId)
             ->where('status', ContractStatus::Active->value)
+            ->topLevel()
+            ->with(['services' => fn ($q) => $q->where('status', ContractStatus::Active->value)])
             ->orderBy('name')
             ->get();
 
