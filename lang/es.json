@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider no devolvió precio para estas extensiones. Están en el catálogo sin precio de compra: introdúzcalo a mano si necesita el margen.",
   "Openprovider settings saved": "Ajustes de Openprovider guardados",
   "Set at Openprovider: :value": "Definido en Openprovider: :value",
-  "What “default” means on your account": "Qué significa «default» en su cuenta"
+  "What “default” means on your account": "Qué significa «default» en su cuenta",
+  ":platform: test email": ":platform: correo de prueba",
+  "This is a test message from :platform.": "Este es un mensaje de prueba de :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Si está leyendo esto, el correo saliente funciona: los recordatorios de renovación, los avisos de caducidad y los enlaces mágicos del portal llegarán.",
+  "Sent at :time.": "Enviado el :time.",
+  "Send test email": "Enviar correo de prueba",
+  "Send a test email": "Enviar un correo de prueba",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Usa los ajustes de correo tal como están en pantalla, guardados o no. Se envía de inmediato, sin pasar por la cola.",
+  "Send": "Enviar",
+  "Send to": "Enviar a",
+  "Test email sent": "Correo de prueba enviado",
+  "Test email failed": "Error al enviar el correo de prueba",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Enviado a :address. Si no llega, revise la carpeta de spam y el SPF y DKIM del dominio remitente.",
+  "Nothing was sent": "No se envió nada",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "El mailer está en Log, así que el mensaje fue al archivo de registro en lugar de al servidor de correo. Elija SMTP para enviar de verdad."
 }
