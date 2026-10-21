@@ -18,7 +18,7 @@
                 <dl class="stack-meta">
                     <div>
                         <dt>{{ __('Expires') }}</dt>
-                        <dd><strong>{{ $domain->expires_at?->translatedFormat('M j, Y') ?? __('—') }}</strong></dd>
+                        <dd><strong>{{ $domain->expiryDate()?->translatedFormat('M j, Y') ?? __('—') }}</strong></dd>
                     </div>
                     <div>
                         <dt>{{ __('Auto-renew') }}</dt>
@@ -53,7 +53,7 @@
                                 <div class="muted cell-sub">{{ $note }}</div>
                             @endif
                         </td>
-                        <td>{{ $domain->expires_at?->translatedFormat('M j, Y') ?? __('—') }}</td>
+                        <td>{{ $domain->expiryDate()?->translatedFormat('M j, Y') ?? __('—') }}</td>
                         <td>
                             @if ($domain->auto_renew)
                                 <span class="badge badge-ok">{{ __('On') }}</span>

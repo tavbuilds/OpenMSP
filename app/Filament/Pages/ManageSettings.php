@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Support\Breakpoints;
 use App\Support\MailTester;
 use App\Support\PlatformSettings;
+use App\Support\QueueHealth;
 use App\Support\UserAdministration;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
@@ -78,7 +80,11 @@ class ManageSettings extends Page implements HasSchemas
             'mail_port' => PlatformSettings::get(PlatformSettings::MAIL_PORT, config('mail.mailers.smtp.port')),
             'mail_username' => PlatformSettings::get(PlatformSettings::MAIL_USERNAME, config('mail.mailers.smtp.username')),
             'mail_password' => '',
-            'mail_scheme' => PlatformSettings::get(PlatformSettings::MAIL_SCHEME, config('mail.mailers.smtp.scheme')),
+            // The Select has an empty option for "leave it to the env", so an
+            // unset scheme has to be '' and not null to land on it.
+            'mail_scheme' => PlatformSettings::normaliseMailScheme(
+                PlatformSettings::get(PlatformSettings::MAIL_SCHEME, config('mail.mailers.smtp.scheme'))
+            ) ?? '',
             'mail_from_address' => PlatformSettings::get(PlatformSettings::MAIL_FROM_ADDRESS, config('mail.from.address')),
             'mail_from_name' => PlatformSettings::get(PlatformSettings::MAIL_FROM_NAME, PlatformSettings::name()),
             'stripe_key' => PlatformSettings::get(PlatformSettings::STRIPE_KEY, config('services.stripe.key')),
@@ -136,6 +142,23 @@ class ManageSettings extends Page implements HasSchemas
                     ->description(__('Leave blank to fall back to environment variables (MAIL_*).'))
                     ->columns(Breakpoints::TWO)
                     ->schema([
+                        // The test below sends inside this request; everything
+                        // else the platform sends goes through the queue. When
+                        // the worker is down those two disagree, and only this
+                        // says so.
+                        Text::make(fn () => __('Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.', [
+                            'count' => QueueHealth::pending(),
+                            'since' => QueueHealth::oldestPendingAt()?->diffForHumans(),
+                        ]))
+                            ->color('danger')
+                            ->columnSpanFull()
+                            ->visible(fn () => QueueHealth::looksStalled()),
+                        Text::make(fn () => __(':count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.', [
+                            'count' => QueueHealth::failed(),
+                        ]))
+                            ->color('warning')
+                            ->columnSpanFull()
+                            ->visible(fn () => QueueHealth::failed() > 0),
                         Select::make('mail_mailer')
                             ->label(__('Mailer'))
                             ->options([
@@ -154,9 +177,23 @@ class ManageSettings extends Page implements HasSchemas
                             ->revealable()
                             ->helperText(fn (Get $get) => $get('has_mail_password') ? 'Set. Leave empty to keep it.' : 'Optional.')
                             ->visible(fn (Get $get) => $get('mail_mailer') === 'smtp'),
-                        TextInput::make('mail_scheme')
-                            ->label(__('MAIL_SCHEME'))
-                            ->placeholder(__('empty = STARTTLS (587); smtps = 465'))
+                        // Two valid values, and "SSL" — what everyone calls
+                        // it — is not one of them. A free text field here
+                        // only produces a failed send and a puzzled operator.
+                        Select::make('mail_scheme')
+                            ->label(__('Encryption'))
+                            ->options([
+                                '' => __('From the environment (MAIL_SCHEME)'),
+                                'smtp' => __('STARTTLS — usually port 587'),
+                                'smtps' => __('SSL/TLS — usually port 465'),
+                            ])
+                            ->selectablePlaceholder(false)
+                            ->helperText(fn (Get $get) => $get('mail_scheme') === 'smtps' && (string) $get('mail_port') !== '465'
+                                ? __('SSL/TLS normally runs on port 465.')
+                                : ($get('mail_scheme') === 'smtp' && (string) $get('mail_port') === '465'
+                                    ? __('Port 465 normally needs SSL/TLS, not STARTTLS.')
+                                    : null))
+                            ->live()
                             ->visible(fn (Get $get) => $get('mail_mailer') === 'smtp'),
                     ])
                     // Sits with the fields it tests, not on the page toolbar.
@@ -199,7 +236,10 @@ class ManageSettings extends Page implements HasSchemas
         PlatformSettings::set(PlatformSettings::MAIL_HOST, $data['mail_host'] ?? null);
         PlatformSettings::set(PlatformSettings::MAIL_PORT, $data['mail_port'] ?? null);
         PlatformSettings::set(PlatformSettings::MAIL_USERNAME, $data['mail_username'] ?? null);
-        PlatformSettings::set(PlatformSettings::MAIL_SCHEME, $data['mail_scheme'] ?? null);
+        PlatformSettings::set(
+            PlatformSettings::MAIL_SCHEME,
+            PlatformSettings::normaliseMailScheme($data['mail_scheme'] ?? null),
+        );
         if (filled($data['mail_password'] ?? null)) {
             PlatformSettings::set(PlatformSettings::MAIL_PASSWORD, $data['mail_password']);
         }
@@ -253,9 +293,17 @@ class ManageSettings extends Page implements HasSchemas
                 try {
                     MailTester::send($data['to'], $settings);
                 } catch (Throwable $e) {
+                    $body = Str::limit($e->getMessage(), 500);
+
+                    // "Invalid login or password" is ambiguous while the field
+                    // is blank: say which password actually went over the wire.
+                    if (MailTester::usedStoredPassword($settings)) {
+                        $body .= "\n\n".__('This used the saved password, because the password field is empty. Type the password in to test a different one.');
+                    }
+
                     Notification::make()
                         ->title(__('Test email failed'))
-                        ->body(Str::limit($e->getMessage(), 500))
+                        ->body($body)
                         ->danger()
                         // The message is the whole point; do not time it out.
                         ->persistent()
@@ -275,11 +323,19 @@ class ManageSettings extends Page implements HasSchemas
                     return;
                 }
 
+                $body = __('Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.', [
+                    'address' => $data['to'],
+                ]);
+
+                // A green test here says the settings are right, not that the
+                // platform can mail: everything else goes through the queue.
+                if (QueueHealth::looksStalled()) {
+                    $body .= ' '.__('This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.');
+                }
+
                 Notification::make()
                     ->title(__('Test email sent'))
-                    ->body(__('Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.', [
-                        'address' => $data['to'],
-                    ]))
+                    ->body($body)
                     ->success()
                     ->send();
             });

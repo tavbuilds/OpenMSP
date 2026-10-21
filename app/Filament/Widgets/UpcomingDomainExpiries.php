@@ -28,8 +28,9 @@ class UpcomingDomainExpiries extends BaseWidget
     {
         return Domain::query()
             ->with(['company', 'product'])
+            ->present()
             ->expiringWithin(60)
-            ->orderBy('expires_at');
+            ->orderByDue();
     }
 
     public function getTableRecordUrlUsing(): ?\Closure
@@ -45,7 +46,10 @@ class UpcomingDomainExpiries extends BaseWidget
                 ->label(__('Customer'))
                 ->placeholder(__('Not assigned'))
                 ->visibleFrom('md'),
-            TextColumn::make('expires_at')->label(__('Expires'))->date('M j, Y'),
+            TextColumn::make('due')
+                ->label(__('Renews'))
+                ->state(fn (Domain $record) => $record->expiryDate())
+                ->date('M j, Y'),
             TextColumn::make('days')
                 ->label(__('Days'))
                 ->state(fn (Domain $record) => $record->daysUntilExpiry())

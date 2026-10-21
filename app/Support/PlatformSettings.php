@@ -5,6 +5,7 @@ namespace App\Support;
 use App\Models\Setting;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Throwable;
@@ -191,6 +192,25 @@ class PlatformSettings
         self::forget(self::ONBOARDING_COMPLETED);
     }
 
+    /**
+     * Symfony accepts exactly "smtp" and "smtps". Everyone else in the world
+     * calls port 465 "SSL" and port 587 "TLS", and typing either produces a
+     * failed send with an error most people read as a bug. Translate.
+     */
+    public static function normaliseMailScheme(mixed $value): ?string
+    {
+        $value = strtolower(trim((string) $value));
+
+        return match ($value) {
+            '' , 'null' => null,
+            'ssl', 'smtps' => 'smtps',
+            'tls', 'starttls', 'smtp' => 'smtp',
+            // Anything else goes through untouched: a future scheme should
+            // not be silently swallowed by this list.
+            default => $value,
+        };
+    }
+
     /** What "default" means for auto-renew on this Openprovider account. */
     public static function openProviderDefaultAutoRenew(): bool
     {
@@ -258,6 +278,23 @@ class PlatformSettings
     /**
      * Overlay DB settings onto runtime config (env remains the fallback).
      */
+    /**
+     * Re-reads the stored settings into a process that is already running.
+     *
+     * applyToConfig() runs once in a service provider, which is right for an
+     * HTTP request and wrong for a queue worker: the worker boots once and
+     * keeps that configuration for hours, so mail settings saved in the UI
+     * afterwards never reach it and every queued mail goes to whichever
+     * mailer it happened to start with. The resolved mailers go too, because
+     * they hold a transport built from the old values.
+     */
+    public static function refresh(): void
+    {
+        self::applyToConfig();
+
+        Mail::forgetMailers();
+    }
+
     public static function applyToConfig(): void
     {
         if (! self::ready()) {
@@ -294,6 +331,9 @@ class PlatformSettings
             self::MAIL_SCHEME => 'mail.mailers.smtp.scheme',
         ] as $key => $configKey) {
             $value = self::get($key);
+            if ($key === self::MAIL_SCHEME) {
+                $value = self::normaliseMailScheme($value);
+            }
             if (filled($value)) {
                 config([$configKey => $value]);
             }

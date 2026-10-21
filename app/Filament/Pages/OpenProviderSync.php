@@ -212,9 +212,10 @@ class OpenProviderSync extends Page implements HasSchemas
                         $report = app(OpenProviderSyncService::class)->run();
                         Notification::make()
                             ->title(__('Openprovider sync finished'))
-                            ->body(__(':created new, :updated updated, :unassigned without a customer.', [
+                            ->body(__(':created new, :updated updated, :removed no longer at the registrar, :unassigned without a customer.', [
                                 'created' => $report->domainsCreated,
                                 'updated' => $report->domainsUpdated,
+                                'removed' => $report->domainsRemoved,
                                 'unassigned' => $report->domainsUnassigned,
                             ]))
                             ->success()
