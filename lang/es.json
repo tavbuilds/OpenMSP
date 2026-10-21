@@ -594,5 +594,8 @@
   "SSL/TLS — usually port 465": "SSL/TLS: normalmente el puerto 465",
   "SSL/TLS normally runs on port 465.": "SSL/TLS suele usar el puerto 465.",
   "Port 465 normally needs SSL/TLS, not STARTTLS.": "El puerto 465 normalmente necesita SSL/TLS, no STARTTLS.",
-  "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Se usó la contraseña guardada, porque el campo de contraseña está vacío. Escribe la contraseña para probar otra."
+  "This used the saved password, because the password field is empty. Type the password in to test a different one.": "Se usó la contraseña guardada, porque el campo de contraseña está vacío. Escribe la contraseña para probar otra.",
+  ":count queued job(s) failed. Whatever they were sending did not arrive and will not be retried on its own.": ":count trabajo(s) en cola han fallado. Lo que iban a enviar no llegó y no se reintentará por sí solo.",
+  "Nothing is working the queue: :count job(s) are waiting, the oldest since :since. Sign-in links and reminders are queued, so they are not being delivered — even if the test below succeeds.": "Nadie está procesando la cola: :count trabajo(s) esperando, el más antiguo desde :since. Los enlaces de acceso y los recordatorios pasan por la cola, así que no se están entregando, aunque la prueba de abajo funcione.",
+  "This went out directly. The queue is not being worked, so sign-in links and reminders are still not being delivered.": "Este salió directamente. La cola no se está procesando, así que los enlaces de acceso y los recordatorios siguen sin entregarse."
 }
