@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider nie zwrócił ceny dla tych rozszerzeń. Są w katalogu bez ceny zakupu — uzupełnij ją ręcznie, jeśli potrzebujesz marży.",
   "Openprovider settings saved": "Zapisano ustawienia Openprovider",
   "Set at Openprovider: :value": "Ustawione w Openprovider: :value",
-  "What “default” means on your account": "Co oznacza „default” na Twoim koncie"
+  "What “default” means on your account": "Co oznacza „default” na Twoim koncie",
+  ":platform: test email": ":platform: wiadomość testowa",
+  "This is a test message from :platform.": "To jest wiadomość testowa z :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Jeśli to czytasz, poczta wychodząca działa: przypomnienia o odnowieniu, ostrzeżenia o wygaśnięciu i magiczne linki do portalu dotrą na miejsce.",
+  "Sent at :time.": "Wysłano :time.",
+  "Send test email": "Wyślij wiadomość testową",
+  "Send a test email": "Wyślij wiadomość testową",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Używa ustawień poczty w takiej postaci, w jakiej są na ekranie — zapisanych lub nie. Wysyłka natychmiastowa, z pominięciem kolejki.",
+  "Send": "Wyślij",
+  "Send to": "Wyślij do",
+  "Test email sent": "Wiadomość testowa wysłana",
+  "Test email failed": "Wiadomość testowa nie powiodła się",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Wysłano na :address. Jeśli nie dotrze, sprawdź folder spam oraz rekordy SPF i DKIM domeny nadawcy.",
+  "Nothing was sent": "Nic nie zostało wysłane",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Mailer jest ustawiony na Log, więc wiadomość trafiła do pliku dziennika zamiast na serwer pocztowy. Wybierz SMTP, aby wysyłać naprawdę."
 }

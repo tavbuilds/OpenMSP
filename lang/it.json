@@ -574,5 +574,19 @@
   "Openprovider returned no price for these extensions. They are in the catalog without a cost price — fill it in by hand if you need the margin.": "Openprovider non ha restituito un prezzo per queste estensioni. Sono a catalogo senza prezzo d’acquisto — inseriscilo a mano se ti serve il margine.",
   "Openprovider settings saved": "Impostazioni Openprovider salvate",
   "Set at Openprovider: :value": "Impostato su Openprovider: :value",
-  "What “default” means on your account": "Cosa significa “default” sul tuo account"
+  "What “default” means on your account": "Cosa significa “default” sul tuo account",
+  ":platform: test email": ":platform: email di prova",
+  "This is a test message from :platform.": "Questo è un messaggio di prova da :platform.",
+  "If you are reading it, outgoing mail works: renewal reminders, expiry warnings and portal magic links will arrive.": "Se stai leggendo questo, la posta in uscita funziona: promemoria di rinnovo, avvisi di scadenza e magic link del portale arriveranno.",
+  "Sent at :time.": "Inviato il :time.",
+  "Send test email": "Invia email di prova",
+  "Send a test email": "Invia un’email di prova",
+  "Uses the email settings as they stand on screen, saved or not. Sent straight away, not through the queue.": "Usa le impostazioni e-mail così come sono a schermo, salvate o no. Inviata subito, non tramite la coda.",
+  "Send": "Invia",
+  "Send to": "Invia a",
+  "Test email sent": "Email di prova inviata",
+  "Test email failed": "Email di prova non riuscita",
+  "Sent to :address. If it does not arrive, check the spam folder and the sending domain’s SPF and DKIM.": "Inviata a :address. Se non arriva, controlla la cartella spam e i record SPF e DKIM del dominio mittente.",
+  "Nothing was sent": "Non è stato inviato nulla",
+  "The mailer is set to Log, so the message went to the log file instead of the mail server. Choose SMTP to send for real.": "Il mailer è impostato su Log, quindi il messaggio è finito nel file di log invece che al server di posta. Scegli SMTP per inviare davvero."
 }
