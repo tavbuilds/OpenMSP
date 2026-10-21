@@ -18,7 +18,8 @@ class Contract extends Model
     use Auditable;
 
     protected $fillable = [
-        'company_id', 'product_id', 'vendor_id', 'purchase_bundle_id',
+        'company_id', 'parent_id', 'is_group',
+        'product_id', 'vendor_id', 'purchase_bundle_id',
         'name', 'reference', 'type',
         'quantity', 'cost_price', 'sale_price', 'currency', 'billing_cycle',
         'start_date', 'renewal_date', 'notice_period_days', 'auto_renew',
@@ -44,6 +45,7 @@ class Contract extends Model
         'notice_period_days' => 'integer',
         'notify_renewals' => 'boolean',
         'is_demo' => 'boolean',
+        'is_group' => 'boolean',
         'type' => ProductType::class,
         'billing_cycle' => BillingCycle::class,
         'status' => ContractStatus::class,
@@ -76,6 +78,110 @@ class Contract extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    // --- Collections -------------------------------------------------
+    //
+    // A contract is either a service or a collection of them. The
+    // collection owns the term — cycle, start date, notice period,
+    // auto-renew — and its services carry their own product and price.
+    // One level only: a collection never holds another.
+
+    /** The collection this service belongs to, if any. */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'parent_id');
+    }
+
+    /** The services inside this collection. */
+    public function services(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->orderBy('name');
+    }
+
+    public function isGroup(): bool
+    {
+        return (bool) $this->is_group;
+    }
+
+    public function isInGroup(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    /**
+     * The fields a collection decides on behalf of its services.
+     *
+     * Copied down rather than read through: every renewal query, reminder
+     * and widget in the application already reads these columns, and a
+     * service whose dates disagree with its collection would show up in the
+     * wrong week. The form makes them read-only on a service so the copy
+     * cannot drift.
+     *
+     * @var list<string>
+     */
+    public const GROUP_LED_FIELDS = [
+        'billing_cycle', 'start_date', 'renewal_date',
+        'notice_period_days', 'auto_renew', 'next_invoice_date',
+    ];
+
+    /** Pushes this collection's term onto every service inside it. */
+    public function syncTermToServices(): int
+    {
+        if (! $this->isGroup()) {
+            return 0;
+        }
+
+        $term = [];
+        foreach (self::GROUP_LED_FIELDS as $field) {
+            $term[$field] = $this->getAttribute($field);
+        }
+
+        $changed = 0;
+        foreach ($this->services()->get() as $service) {
+            $service->forceFill($term);
+            if ($service->isDirty()) {
+                $service->save();
+                $changed++;
+            }
+        }
+
+        return $changed;
+    }
+
+    /** Top level: collections and services that belong to none. */
+    public function scopeTopLevel(Builder $query): Builder
+    {
+        return $query->whereNull('parent_id');
+    }
+
+    /**
+     * The rows that carry money.
+     *
+     * A collection has no price of its own — it totals its services — so
+     * summing revenue over everything would count nothing twice only as
+     * long as this scope is used for it.
+     */
+    public function scopeBillable(Builder $query): Builder
+    {
+        return $query->where('is_group', false);
+    }
+
+    /** Sale price per period: a collection is the sum of what it holds. */
+    public function periodSalePrice(): float
+    {
+        if ($this->isGroup()) {
+            return (float) $this->services->sum(
+                fn (self $service) => (float) $service->sale_price * (int) $service->quantity
+            );
+        }
+
+        return (float) $this->sale_price * (int) $this->quantity;
+    }
+
+    public function periodCostPrice(): float
+    {
+        return (float) $this->effective_cost;
+    }
+
     // --- Portal helpers (no internal cost / margin / license keys) -----
 
     /**
@@ -102,12 +208,10 @@ class Contract extends Model
         };
     }
 
-    /** Total sale price (unit price x quantity), formatted for the portal. */
+    /** Total sale price for the period, formatted for the portal. */
     public function portalSalePriceFormatted(): string
     {
-        $total = (float) $this->sale_price * (int) $this->quantity;
-
-        return Money::format($total, $this->currency);
+        return Money::format($this->periodSalePrice(), $this->currency);
     }
 
     public function isActiveForPortal(): bool
@@ -146,6 +250,13 @@ class Contract extends Model
             'status' => ContractStatus::Active,
             'cancelled_at' => null,
         ])->save();
+
+        // Renewing the collection renews what is in it; the services are not
+        // separately renewable, which is the point of grouping them.
+        if ($this->isGroup()) {
+            $this->services()->update(['status' => ContractStatus::Active->value, 'cancelled_at' => null]);
+            $this->syncTermToServices();
+        }
     }
 
     public function cancelNow(?\DateTimeInterface $at = null): void
@@ -154,11 +265,67 @@ class Contract extends Model
             throw new \LogicException('This contract is already inactive.');
         }
 
+        $at ??= now()->toDateString();
+
         $this->forceFill([
             'status' => ContractStatus::Cancelled,
-            'cancelled_at' => $at ?? now()->toDateString(),
+            'cancelled_at' => $at,
             'auto_renew' => false,
         ])->save();
+
+        // Cancelling the collection ends everything in it. A customer who
+        // wants to drop one service instead takes that service out of the
+        // collection first, or cancels it on its own.
+        if ($this->isGroup()) {
+            foreach ($this->services()->where('status', ContractStatus::Active->value)->get() as $service) {
+                $service->forceFill([
+                    'status' => ContractStatus::Cancelled,
+                    'cancelled_at' => $at,
+                    'auto_renew' => false,
+                ])->save();
+            }
+        }
+    }
+
+    /**
+     * Takes a service out of its collection and leaves it standing alone.
+     *
+     * It keeps the term it inherited: it was running on those dates, and
+     * resetting them on the way out would quietly move a renewal.
+     */
+    public function detachFromGroup(): void
+    {
+        if (! $this->isInGroup()) {
+            return;
+        }
+
+        $this->forceFill(['parent_id' => null])->save();
+    }
+
+    /**
+     * Puts a service into a collection and hands it the collection's term.
+     *
+     * A collection cannot go inside another, and nothing can go inside
+     * itself: one level is all this is meant to be.
+     */
+    public function moveIntoGroup(self $group): bool
+    {
+        if (! $group->isGroup() || $this->isGroup() || $this->is($group)) {
+            return false;
+        }
+
+        if ($this->company_id !== $group->company_id) {
+            return false;
+        }
+
+        $term = [];
+        foreach (self::GROUP_LED_FIELDS as $field) {
+            $term[$field] = $group->getAttribute($field);
+        }
+
+        $this->forceFill([...$term, 'parent_id' => $group->getKey()])->save();
+
+        return true;
     }
 
     /** Customer mail only if both the company and this license have it enabled. */
@@ -215,7 +382,12 @@ class Contract extends Model
 
     protected function totalSale(): Attribute
     {
-        return Attribute::get(fn () => $this->quantity * (float) $this->sale_price);
+        // A collection's figures are its services', so every derived number
+        // — margin, ARR, the lot — comes out right without each of them
+        // having to know that collections exist.
+        return Attribute::get(fn () => $this->isGroup()
+            ? $this->periodSalePrice()
+            : $this->quantity * (float) $this->sale_price);
     }
 
     /** Does cost come from a shared purchase bundle? */
@@ -231,6 +403,10 @@ class Contract extends Model
     protected function effectiveCost(): Attribute
     {
         return Attribute::get(function () {
+            if ($this->isGroup()) {
+                return $this->services->sum(fn (self $service) => (float) $service->effective_cost);
+            }
+
             if ($this->purchase_bundle_id && $this->purchaseBundle) {
                 return $this->purchaseBundle->allocatedCostForContract($this);
             }
@@ -270,10 +446,15 @@ class Contract extends Model
     /**
      * Contracts whose renewal is worth seeing coming: active, dated, and on a
      * committed term. See BillingCycle::withRenewalTerm().
+     *
+     * Top level only. A service inside a collection renews when its
+     * collection does, so listing it as well would warn twice about one
+     * thing and hide the thing that is actually renewed.
      */
     public function scopeWithUpcomingRenewalTerm(Builder $query): Builder
     {
         return $query
+            ->topLevel()
             ->where('status', ContractStatus::Active->value)
             ->whereNotNull('renewal_date')
             ->whereIn('billing_cycle', BillingCycle::renewalTermValues());

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Contracts\Pages;
 
 use App\Filament\Resources\Contracts\ContractResource;
 use App\Filament\Resources\Contracts\Schemas\ContractForm;
+use App\Models\Contract;
 use App\Support\Breakpoints;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Schemas\Components\Component;
@@ -30,6 +31,66 @@ class CreateContract extends CreateRecord
         $wizard = $this->baseWizardComponent();
 
         return $wizard->contained();
+    }
+
+    /**
+     * Arriving from "Add service" on a collection: the new service joins it
+     * and inherits its term, so the term step would only offer dates the
+     * collection is about to overwrite.
+     */
+    public function mount(): void
+    {
+        parent::mount();
+
+        $this->parentGroup = $this->resolveParentGroup();
+
+        if ($this->parentGroup !== null) {
+            $term = ['company_id' => $this->parentGroup->company_id];
+            foreach (Contract::GROUP_LED_FIELDS as $field) {
+                $term[$field] = $this->parentGroup->getAttribute($field);
+            }
+
+            $this->form->fill([...$this->data, ...$term]);
+        }
+    }
+
+    public ?Contract $parentGroup = null;
+
+    private function resolveParentGroup(): ?Contract
+    {
+        $id = request()->query('parent');
+
+        if (! is_string($id) && ! is_int($id)) {
+            return null;
+        }
+
+        $group = Contract::query()->whereKey($id)->first();
+
+        return $group?->isGroup() ? $group : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        if ($this->parentGroup !== null) {
+            $data['parent_id'] = $this->parentGroup->getKey();
+            $data['company_id'] = $this->parentGroup->company_id;
+            foreach (Contract::GROUP_LED_FIELDS as $field) {
+                $data[$field] = $this->parentGroup->getAttribute($field);
+            }
+        }
+
+        return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return $this->parentGroup !== null
+            ? ContractResource::getUrl('view', ['record' => $this->parentGroup])
+            : parent::getRedirectUrl();
     }
 
     protected function getSteps(): array

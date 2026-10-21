@@ -62,7 +62,7 @@ class DomainsTable
                     ->state(fn (Domain $record) => $record->isRemoved()
                         ? __('No longer at the registrar')
                         : $record->registrarStatusLabel())
-                    ->color(fn (Domain $record) => $record->isRemoved() ? 'gray' : 'info')
+                    ->color(fn (Domain $record) => $record->registrarStatusColor())
                     ->visibleFrom(Breakpoints::COLUMN_SECONDARY),
                 IconColumn::make('auto_renew')
                     ->label(__('Auto-renew'))
