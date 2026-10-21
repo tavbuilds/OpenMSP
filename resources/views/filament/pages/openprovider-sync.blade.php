@@ -35,10 +35,20 @@
                             <dd>{{ $report['domains_unassigned'] ?? 0 }}</dd>
                         </div>
                         <div>
+                            <dt>{{ __('No longer at the registrar') }}</dt>
+                            <dd>{{ $report['domains_removed'] ?? 0 }}</dd>
+                        </div>
+                        <div>
                             <dt>{{ __('Extension prices updated') }}</dt>
                             <dd>{{ $report['tld_prices_updated'] ?? 0 }}</dd>
                         </div>
                     </dl>
+
+                    @if (($report['domains_removed'] ?? 0) > 0)
+                        <p class="omsp-prose">
+                            {{ __('Openprovider no longer returns these domains, so they were marked rather than deleted — the customer link and the notes stay. Filter the domain list on "No longer at the registrar" to see them.') }}
+                        </p>
+                    @endif
 
                     @if (! empty($report['extensions_without_price']))
                         <p class="omsp-prose">

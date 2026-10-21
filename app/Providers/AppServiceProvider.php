@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Support\DemoAccount;
 use App\Support\PlatformSettings;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -19,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         PlatformSettings::applyToConfig();
+
+        // ...and again before every queued job. A worker boots once and runs
+        // for hours, so without this it sends with the mail settings that
+        // were stored when it started — which is how a working test mail and
+        // a magic link that never arrives happen at the same time.
+        Queue::before(fn () => PlatformSettings::refresh());
 
         // On a phone a wide table clips everything past the second column,
         // row actions included. Stacking turns each row into a labelled card.
