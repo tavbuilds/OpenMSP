@@ -5,7 +5,12 @@ namespace App\Support;
 use App\Models\AuditLog;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Laragear\WebAuthn\Assertion\Validator\AssertionValidation;
+use Laragear\WebAuthn\Assertion\Validator\AssertionValidator;
+use Laragear\WebAuthn\Http\Requests\AssertionRequest;
+use Laragear\WebAuthn\JsonTransport;
 use Laragear\WebAuthn\Models\WebAuthnCredential;
+use Throwable;
 
 /**
  * Passkeys for the admin panel.
@@ -70,6 +75,63 @@ final class Passkeys
         $credential->delete();
 
         self::audit($user, 'passkey.removed', ['alias' => $alias]);
+
+        return true;
+    }
+
+    /** Where the options that go with the live challenge are kept. */
+    private const CHALLENGE_OPTIONS_KEY = 'passkey.challenge_options';
+
+    /**
+     * A challenge for this one account, for the second-factor prompt.
+     *
+     * The ceremony there is not discoverable: we already know who is signing
+     * in, and naming their credentials keeps the browser from offering a key
+     * belonging to somebody else on the same machine.
+     *
+     * Minted once and then reused while it lives. Filament rebuilds the
+     * challenge form to validate it, so a generator that ran on every build
+     * would replace the challenge the browser had just signed — and the
+     * sign-in would fail with "challenge is not equal" every single time.
+     * The package pulls the challenge out of the session when it checks one,
+     * so a retry gets a fresh pair without any help from here.
+     *
+     * @return array<string, mixed>
+     */
+    public static function assertionOptionsFor(User $user): array
+    {
+        $sessionKey = self::CHALLENGE_OPTIONS_KEY.'.'.$user->getKey();
+        $live = session()->has((string) config('webauthn.challenge.key'));
+
+        if ($live && is_array($cached = session()->get($sessionKey))) {
+            return $cached;
+        }
+
+        $json = app(AssertionRequest::class)
+            ->toVerify($user)
+            ->toResponse(request())
+            ->getData(true);
+
+        $json = is_array($json) ? $json : [];
+        session()->put($sessionKey, $json);
+
+        return $json;
+    }
+
+    /**
+     * Checks an assertion against the challenge in the session.
+     *
+     * @param  array<string, mixed>  $assertion
+     */
+    public static function verifyAssertion(User $user, array $assertion): bool
+    {
+        try {
+            app(AssertionValidator::class)
+                ->send(new AssertionValidation(new JsonTransport($assertion), user: $user))
+                ->thenReturn();
+        } catch (Throwable) {
+            return false;
+        }
 
         return true;
     }

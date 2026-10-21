@@ -658,4 +658,107 @@
         background-color: rgb(0 0 0 / 0.15);
         color: inherit;
     }
+
+    /* Passkeys. Hand-written on Filament's tokens like everything else
+       here: there is no Tailwind build in the container. */
+    .omsp-passkey-login {
+        margin-top: 1.5rem;
+    }
+    .omsp-passkey-divider {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+        color: var(--gray-400);
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    .omsp-passkey-divider::before,
+    .omsp-passkey-divider::after {
+        content: '';
+        flex: 1;
+        border-top: 1px solid var(--gray-200);
+    }
+    .dark .omsp-passkey-divider::before,
+    .dark .omsp-passkey-divider::after {
+        border-color: var(--gray-700);
+    }
+    .omsp-passkey-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--gray-300);
+        border-radius: 0.5rem;
+        background-color: transparent;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .omsp-passkey-btn:hover:not(:disabled) {
+        background-color: var(--gray-50);
+    }
+    .omsp-passkey-btn:disabled {
+        opacity: 0.6;
+        cursor: progress;
+    }
+    .omsp-passkey-btn svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+    .dark .omsp-passkey-btn {
+        border-color: var(--gray-600);
+        color: var(--gray-100);
+    }
+    .dark .omsp-passkey-btn:hover:not(:disabled) {
+        background-color: var(--gray-800);
+    }
+    .omsp-passkey-error {
+        margin-top: 0.75rem;
+        color: var(--danger-600);
+        font-size: 0.875rem;
+    }
+    .dark .omsp-passkey-error {
+        color: var(--danger-400);
+    }
+    .omsp-passkey-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--gray-100);
+    }
+    .omsp-passkey-row:last-child {
+        border-bottom: 0;
+    }
+    .dark .omsp-passkey-row {
+        border-color: var(--gray-800);
+    }
+    .omsp-passkey-meta {
+        color: var(--gray-500);
+        font-size: 0.8125rem;
+    }
+    .omsp-passkey-form {
+        display: grid;
+        gap: 0.75rem;
+        max-width: 24rem;
+    }
+    .omsp-passkey-form label {
+        display: grid;
+        gap: 0.25rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    .omsp-passkey-form .fi-input {
+        width: 100%;
+    }
+    /* The button is as wide as the form on a phone and no wider on a desk. */
+    .omsp-passkey-form .omsp-passkey-btn {
+        justify-self: start;
+        width: auto;
+        min-width: 10rem;
+    }
 </style>
