@@ -11,6 +11,9 @@ enum PlannedTaskKind: string implements HasLabel, HasColor
     case Migration = 'migration';
     case Onsite = 'onsite';
     case Project = 'project';
+    // Raised when a customer cancels: somebody has to stop the licence,
+    // the hosting or the domain from renewing, and a mail alone sinks.
+    case Cancellation = 'cancellation';
     case Other = 'other';
 
     public function getLabel(): string
@@ -20,6 +23,7 @@ enum PlannedTaskKind: string implements HasLabel, HasColor
             self::Migration => __('Migration'),
             self::Onsite => __('On-site'),
             self::Project => __('Project'),
+            self::Cancellation => __('Cancellation'),
             self::Other => __('Other'),
         };
     }
@@ -31,6 +35,7 @@ enum PlannedTaskKind: string implements HasLabel, HasColor
             self::Migration => 'info',
             self::Onsite => 'success',
             self::Project => 'primary',
+            self::Cancellation => 'danger',
             self::Other => 'gray',
         };
     }

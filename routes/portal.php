@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Portal\AutoCollectController;
+use App\Http\Controllers\Portal\CancellationController;
 use App\Http\Controllers\Portal\ContractController;
 use App\Http\Controllers\Portal\DashboardController;
 use App\Http\Controllers\Portal\DomainController;
@@ -26,6 +27,9 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::get('/services/{contract}/auto-collect/success', [AutoCollectController::class, 'success'])->name('auto-collect.success');
 
         Route::get('/contracts/{contract}', ContractController::class)->name('contracts.show');
+        Route::post('/contracts/{contract}/cancel', CancellationController::class)
+            ->middleware('throttle:10,1')
+            ->name('contracts.cancel');
 
         Route::get('/domains', DomainController::class)->name('domains');
 

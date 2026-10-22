@@ -6,6 +6,7 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Enums\ProductType;
 use App\Models\Contract;
+use App\Support\ContractMoves;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -70,7 +71,7 @@ final class ContractGroups
                     continue;
                 }
 
-                $contract->moveIntoGroup($group);
+                ContractMoves::into($contract, $group);
             }
 
             return $group->fresh(['services']);

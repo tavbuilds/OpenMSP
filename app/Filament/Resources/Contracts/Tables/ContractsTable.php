@@ -9,6 +9,7 @@ use App\Filament\Resources\Contracts\ContractResource;
 use App\Models\Contract;
 use App\Support\Breakpoints;
 use App\Support\ContractGroups;
+use App\Support\ContractMoves;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -208,7 +209,10 @@ class ContractsTable
             ->label(__('Combine into one contract'))
             ->icon('heroicon-o-rectangle-stack')
             ->modalHeading(__('Combine into one contract'))
-            ->modalDescription(__('The services keep their own prices. The term you set here applies to all of them.'))
+            ->modalDescription(fn (Collection $records): string => implode(' ', [
+                __('The services keep their own prices. The term you set here applies to all of them.'),
+                ...ContractMoves::warnings($records),
+            ]))
             ->modalSubmitActionLabel(__('Combine'))
             ->visible(fn () => auth()->user()?->canManageContracts() ?? false)
             ->schema([

@@ -153,6 +153,40 @@
         .btn-outline { background:#fff; color:var(--primary) !important; border:1px solid var(--primary); }
         .btn-disabled { background:#94a3b8; cursor:default; }
         .btn-block { width: 100%; }
+        .btn-danger { background:#b91c1c; }
+        /* A header that exists for screen readers only: the cancel column
+           needs a name without putting one above a row of buttons. */
+        .sr-only {
+            position:absolute;
+            width:1px; height:1px;
+            padding:0; margin:-1px;
+            overflow:hidden;
+            clip:rect(0 0 0 0);
+            white-space:nowrap;
+            border:0;
+        }
+        /* Quiet enough that cancelling is not the obvious thing to press,
+           visible enough that it is not hidden either. */
+        .btn-quiet {
+            background:#fff;
+            color:var(--muted) !important;
+            border:1px solid var(--border);
+        }
+        .btn-quiet:hover { color:var(--text) !important; }
+
+        .omsp-dialog {
+            border:none;
+            border-radius:14px;
+            padding:1.5rem;
+            max-width:30rem;
+            width:calc(100% - 2rem);
+            box-shadow:0 20px 50px rgb(15 23 42 / .25);
+            color:var(--text);
+        }
+        .omsp-dialog::backdrop { background:rgb(15 23 42 / .45); }
+        .omsp-dialog h2 { margin:0 0 .75rem; font-size:1.15rem; }
+        .omsp-dialog p { margin:0 0 .75rem; }
+        .omsp-dialog .stack-actions { margin-top:1.25rem; }
         /* Compact variant for table rows and the header, where a 2.75rem
            button would stretch the row it sits in. */
         .btn-sm {

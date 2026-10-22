@@ -72,7 +72,16 @@ class StripeBillingService
 
         $customerId = $this->ensureCustomer($company);
         [$interval, $intervalCount] = $this->stripeRecurring($contract->billing_cycle);
-        $amountCents = (int) round(((float) $contract->sale_price) * (int) $contract->quantity * 100);
+
+        // total_sale answers for a collection as well as a single service:
+        // reading sale_price here would charge a collection nothing, since
+        // it holds no price of its own.
+        $amountCents = (int) round(((float) $contract->total_sale) * 100);
+
+        // A service inside a collection is billed through that collection.
+        if ($contract->isInGroup()) {
+            throw new UnexpectedValueException('A service inside a contract is billed through that contract.');
+        }
 
         if ($amountCents < 50) {
             throw new UnexpectedValueException('Amount too low for Stripe (min. €0.50).');

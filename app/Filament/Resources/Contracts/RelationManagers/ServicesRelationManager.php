@@ -6,6 +6,8 @@ use App\Enums\ContractStatus;
 use App\Filament\Resources\Contracts\ContractResource;
 use App\Models\Contract;
 use App\Support\Breakpoints;
+use App\Support\ContractMoves;
+use App\Support\ContractTermination;
 use App\Support\Money;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -78,10 +80,13 @@ class ServicesRelationManager extends RelationManager
                     ->color('gray')
                     ->requiresConfirmation()
                     ->modalHeading(__('Take this service out of the contract?'))
-                    ->modalDescription(__('It carries on by itself, keeping the dates it has now. Nothing is cancelled.'))
+                    ->modalDescription(fn (Contract $record): string => implode(' ', [
+                        __('It carries on by itself, keeping the dates it has now. Nothing is cancelled.'),
+                        ...ContractMoves::warnings([$record]),
+                    ]))
                     ->visible(fn (): bool => ! $this->isReadOnly())
                     ->action(function (Contract $record): void {
-                        $record->detachFromGroup();
+                        ContractMoves::out($record);
 
                         Notification::make()
                             ->title(__('Taken out of the contract'))
@@ -98,7 +103,9 @@ class ServicesRelationManager extends RelationManager
                     ->modalDescription(__('Only this one. The rest of the contract carries on.'))
                     ->visible(fn (Contract $record): bool => ! $this->isReadOnly() && $record->canCancel())
                     ->action(function (Contract $record): void {
-                        $record->cancelNow();
+                        // Through the same path as a customer cancelling,
+                        // so the task and the staff mail happen either way.
+                        ContractTermination::cancel($record, by: 'admin');
 
                         Notification::make()->title(__('Service cancelled'))->success()->send();
                     }),
@@ -109,8 +116,12 @@ class ServicesRelationManager extends RelationManager
                         ->label(__('Take out of this contract'))
                         ->icon('heroicon-o-arrow-up-tray')
                         ->requiresConfirmation()
+                        ->modalDescription(fn (Collection $records): string => implode(' ', [
+                            __('They carry on by themselves, keeping the dates they have now. Nothing is cancelled.'),
+                            ...ContractMoves::warnings($records),
+                        ]))
                         ->action(function (Collection $records): void {
-                            $records->each(fn (Contract $c) => $c->detachFromGroup());
+                            $records->each(fn (Contract $c) => ContractMoves::out($c));
 
                             Notification::make()
                                 ->title(__('Taken out of the contract'))
