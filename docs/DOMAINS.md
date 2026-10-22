@@ -99,6 +99,12 @@ Reminders at 30 / 14 / 7 / 1 days and once on the day it expires, per domain,
 **to admins and managers only**. A domain never emails the customer — the
 customer hears about renewals through their contract.
 
+They arrive as **one mail a morning**, not one per domain: six domains falling
+due in the same minute is how an inbox teaches someone to ignore all six. The
+digest lists every domain due that day, whatever has already expired first,
+and nothing is sent on a quiet morning. See `REMINDERS.md` for the shape of
+it and for which language it is written in.
+
 A renewal starts a fresh cycle: when either date moves out, the "already sent"
 record is cleared, so next year warns again. Either date, because registrars
 do not always move both, and a missed reset is a year of silence on a domain

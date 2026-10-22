@@ -4,20 +4,27 @@ namespace App\Console\Commands;
 
 use App\Models\Endpoint;
 use App\Models\User;
-use App\Notifications\EndpointExpiryReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 class SendEndpointExpiryReminders extends Command
 {
     protected $signature = 'endpoints:send-expiry-reminders';
 
-    protected $description = 'Send certificate/endpoint reminders (30/14/7/1 days and expired), honoring per-monitor toggles.';
+    protected $description = 'Send one digest of the certificates due (30/14/7/1 days and expired), honoring per-monitor toggles.';
 
     public function handle(): int
     {
         $staff = User::query()->whereIn('role', ['admin', 'manager'])->get();
-        $sent = 0;
+
+        /** @var Collection<int, Endpoint> $forStaff */
+        $forStaff = new Collection;
+        $context = [];
+
+        /** @var array<int, Collection<int, Endpoint>> $byCompany */
+        $byCompany = [];
 
         $endpoints = Endpoint::query()
             ->with(['company.contacts'])
@@ -30,24 +37,43 @@ class SendEndpointExpiryReminders extends Command
                 continue;
             }
 
-            if ($staff->isNotEmpty()) {
-                Notification::send($staff, new EndpointExpiryReminder($endpoint, $which, false));
-            }
+            $context[$endpoint->getKey()] = ['days' => $which === 'expired' ? null : (int) $which];
+            $forStaff->push($endpoint);
 
-            if ($endpoint->notify_customer) {
-                $contacts = $endpoint->company?->contacts
-                    ?->filter(fn ($c) => filled($c->email))
-                    ?? collect();
-                if ($contacts->isNotEmpty()) {
-                    Notification::send($contacts, new EndpointExpiryReminder($endpoint, $which, true));
-                }
+            // A customer hears only about their own, so their digest is
+            // built per company rather than from the whole run.
+            if ($endpoint->notify_customer && $endpoint->company_id) {
+                $byCompany[$endpoint->company_id] ??= new Collection;
+                $byCompany[$endpoint->company_id]->push($endpoint);
             }
 
             $endpoint->markNotified($which);
-            $sent++;
         }
 
-        $this->info("{$sent} endpoint reminder(s) sent.");
+        if ($forStaff->isEmpty()) {
+            $this->info('Nothing due.');
+
+            return self::SUCCESS;
+        }
+
+        if ($staff->isNotEmpty()) {
+            Notification::send($staff, new ReminderDigest(ReminderDigest::CERTIFICATES, $forStaff, $context));
+        }
+
+        $customers = 0;
+        foreach ($byCompany as $theirs) {
+            $contacts = $theirs->first()->company?->contacts->filter(fn ($c) => filled($c->email)) ?? collect();
+            if ($contacts->isEmpty()) {
+                continue;
+            }
+
+            Notification::send($contacts, new ReminderDigest(
+                ReminderDigest::CERTIFICATES, $theirs, $context, forCustomer: true
+            ));
+            $customers += $contacts->count();
+        }
+
+        $this->info($forStaff->count().' certificate(s) digested to '.$staff->count()." staff and {$customers} customer contact(s).");
 
         return self::SUCCESS;
     }
