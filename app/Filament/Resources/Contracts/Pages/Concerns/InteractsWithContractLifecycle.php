@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\Contracts\Pages\Concerns;
 
 use App\Models\Contract;
-use App\Services\StripeBillingService;
+use App\Support\ContractCancellation;
+use App\Support\ContractTermination;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 
@@ -37,19 +38,41 @@ trait InteractsWithContractLifecycle
                 ->color('danger')
                 ->requiresConfirmation()
                 ->modalHeading(__('Cancel this contract?'))
-                ->modalDescription(__('Status becomes Canceled and auto-renew is turned off. A linked Stripe subscription is stopped if present.'))
+                ->modalDescription(function (): string {
+                    /** @var Contract $record */
+                    $record = $this->getRecord();
+                    $cancellation = ContractCancellation::for($record);
+
+                    $lines = [__('Auto-renew goes off and any direct debit for it is stopped.')];
+
+                    if ($record->isGroup() && $record->services()->exists()) {
+                        $lines[] = __('Everything in this contract is cancelled with it.');
+                    }
+
+                    if ($ends = $cancellation->endsOn()) {
+                        $lines[] = __('The service runs until :date.', ['date' => $ends->translatedFormat('j F Y')]);
+                    }
+
+                    if ($invoice = $cancellation->lastInvoiceOn()) {
+                        $lines[] = __('The last invoice is on :date.', ['date' => $invoice->translatedFormat('j F Y')]);
+                    }
+
+                    $lines[] = __('A task is raised so the licence, hosting or domain behind it is not renewed.');
+
+                    return implode(' ', $lines);
+                })
                 ->visible(fn (): bool => $this->getRecord()->canCancel())
                 ->action(function (): void {
                     /** @var Contract $record */
                     $record = $this->getRecord();
-                    $record->cancelNow();
-                    try {
-                        app(StripeBillingService::class)->cancelSubscription($record->fresh());
-                    } catch (\Throwable $e) {
-                        report($e);
-                    }
+
+                    // One path for every cancellation, whoever started it:
+                    // Stripe stopped, task raised, staff told.
+                    ContractTermination::cancel($record, by: 'admin');
+
                     Notification::make()
                         ->title(__('Contract canceled'))
+                        ->body(__('A task has been raised so the renewal can be stopped at the supplier.'))
                         ->success()
                         ->send();
                 }),

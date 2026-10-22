@@ -56,12 +56,29 @@ class Company extends Model
 
     // --- Key figures over de actieve contracten -------------------------
 
-    /** @return Collection<int, Contract> */
+    /**
+     * The active rows that carry money.
+     *
+     * A collection has no price of its own — it totals its services — so
+     * summing over everything counted this customer's revenue twice.
+     *
+     * @return Collection<int, Contract>
+     */
     protected function activeContracts()
     {
         return $this->contracts()
+            ->billable()
             ->where('status', ContractStatus::Active->value)
             ->get();
+    }
+
+    /** Contracts as a person counts them: a collection is one, not one plus its parts. */
+    public function activeContractCount(): int
+    {
+        return $this->contracts()
+            ->topLevel()
+            ->where('status', ContractStatus::Active->value)
+            ->count();
     }
 
     /** Maandelijkse recurring omzet (MRR) over actieve contracten. */

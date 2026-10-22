@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
+use App\Filament\Resources\Companies\Pages\ViewCompany;
+use App\Filament\Resources\Companies\RelationManagers\ContractsRelationManager;
 use App\Filament\Resources\Contracts\Pages\ListContracts;
 use App\Filament\Widgets\PortfolioStats;
 use App\Filament\Widgets\UpcomingRenewals;
@@ -317,6 +319,43 @@ class ContractGroupTest extends TestCase
             // Two services and their collection: one contract, and the
             // revenue of the two services, counted once.
             ->assertSee('1');
+    }
+
+    /**
+     * A collection totals its services, so counting it alongside them
+     * doubled the customer's MRR — which is the number an operator quotes.
+     */
+    public function test_a_customer_s_revenue_counts_a_collection_once(): void
+    {
+        $this->merge([
+            $this->service('Hosting', ['sale_price' => 25, 'cost_price' => 10]),
+            $this->service('Domein', ['sale_price' => 15, 'cost_price' => 5]),
+        ]);
+
+        $company = $this->company->fresh();
+
+        // 40 a year over twelve months, counted once.
+        $this->assertEqualsWithDelta(40 / 12, $company->mrr(), 0.01);
+        $this->assertEqualsWithDelta(25.0, $company->annualMargin(), 0.01);
+        $this->assertSame(1, $company->activeContractCount());
+    }
+
+    /** The same on the customer page: one row, not the row and its parts. */
+    public function test_the_customer_page_lists_the_collection_and_not_its_services(): void
+    {
+        PlatformSettings::markOnboardingComplete();
+        $this->actingAs(User::factory()->admin()->create());
+
+        $hosting = $this->service('Hosting');
+        $loose = $this->service('Losse dienst');
+        $group = $this->merge([$hosting]);
+
+        Livewire::test(ContractsRelationManager::class, [
+            'ownerRecord' => $this->company->fresh(),
+            'pageClass' => ViewCompany::class,
+        ])
+            ->assertCanSeeTableRecords(Contract::query()->whereIn('id', [$group->id, $loose->id])->get())
+            ->assertCanNotSeeTableRecords(Contract::query()->whereKey($hosting->id)->get());
     }
 
     public function test_the_portal_lists_the_collection_and_opens_its_services(): void
