@@ -78,6 +78,23 @@ class Contract extends Model
         return $this->hasMany(Invoice::class);
     }
 
+    /** Changes to what this contract's direct debit collects. */
+    public function billingChanges(): HasMany
+    {
+        return $this->hasMany(ContractBillingChange::class);
+    }
+
+    public function pendingBillingChange(): ?ContractBillingChange
+    {
+        return $this->billingChanges()->pending()->latest('id')->first();
+    }
+
+    /** Whether a mandate is in place that an amount change would affect. */
+    public function collectsByDirectDebit(): bool
+    {
+        return (bool) $this->auto_collect && filled($this->stripe_subscription_id);
+    }
+
     // --- Collections -------------------------------------------------
     //
     // A contract is either a service or a collection of them. The

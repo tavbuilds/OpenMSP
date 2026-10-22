@@ -184,6 +184,15 @@
             color:var(--text);
         }
         .omsp-dialog::backdrop { background:rgb(15 23 42 / .45); }
+        /* Loud enough not to be scrolled past: until this is answered we
+           are still collecting the old amount. */
+        .omsp-notice {
+            border-left:4px solid var(--primary);
+            background:#f8fafc;
+        }
+        .omsp-notice h2 { margin:0 0 .5rem; font-size:1.05rem; }
+        .omsp-notice p { margin:0 0 .5rem; }
+        .omsp-notice .stack-actions { margin-top:.75rem; }
         .omsp-dialog h2 { margin:0 0 .75rem; font-size:1.15rem; }
         .omsp-dialog p { margin:0 0 .75rem; }
         .omsp-dialog .stack-actions { margin-top:1.25rem; }

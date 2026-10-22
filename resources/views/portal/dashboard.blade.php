@@ -6,6 +6,15 @@
 <h1>{{ __('Active services') }}</h1>
 <p class="muted lede">{{ __(':company — the services and licenses we currently run for you.', ['company' => $company?->name]) }}</p>
 
+@include('portal.partials.billing-change', ['changes' => $billingChanges])
+
+@php
+    // The list shows what each contract is worth; while a change waits
+    // we are still collecting the old amount, and the row has to say so
+    // rather than let the price stand in for it.
+    $awaitingApproval = $billingChanges->keyBy('contract_id');
+@endphp
+
 @if ($services->isEmpty())
     <div class="card"><p class="muted empty">{{ __('There are no active services or licenses right now.') }}</p></div>
 @else
@@ -44,6 +53,11 @@
                 <div class="stack-actions">
                     @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                         <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
+                        @if ($pending = $awaitingApproval->get($service->id))
+                            <div class="muted cell-sub">{{ __('Collecting :amount until you approve the change.', [
+                                'amount' => $pending->previousFormatted(),
+                            ]) }}</div>
+                        @endif
                     @elseif ($service->stripe_payment_status === 'pending')
                         <span class="badge badge-pending">{{ __('Activating…') }}</span>
                     @elseif ($service->stripe_payment_status === 'past_due')
@@ -102,6 +116,11 @@
                         <td>
                             @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                                 <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
+                                @if ($pending = $awaitingApproval->get($service->id))
+                                    <div class="muted cell-sub">{{ __('Collecting :amount until you approve the change.', [
+                                        'amount' => $pending->previousFormatted(),
+                                    ]) }}</div>
+                                @endif
                             @elseif ($service->stripe_payment_status === 'pending')
                                 <span class="badge badge-pending">{{ __('Activating…') }}</span>
                             @elseif ($service->stripe_payment_status === 'past_due')

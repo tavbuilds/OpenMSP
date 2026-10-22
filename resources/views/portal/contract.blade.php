@@ -14,11 +14,23 @@
     ) }}
 </p>
 
+@include('portal.partials.billing-change', ['changes' => $billingChanges])
+
 <div class="card stack-card">
     <dl class="stack-meta">
         <div>
             <dt>{{ __('Total') }}</dt>
-            <dd><strong>{{ $contract->portalSalePriceFormatted() }}</strong></dd>
+            <dd>
+                <strong>{{ $contract->portalSalePriceFormatted() }}</strong>
+                @php $pending = $billingChanges->firstWhere('contract_id', $contract->id); @endphp
+                @if ($pending)
+                    {{-- The total is what the contract is worth; until the
+                         change is answered it is not what we collect. --}}
+                    <div class="muted cell-sub">{{ __('Collecting :amount until you approve the change.', [
+                        'amount' => $pending->previousFormatted(),
+                    ]) }}</div>
+                @endif
+            </dd>
         </div>
         <div>
             <dt>{{ __('Billing') }}</dt>

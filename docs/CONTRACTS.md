@@ -93,13 +93,41 @@ cancellation — from the portal or the panel — goes through
 
 ## Direct debits and moving services
 
-A SEPA mandate is given for one agreement. When a service moves into a
-collection, or leaves one to stand alone, the thing being billed is not the
-thing the customer authorised any more — so the mandate is stopped, the
-customer is emailed, and they give a new one for the contract it now
-belongs to. Until then that contract is invoiced to pay by hand.
+A SEPA mandate is given to us, not to an amount. Moving a service in or
+out of a collection therefore does not cost the customer their mandate:
+Stripe can re-price the existing subscription and the authorisation stands.
+What does need their word is the new sum.
 
-The operator sees this in the confirmation before they move anything;
+So the move happens at once, and the collection *keeps being debited for
+the old amount* while a `ContractBillingChange` row waits with the new one.
+The customer approves or declines it in the portal:
+
+| They | We |
+|---|---|
+| approve | re-price the subscription (`proration_behavior: none`, so it takes effect next period) and mark the change confirmed |
+| decline | cancel the subscription; they go back to an invoice they pay by hand, and can set up a new mandate whenever they like |
+| do nothing | keep collecting the old amount — the only one anyone has agreed to |
+
+Only one question is ever outstanding per contract. A later move retires
+the earlier one as `superseded` rather than stacking a second, including
+when the later move puts the amount back where it was and so asks nothing.
+Because of that, the amount a change is measured *from* is what Stripe is
+collecting — `previous_amount` of the waiting change — not the contract's
+current total.
+
+Neither side is taken on trust: if Stripe will not re-price, the change
+stays pending and the customer is told; if the cancel on a decline does not
+land, the change stays pending too, because telling someone their direct
+debit has stopped while it is still running is the one outcome we cannot
+have. Both the portal and the contract page in the panel show what is
+being collected against what is waiting.
+
+Where no mandate can simply be re-priced — the collection does not collect
+but the arriving service did, or the last service leaves a collection that
+does — the subscription is handed over to the contract that should carry
+it, and the customer is asked about any difference the same way.
+
+The operator sees all this in the confirmation before they move anything;
 `ContractMoves::warnings()` builds that line, and `ContractMoves::into()`
 and `::out()` do the move. Nothing moves silently out from under a mandate.
 

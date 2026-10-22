@@ -50,6 +50,35 @@ class ContractInfolist
                             ->placeholder(__('—')),
                     ]),
 
+                // Only on screen while an answer is outstanding: until then
+                // Stripe is still collecting the old amount, and the page
+                // would otherwise show a total nobody is paying.
+                Section::make(__('Waiting on the customer'))
+                    ->icon(Heroicon::OutlinedClock)
+                    ->visible(fn (Contract $record) => $record->pendingBillingChange() !== null)
+                    ->columns(Breakpoints::THREE)
+                    ->schema([
+                        TextEntry::make('pending_change_note')
+                            ->hiddenLabel()
+                            ->columnSpanFull()
+                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->explanation()
+                                .' '.__('We keep collecting the old amount until they approve the new one in the portal.')),
+
+                        TextEntry::make('pending_change_previous')
+                            ->label(__('Collecting now'))
+                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->previousFormatted()),
+
+                        TextEntry::make('pending_change_new')
+                            ->label(__('Asked to approve'))
+                            ->badge()
+                            ->color(fn (Contract $record) => $record->pendingBillingChange()?->goesUp() ? 'warning' : 'success')
+                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->newFormatted()),
+
+                        TextEntry::make('pending_change_since')
+                            ->label(__('Asked on'))
+                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->created_at?->format('M j, Y H:i')),
+                    ]),
+
                 Tabs::make()
                     ->columnSpanFull()
                     ->tabs([
