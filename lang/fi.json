@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "Avaimesi on toinen vaihe. Viimeistele kirjautuminen sillä.",
   "Your passkeys": "Avaimesi",
   "Your password": "Salasanasi",
-  "or": "tai"
+  "or": "tai",
+  "Last used :date": "Viimeksi käytetty :date"
 }

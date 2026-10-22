@@ -86,7 +86,7 @@ class PasskeyAuthentication implements MultiFactorAuthenticationProvider
     public function getChallengeFormComponents(Authenticatable $user): array
     {
         /** @var User $user */
-        $options = Passkeys::assertionOptionsFor($user);
+        $options = Passkeys::challengeOptionsFor($user);
 
         return [
             View::make('filament.auth.passkey-challenge')
@@ -108,7 +108,7 @@ class PasskeyAuthentication implements MultiFactorAuthenticationProvider
             return function (string $attribute, mixed $value, Closure $fail) use ($user): void {
                 $assertion = is_string($value) ? json_decode($value, true) : null;
 
-                if (! is_array($assertion) || ! Passkeys::verifyAssertion($user, $assertion)) {
+                if (! is_array($assertion) || ! Passkeys::verifyChallenge($user, $assertion)) {
                     $fail(__('That passkey was not recognised.'));
                 }
             };

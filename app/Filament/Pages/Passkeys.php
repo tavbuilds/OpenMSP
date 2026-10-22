@@ -12,6 +12,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Collection;
 use Laragear\WebAuthn\Models\WebAuthnCredential;
+use Laravel\Passkeys\Actions\DeletePasskey;
 
 /**
  * Where an operator adds and removes their own passkeys.
@@ -77,9 +78,19 @@ class Passkeys extends Page
                     return;
                 }
 
-                if (PasskeyStore::forget($this->user(), (string) ($arguments['credential'] ?? ''))) {
-                    Notification::make()->title(__('Passkey removed'))->success()->send();
+                $passkey = $this->user()->passkeys()
+                    ->whereKey($arguments['credential'] ?? null)
+                    ->first();
+
+                if ($passkey === null) {
+                    return;
                 }
+
+                // Through the package's own action, so its event fires and
+                // the audit entry is written in one place.
+                app(DeletePasskey::class)($this->user(), $passkey);
+
+                Notification::make()->title(__('Passkey removed'))->success()->send();
             });
     }
 

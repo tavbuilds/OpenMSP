@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "Je passkey is de tweede stap. Gebruik hem om het inloggen af te ronden.",
   "Your passkeys": "Je passkeys",
   "Your password": "Je wachtwoord",
-  "or": "of"
+  "or": "of",
+  "Last used :date": "Laatst gebruikt :date"
 }

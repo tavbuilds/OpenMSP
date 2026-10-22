@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "Din adgangsnøgle er andet trin. Brug den til at fuldføre login.",
   "Your passkeys": "Dine adgangsnøgler",
   "Your password": "Din adgangskode",
-  "or": "eller"
+  "or": "eller",
+  "Last used :date": "Sidst brugt :date"
 }

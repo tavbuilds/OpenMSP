@@ -1,10 +1,10 @@
 {{--
-    The WebAuthn ceremonies, by hand.
+    The browser half of laravel/passkeys.
 
     There is no asset pipeline in the container, so this is plain script on
-    the page rather than a bundled package. It is small because the server
+    the page rather than a bundled client. It stays small because the server
     does the hard parts: all this does is move binary between base64url and
-    ArrayBuffer and hand the result back.
+    ArrayBuffer and hand the result back in the shape the package expects.
 --}}
 <script>
 window.omspPasskey = (function () {
@@ -25,9 +25,9 @@ window.omspPasskey = (function () {
     const csrf = () =>
         document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
-    async function post(url, body) {
+    async function send(method, url, body) {
         const response = await fetch(url, {
-            method: 'POST',
+            method: method,
             credentials: 'same-origin',
             headers: {
                 'Content-Type': 'application/json',
@@ -35,13 +35,20 @@ window.omspPasskey = (function () {
                 'X-Requested-With': 'XMLHttpRequest',
                 'X-CSRF-TOKEN': csrf(),
             },
-            body: JSON.stringify(body ?? {}),
+            body: body === undefined ? undefined : JSON.stringify(body),
         });
 
         const data = await response.json().catch(() => ({}));
 
         if (!response.ok) {
-            throw new Error(data.message || '{{ __('Something went wrong. Try again.') }}');
+            // Laravel answers a failed rule with {errors: {field: [msg]}};
+            // show the message rather than "422".
+            const first = data.errors && Object.values(data.errors)[0];
+            throw new Error(
+                (Array.isArray(first) ? first[0] : null) ||
+                data.message ||
+                '{{ __('Something went wrong. Try again.') }}'
+            );
         }
 
         return data;
@@ -100,33 +107,35 @@ window.omspPasskey = (function () {
 
     /** Discoverable sign-in: no email typed, the device offers the account. */
     async function signIn() {
-        const options = await post(@json(route('passkeys.login.options')));
-        const assertion = await assertWith(options);
+        const { options } = await send('GET', @json(route('passkey.login-options')));
+        const credential = await assertWith(options);
 
-        return post(@json(route('passkeys.login')), assertion);
+        return send('POST', @json(route('passkey.login')), { credential });
     }
 
-    async function register(alias, password) {
-        const options = await post(@json(route('passkeys.register.options')));
+    async function register(name, password) {
+        const { options } = await send('GET', @json(route('passkey.registration-options')));
 
-        const credential = await navigator.credentials.create({
+        const created = await navigator.credentials.create({
             publicKey: prepareCreation(options),
         });
 
-        if (!credential) {
+        if (!created) {
             throw new Error('{{ __('No passkey was created.') }}');
         }
 
-        return post(@json(route('passkeys.register')), {
-            id: credential.id,
-            rawId: toBase64Url(credential.rawId),
-            type: credential.type,
-            response: {
-                clientDataJSON: toBase64Url(credential.response.clientDataJSON),
-                attestationObject: toBase64Url(credential.response.attestationObject),
-            },
-            alias: alias,
+        return send('POST', @json(route('passkey.store')), {
+            name: name || @json(__('Passkey')),
             password: password,
+            credential: {
+                id: created.id,
+                rawId: toBase64Url(created.rawId),
+                type: created.type,
+                response: {
+                    clientDataJSON: toBase64Url(created.response.clientDataJSON),
+                    attestationObject: toBase64Url(created.response.attestationObject),
+                },
+            },
         });
     }
 
