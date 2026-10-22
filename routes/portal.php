@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Portal\AutoCollectController;
-use App\Http\Controllers\Portal\BillingChangeController;
 use App\Http\Controllers\Portal\CancellationController;
 use App\Http\Controllers\Portal\ContractController;
 use App\Http\Controllers\Portal\DashboardController;
@@ -31,13 +30,6 @@ Route::prefix('portal')->name('portal.')->group(function () {
         Route::post('/contracts/{contract}/cancel', CancellationController::class)
             ->middleware('throttle:10,1')
             ->name('contracts.cancel');
-
-        Route::post('/billing-changes/{change}/confirm', [BillingChangeController::class, 'confirm'])
-            ->middleware('throttle:10,1')
-            ->name('billing-changes.confirm');
-        Route::post('/billing-changes/{change}/decline', [BillingChangeController::class, 'decline'])
-            ->middleware('throttle:10,1')
-            ->name('billing-changes.decline');
 
         Route::get('/domains', DomainController::class)->name('domains');
 

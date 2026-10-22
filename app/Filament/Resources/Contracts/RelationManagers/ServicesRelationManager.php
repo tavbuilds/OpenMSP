@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Contracts\RelationManagers;
 
 use App\Enums\ContractStatus;
-use App\Enums\MoveOutcome;
 use App\Filament\Resources\Contracts\ContractResource;
 use App\Models\Contract;
 use App\Support\Breakpoints;
@@ -87,7 +86,13 @@ class ServicesRelationManager extends RelationManager
                     ]))
                     ->visible(fn (): bool => ! $this->isReadOnly())
                     ->action(function (Contract $record): void {
-                        self::reportMove(ContractMoves::out($record), $record->name);
+                        ContractMoves::out($record);
+
+                        Notification::make()
+                            ->title(__('Taken out of the contract'))
+                            ->body(__(':name runs on its own now.', ['name' => $record->name]))
+                            ->success()
+                            ->send();
                     }),
                 Action::make('cancelService')
                     ->label(__('Cancel'))
@@ -116,89 +121,17 @@ class ServicesRelationManager extends RelationManager
                             ...ContractMoves::warnings($records),
                         ]))
                         ->action(function (Collection $records): void {
-                            $moved = [];
-                            $asked = [];
-                            $stuck = [];
+                            $records->each(fn (Contract $c) => ContractMoves::out($c));
 
-                            foreach ($records as $record) {
-                                match (ContractMoves::out($record)) {
-                                    MoveOutcome::Done => $moved[] = $record->name,
-                                    MoveOutcome::AwaitingCustomer => $asked[] = $record->name,
-                                    default => $stuck[] = $record->name,
-                                };
-                            }
-
-                            self::reportBulkMove($moved, $asked, $stuck);
+                            Notification::make()
+                                ->title(__('Taken out of the contract'))
+                                ->body(trans_choice('{1} :count service runs on its own now.|[2,*] :count services run on their own now.', $records->count(), ['count' => $records->count()]))
+                                ->success()
+                                ->send();
                         })
                         ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
-    }
-
-    /**
-     * Says what actually happened, which is not always the move.
-     *
-     * A move that changes what a live direct debit collects is only
-     * proposed here; the customer carries it out. Reporting that as done
-     * would have the operator believing a service had left a contract it
-     * is still in.
-     */
-    private static function reportMove(MoveOutcome $outcome, string $name): void
-    {
-        match ($outcome) {
-            MoveOutcome::Done => Notification::make()
-                ->title(__('Taken out of the contract'))
-                ->body(__(':name runs on its own now.', ['name' => $name]))
-                ->success()
-                ->send(),
-            MoveOutcome::AwaitingCustomer => Notification::make()
-                ->title(__('Waiting on the customer'))
-                ->body(__('This changes their direct debit, so :name stays where it is until they approve it in the portal.', ['name' => $name]))
-                ->warning()
-                ->send(),
-            MoveOutcome::Blocked => Notification::make()
-                ->title(__('Another change is already waiting'))
-                ->body(__('The customer still has to answer the last one. Withdraw it on the contract page, or wait for their answer.'))
-                ->danger()
-                ->send(),
-            MoveOutcome::Refused => Notification::make()
-                ->title(__('Could not take it out'))
-                ->body(__(':name is not part of this contract.', ['name' => $name]))
-                ->danger()
-                ->send(),
-        };
-    }
-
-    /**
-     * @param  list<string>  $moved
-     * @param  list<string>  $asked
-     * @param  list<string>  $stuck
-     */
-    private static function reportBulkMove(array $moved, array $asked, array $stuck): void
-    {
-        if ($moved !== []) {
-            Notification::make()
-                ->title(__('Taken out of the contract'))
-                ->body(trans_choice('{1} :count service runs on its own now.|[2,*] :count services run on their own now.', count($moved), ['count' => count($moved)]))
-                ->success()
-                ->send();
-        }
-
-        if ($asked !== []) {
-            Notification::make()
-                ->title(__('Waiting on the customer'))
-                ->body(__('These change their direct debit, so they stay where they are until approved: :names.', ['names' => implode(', ', $asked)]))
-                ->warning()
-                ->send();
-        }
-
-        if ($stuck !== []) {
-            Notification::make()
-                ->title(__('Not taken out'))
-                ->body(__('Nothing happened for :names. A change may already be waiting on the customer.', ['names' => implode(', ', $stuck)]))
-                ->danger()
-                ->send();
-        }
     }
 
     /** The collection's own figures, under the table. */

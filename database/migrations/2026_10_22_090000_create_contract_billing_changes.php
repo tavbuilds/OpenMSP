@@ -7,14 +7,17 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * A move waiting on the customer, and what it would cost them.
+     * A record of every change to what a direct debit collects.
      *
-     * Moving a service into or out of a contract changes what that contract
-     * bills. The mandate itself survives — it is given to us, not to an
-     * amount — so the Stripe subscription can be updated rather than torn
-     * down and asked for again. The sum is still theirs to agree to, and
-     * that agreement is the last step: the move described here has not
-     * happened, and does not happen unless they approve it.
+     * An operator changing a contract is acting on the customer's own
+     * instruction, so the change is made and the subscription re-priced
+     * there and then. What the customer is owed is to be told: money
+     * leaving their account by a different amount than last month is not
+     * something to discover on a bank statement.
+     *
+     * This is the trail of those changes and the mails that went with
+     * them — the one place to look when somebody asks why the amount
+     * moved.
      */
     public function up(): void
     {
@@ -22,9 +25,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('contract_id')->constrained()->cascadeOnDelete();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
-            // The contract that would move. Carried out on approval, so
-            // this is what to act on, not only what to say. Null once it
-            // has been deleted; the name is kept for the record.
+            // The service behind the change. Null once it has been
+            // deleted; the name is kept for the record.
             $table->foreignId('service_id')->nullable()->constrained('contracts')->nullOnDelete();
             $table->string('service_name')->nullable();
 
@@ -32,14 +34,12 @@ return new class extends Migration
             $table->decimal('new_amount', 12, 2);
             $table->string('currency', 3)->default('EUR');
 
-            $table->string('reason');  // service_added | service_removed
-            $table->string('status')->default('pending'); // pending | confirmed | declined | withdrawn
-            $table->timestamp('confirmed_at')->nullable();
-            $table->timestamp('declined_at')->nullable();
+            $table->string('reason');  // service_added | service_removed | amount_edited
+            $table->timestamp('notified_at')->nullable();
             $table->timestamps();
 
-            $table->index(['company_id', 'status']);
-            $table->index(['contract_id', 'status']);
+            $table->index(['company_id', 'created_at']);
+            $table->index(['contract_id', 'created_at']);
         });
     }
 

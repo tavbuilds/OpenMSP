@@ -50,35 +50,6 @@ class ContractInfolist
                             ->placeholder(__('—')),
                     ]),
 
-                // Only on screen while an answer is outstanding. The
-                // figures below it are the contract as it stands, because
-                // nothing in it moves until the customer says yes.
-                Section::make(__('Waiting on the customer'))
-                    ->icon(Heroicon::OutlinedClock)
-                    ->visible(fn (Contract $record) => $record->pendingBillingChange() !== null)
-                    ->columns(Breakpoints::THREE)
-                    ->schema([
-                        TextEntry::make('pending_change_note')
-                            ->hiddenLabel()
-                            ->columnSpanFull()
-                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->explanation()
-                                .' '.__('It has not been applied: the customer approves it in the portal, and the contract stays as it is until they do.')),
-
-                        TextEntry::make('pending_change_previous')
-                            ->label(__('Collecting now'))
-                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->previousFormatted()),
-
-                        TextEntry::make('pending_change_new')
-                            ->label(__('Asked to approve'))
-                            ->badge()
-                            ->color(fn (Contract $record) => $record->pendingBillingChange()?->goesUp() ? 'warning' : 'success')
-                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->newFormatted()),
-
-                        TextEntry::make('pending_change_since')
-                            ->label(__('Asked on'))
-                            ->state(fn (Contract $record) => $record->pendingBillingChange()?->created_at?->format('M j, Y H:i')),
-                    ]),
-
                 Tabs::make()
                     ->columnSpanFull()
                     ->tabs([
@@ -168,6 +139,26 @@ class ContractInfolist
                                     ->copyable()
                                     ->fontFamily(FontFamily::Mono)
                                     ->columnSpanFull(),
+
+                                TextEntry::make('last_billing_change')
+                                    ->label(__('Last amount change'))
+                                    ->columnSpanFull()
+                                    ->visible(fn (Contract $record) => $record->lastBillingChange() !== null)
+                                    ->state(function (Contract $record) {
+                                        $change = $record->lastBillingChange();
+
+                                        return __(':previous → :new on :date', [
+                                            'previous' => $change?->previousFormatted(),
+                                            'new' => $change?->newFormatted(),
+                                            'date' => $change?->created_at?->format('M j, Y H:i'),
+                                        ]);
+                                    })
+                                    // Whether the customer was told is the
+                                    // part worth knowing when they ring up
+                                    // about an amount they did not expect.
+                                    ->helperText(fn (Contract $record) => $record->lastBillingChange()?->notified_at
+                                        ? __('The customer was emailed about it.')
+                                        : __('No email went out — the customer has no email address on file.')),
                             ]),
 
                         Tab::make(__('License keys & notes'))

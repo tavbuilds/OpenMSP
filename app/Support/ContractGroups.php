@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
-use App\Enums\MoveOutcome;
 use App\Enums\ProductType;
 use App\Models\Contract;
 use Illuminate\Support\Collection;
@@ -28,19 +27,11 @@ final class ContractGroups
      * how you add a service to a group you already made. Otherwise a new one
      * is created with the term supplied by the operator.
      *
-     * A service whose direct debit the move would change does not join:
-     * that is the customer's to approve, and $deferred comes back saying
-     * which ones are waiting on them so the operator is not left thinking
-     * the collection holds more than it does.
-     *
      * @param  Collection<int, Contract>  $contracts
      * @param  array<string, mixed>  $term  name, billing_cycle, start_date, renewal_date, notice_period_days, auto_renew
-     * @param  array{awaiting: list<string>, blocked: list<string>}|null  $deferred  filled in on return
      */
-    public static function merge(Collection $contracts, array $term, ?array &$deferred = null): Contract
+    public static function merge(Collection $contracts, array $term): Contract
     {
-        $deferred = ['awaiting' => [], 'blocked' => []];
-
         $contracts = $contracts->filter(fn (Contract $c) => ! $c->isInGroup() || $c->isGroup());
 
         if ($contracts->isEmpty()) {
@@ -59,7 +50,7 @@ final class ContractGroups
 
         $term = self::fillInTerm($term, $contracts);
 
-        return DB::transaction(function () use ($contracts, $groups, $term, $companies, &$deferred): Contract {
+        return DB::transaction(function () use ($contracts, $groups, $term, $companies): Contract {
             $group = $groups->first() ?? self::create((int) $companies->first(), $term, $contracts);
 
             if ($groups->isNotEmpty()) {
@@ -79,11 +70,7 @@ final class ContractGroups
                     continue;
                 }
 
-                match (ContractMoves::into($contract, $group)) {
-                    MoveOutcome::AwaitingCustomer => $deferred['awaiting'][] = $contract->name,
-                    MoveOutcome::Blocked => $deferred['blocked'][] = $contract->name,
-                    default => null,
-                };
+                ContractMoves::into($contract, $group);
             }
 
             return $group->fresh(['services']);

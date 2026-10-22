@@ -91,50 +91,47 @@ cancellation — from the portal or the panel — goes through
    naming the services inside it;
 4. emails every admin and manager.
 
-## Direct debits and moving services
+## Direct debits and changing a contract
 
-A SEPA mandate is given to us, not to an amount. Moving a service in or
-out of a collection therefore does not cost the customer their mandate:
-Stripe can re-price the existing subscription and the authorisation
-stands. The *sum* is still theirs to agree to, and that agreement is the
-last step of the change, not a notice sent after it.
+A SEPA mandate is given to us, not to an amount. Changing what a contract
+is worth therefore costs the customer nothing: Stripe re-prices the
+existing subscription and the authorisation stands.
 
-So a move that would change what a live mandate collects **does not
-happen**. It is written down as a `ContractBillingChange`, sent to the
-customer, and carried out only when they approve it. Until then the
-service is exactly where it was, the contract totals what it always did,
-and the direct debit collects what it always did.
+Nor is there anything to approve. An operator changing a contract in the
+panel is carrying out what the customer asked for — that is where the
+instruction came from — so the change is made and the subscription
+re-priced there and then, taking effect from the next period
+(`proration_behavior: none`: no credit, no catch-up charge for a period
+already paid).
 
-| They | We |
+What the customer *is* owed is the telling. A different sum leaving their
+account is not a thing to discover on a bank statement, so every change
+that reaches a live mandate is recorded in `contract_billing_changes` and
+emailed to them, saying what changed, what the new amount is, and that
+their mandate is untouched.
+
+`BillingAmount::changed()` is the one door all of this goes through.
+Callers hand it the amount that was being collected *before* whatever
+they did (`BillingAmount::collectedBy()`, read first), and it works out
+whether anything actually moved. Three things call it:
+
+| Where | What it covers |
 |---|---|
-| approve | make the move, then re-price the subscription (`proration_behavior: none`, so it takes effect next period) |
-| decline | nothing — there is no Stripe call and nothing to undo, because nothing was done |
-| do nothing | nothing, indefinitely; the operator can withdraw the request from the contract page |
+| `ContractMoves::into()` / `::out()` | a service joining or leaving a collection |
+| `ContractObserver` | a `sale_price` or `quantity` edited in the panel |
+| — | nothing else; a rename or a term change costs nothing and says nothing |
 
-Moves that cost the customer nothing are simply made: no mandate in play,
-or the same money arranged differently. Two of those are worth naming —
-the last service leaving a collecting collection (the subscription follows
-it out, same amount), and a service with its own mandate joining a
-collection that also collects (two debits become one for the same total).
+The observer is there because editing a quantity used to change what we
+invoice without changing what we collect, leaving the subscription on
+last month's figure indefinitely. A service inside a collection has no
+mandate of its own, so its price feeds the collection's subscription —
+that is what `Contract::billingParent()` resolves.
 
-Only **one** change can wait on a contract at a time. A second would be
-measured against a contract the first is about to change, so both answers
-together would land on an amount neither of them quoted; it is refused
-with `MoveOutcome::Blocked` and the operator is told. Withdrawing the
-first clears the way.
-
-Nothing is taken on trust at the other end either. On approval the amount
-is recomputed from the contracts as they stand and checked against the
-figure the customer actually said yes to — prices can be edited while a
-change waits, and charging a sum nobody agreed to is the thing this whole
-path exists to prevent. If it no longer matches, the approval is refused
-and the change stays pending.
-
-`ContractMoves::into()` and `::out()` return a `MoveOutcome` saying which
-of these happened, because "done" and "asked" look the same from the
-outside and only one of them changed anything. `ContractMoves::warnings()`
-builds the line the operator reads before confirming, and
-`ContractGroups::merge()` reports back which services did not join.
+Some moves cost the customer nothing and so say nothing: no mandate in
+play, the last service leaving a collecting collection (the subscription
+follows it out at the same amount), or a service's own mandate merging
+into one that ends up collecting the same total. A mail about an amount
+that did not move is noise.
 
 A service inside a collection cannot take a direct debit of its own: two
 mandates for one agreement would debit the customer twice. The portal

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
-use App\Enums\MoveOutcome;
 use App\Enums\PlannedTaskKind;
 use App\Models\Company;
 use App\Models\Contact;
@@ -12,7 +11,7 @@ use App\Models\Contract;
 use App\Models\ContractBillingChange;
 use App\Models\PlannedTask;
 use App\Models\User;
-use App\Notifications\BillingChangePending;
+use App\Notifications\BillingAmountChanged;
 use App\Notifications\ContractCancelled;
 use App\Services\StripeBillingService;
 use App\Support\ContractCancellation;
@@ -61,6 +60,26 @@ class PortalCancellationTest extends TestCase
             'notice_period_days' => 30,
             'status' => ContractStatus::Active,
         ], $overrides));
+    }
+
+    /**
+     * A Stripe that records what it was asked to collect.
+     *
+     * @param  list<array{int, float}>  $repriced
+     */
+    private function stripe(array &$repriced): StripeBillingService
+    {
+        return new class($repriced) extends StripeBillingService
+        {
+            public function __construct(public array &$seen) {}
+
+            public function updateSubscriptionAmount(Contract $contract): void
+            {
+                $this->seen[] = [$contract->id, (float) $contract->total_sale];
+            }
+
+            public function cancelSubscription(Contract $contract): void {}
+        };
     }
 
     private function contact(): Contact
@@ -250,13 +269,14 @@ class PortalCancellationTest extends TestCase
     }
 
     /**
-     * A move that changes what a mandate collects is not ours to make.
+     * A move is made, not proposed.
      *
-     * The mandate survives — it was given to us, not to an amount — so
-     * nothing has to be set up again. The sum is still the customer's to
-     * agree to, and until they do, the service has not moved.
+     * An operator changing a contract is carrying out what the customer
+     * asked for, so there is nothing to approve. The mandate survives the
+     * new amount — it was given to us, not to a sum — and the customer is
+     * told what will leave their account from now on.
      */
-    public function test_adding_a_service_to_a_collecting_contract_does_not_add_it_yet(): void
+    public function test_adding_a_service_re_prices_the_subscription_and_tells_the_customer(): void
     {
         Notification::fake();
         $contact = $this->contact();
@@ -268,27 +288,28 @@ class PortalCancellationTest extends TestCase
             'stripe_subscription_id' => 'sub_test',
         ])->save();
 
+        $repriced = [];
+        $this->swap(StripeBillingService::class, $this->stripe($repriced));
+
         $hosting = $this->service('Hosting', ['sale_price' => 25]);
+        $this->assertTrue(ContractMoves::into($hosting, $group->fresh()));
 
-        $this->assertSame(MoveOutcome::AwaitingCustomer, ContractMoves::into($hosting, $group->fresh()));
-
-        // The point of the whole thing: nothing moved.
-        $this->assertNull($hosting->fresh()->parent_id);
-        $this->assertSame(1, $group->fresh()->services()->count());
-        $this->assertEqualsWithDelta(15.0, (float) $group->fresh()->total_sale, 0.01);
+        $this->assertSame($group->id, $hosting->fresh()->parent_id);
+        $this->assertSame([[$group->id, 40.0]], $repriced);
+        $this->assertTrue($group->fresh()->collectsByDirectDebit());
 
         $change = ContractBillingChange::query()->firstOrFail();
-        $this->assertSame('pending', $change->status);
-        $this->assertSame($hosting->id, $change->service_id);
         $this->assertEqualsWithDelta(15.0, (float) $change->previous_amount, 0.01);
         $this->assertEqualsWithDelta(40.0, (float) $change->new_amount, 0.01);
-        Notification::assertSentTo($contact, BillingChangePending::class);
+        $this->assertSame('Hosting', $change->service_name);
+        $this->assertNotNull($change->fresh()->notified_at);
+        Notification::assertSentTo($contact, BillingAmountChanged::class);
     }
 
-    public function test_removing_a_service_does_not_remove_it_yet(): void
+    public function test_removing_a_service_re_prices_the_subscription_and_tells_the_customer(): void
     {
         Notification::fake();
-        $this->contact();
+        $contact = $this->contact();
 
         $hosting = $this->service('Hosting', ['sale_price' => 25]);
         $group = $this->group([$hosting, $this->service('Domein', ['sale_price' => 15])]);
@@ -298,65 +319,33 @@ class PortalCancellationTest extends TestCase
             'stripe_subscription_id' => 'sub_test',
         ])->save();
 
-        $this->assertSame(MoveOutcome::AwaitingCustomer, ContractMoves::out($hosting->fresh()));
+        $repriced = [];
+        $this->swap(StripeBillingService::class, $this->stripe($repriced));
 
-        $this->assertSame($group->id, $hosting->fresh()->parent_id);
-        $this->assertSame(2, $group->fresh()->services()->count());
+        ContractMoves::out($hosting->fresh());
+
+        $this->assertNull($hosting->fresh()->parent_id);
+        $this->assertSame([[$group->id, 15.0]], $repriced);
 
         $change = ContractBillingChange::query()->firstOrFail();
         $this->assertEqualsWithDelta(40.0, (float) $change->previous_amount, 0.01);
         $this->assertEqualsWithDelta(15.0, (float) $change->new_amount, 0.01);
         $this->assertFalse($change->goesUp());
+        Notification::assertSentTo($contact, BillingAmountChanged::class);
     }
 
-    /** The approval is the step that does it. */
-    public function test_approving_carries_the_move_out_and_re_prices_the_subscription(): void
+    /**
+     * The gap this closes: we invoiced one amount and debited another.
+     *
+     * Editing a quantity in the panel changed what the contract is worth
+     * and left the subscription on last month's figure.
+     */
+    public function test_editing_a_quantity_inside_a_collection_re_prices_the_subscription(): void
     {
         Notification::fake();
         $contact = $this->contact();
 
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
-            'auto_collect' => true,
-            'stripe_payment_status' => 'active',
-            'stripe_subscription_id' => 'sub_test',
-        ])->save();
-
-        $hosting = $this->service('Hosting', ['sale_price' => 25]);
-        ContractMoves::into($hosting, $group->fresh());
-        $change = ContractBillingChange::query()->firstOrFail();
-
-        $repriced = [];
-        $this->swap(StripeBillingService::class, new class($repriced) extends StripeBillingService
-        {
-            public function __construct(public array &$seen) {}
-
-            public function updateSubscriptionAmount(Contract $contract): void
-            {
-                $this->seen[] = [$contract->id, (float) $contract->total_sale];
-            }
-        });
-
-        $this->actingAs($contact, 'portal')
-            ->post(route('portal.billing-changes.confirm', $change))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $this->assertSame($group->id, $hosting->fresh()->parent_id);
-        $this->assertEqualsWithDelta(40.0, (float) $group->fresh()->total_sale, 0.01);
-        $this->assertSame([[$group->id, 40.0]], $repriced);
-
-        $this->assertSame('confirmed', $change->fresh()->status);
-        $this->assertNotNull($change->fresh()->confirmed_at);
-        $this->assertTrue($group->fresh()->collectsByDirectDebit());
-    }
-
-    public function test_approving_a_removal_takes_the_service_out(): void
-    {
-        Notification::fake();
-        $contact = $this->contact();
-
-        $hosting = $this->service('Hosting', ['sale_price' => 25]);
+        $hosting = $this->service('Hosting', ['sale_price' => 25, 'quantity' => 1]);
         $group = $this->group([$hosting, $this->service('Domein', ['sale_price' => 15])]);
         $group->forceFill([
             'auto_collect' => true,
@@ -364,143 +353,88 @@ class PortalCancellationTest extends TestCase
             'stripe_subscription_id' => 'sub_test',
         ])->save();
 
-        ContractMoves::out($hosting->fresh());
+        $repriced = [];
+        $this->swap(StripeBillingService::class, $this->stripe($repriced));
+
+        $hosting->fresh()->update(['quantity' => 3]);
+
+        // 3 × 25 + 15.
+        $this->assertSame([[$group->id, 90.0]], $repriced);
+
         $change = ContractBillingChange::query()->firstOrFail();
-
-        $this->swap(StripeBillingService::class, new class extends StripeBillingService
-        {
-            public function __construct() {}
-
-            public function updateSubscriptionAmount(Contract $contract): void {}
-        });
-
-        $this->actingAs($contact, 'portal')
-            ->post(route('portal.billing-changes.confirm', $change))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
-
-        $this->assertNull($hosting->fresh()->parent_id);
-        $this->assertEqualsWithDelta(15.0, (float) $group->fresh()->total_sale, 0.01);
+        $this->assertSame(ContractBillingChange::REASON_AMOUNT_EDITED, $change->reason);
+        $this->assertEqualsWithDelta(40.0, (float) $change->previous_amount, 0.01);
+        $this->assertEqualsWithDelta(90.0, (float) $change->new_amount, 0.01);
+        $this->assertSame('Hosting', $change->service_name);
+        Notification::assertSentTo($contact, BillingAmountChanged::class);
     }
 
-    /** Declining leaves the world exactly as it found it. */
-    public function test_declining_changes_nothing_at_all(): void
+    public function test_editing_the_price_of_a_loose_collecting_service_re_prices_it(): void
     {
         Notification::fake();
-        $contact = $this->contact();
+        $this->contact();
 
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
+        $hosting = $this->service('Hosting', ['sale_price' => 25]);
+        $hosting->forceFill([
             'auto_collect' => true,
             'stripe_payment_status' => 'active',
             'stripe_subscription_id' => 'sub_test',
         ])->save();
 
-        $hosting = $this->service('Hosting', ['sale_price' => 25]);
-        ContractMoves::into($hosting, $group->fresh());
-        $change = ContractBillingChange::query()->firstOrFail();
+        $repriced = [];
+        $this->swap(StripeBillingService::class, $this->stripe($repriced));
 
-        // Nothing was done, so there is nothing for Stripe to undo: a
-        // call to it here would be a bug, not a safeguard.
+        $hosting->fresh()->update(['sale_price' => 30]);
+
+        $this->assertSame([[$hosting->id, 30.0]], $repriced);
+        $this->assertEqualsWithDelta(25.0, (float) ContractBillingChange::query()->firstOrFail()->previous_amount, 0.01);
+    }
+
+    /** Nothing to collect differently, nothing to say. */
+    public function test_editing_a_price_without_a_mandate_tells_nobody(): void
+    {
+        Notification::fake();
+        $this->contact();
+
+        $hosting = $this->service('Hosting', ['sale_price' => 25]);
+
         $this->swap(StripeBillingService::class, new class extends StripeBillingService
         {
             public function __construct() {}
-
-            public function cancelSubscription(Contract $contract): void
-            {
-                throw new \RuntimeException('Stripe must not be touched on a decline');
-            }
 
             public function updateSubscriptionAmount(Contract $contract): void
             {
-                throw new \RuntimeException('Stripe must not be touched on a decline');
+                throw new \RuntimeException('There is no subscription to re-price');
             }
         });
 
-        $this->actingAs($contact, 'portal')
-            ->post(route('portal.billing-changes.decline', $change))
-            ->assertRedirect()
-            ->assertSessionHasNoErrors();
+        $hosting->update(['sale_price' => 30]);
 
-        $this->assertSame('declined', $change->fresh()->status);
-        $this->assertNull($hosting->fresh()->parent_id);
-        $this->assertEqualsWithDelta(15.0, (float) $group->fresh()->total_sale, 0.01);
-        $this->assertTrue($group->fresh()->collectsByDirectDebit());
+        $this->assertSame(0, ContractBillingChange::query()->count());
+        Notification::assertNothingSent();
     }
 
-    /** They approved a figure, so that is the figure or nothing. */
-    public function test_an_approval_is_refused_once_the_amount_has_moved_on(): void
+    /** A rename or a new renewal date costs the customer nothing. */
+    public function test_an_edit_that_does_not_touch_the_money_says_nothing(): void
     {
         Notification::fake();
-        $contact = $this->contact();
-
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
-            'auto_collect' => true,
-            'stripe_payment_status' => 'active',
-            'stripe_subscription_id' => 'sub_test',
-        ])->save();
+        $this->contact();
 
         $hosting = $this->service('Hosting', ['sale_price' => 25]);
-        ContractMoves::into($hosting, $group->fresh());
-        $change = ContractBillingChange::query()->firstOrFail();
-
-        // Somebody edits the price while the customer is deciding.
-        $hosting->forceFill(['sale_price' => 45])->save();
-
-        $this->actingAs($contact, 'portal')
-            ->post(route('portal.billing-changes.confirm', $change))
-            ->assertSessionHasErrors('billing');
-
-        $this->assertSame('pending', $change->fresh()->status);
-        $this->assertNull($hosting->fresh()->parent_id);
-    }
-
-    /** Two questions at once would each quote an amount the other breaks. */
-    public function test_a_second_move_waits_for_the_first_to_be_answered(): void
-    {
-        Notification::fake();
-        $this->contact();
-
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
+        $hosting->forceFill([
             'auto_collect' => true,
             'stripe_payment_status' => 'active',
             'stripe_subscription_id' => 'sub_test',
         ])->save();
 
-        ContractMoves::into($this->service('Hosting', ['sale_price' => 25]), $group->fresh());
-        $ssl = $this->service('SSL', ['sale_price' => 10]);
+        $hosting->fresh()->update(['name' => 'Hosting (renamed)', 'notes' => 'something']);
 
-        $this->assertSame(MoveOutcome::Blocked, ContractMoves::into($ssl, $group->fresh()));
-
-        $this->assertSame(1, ContractBillingChange::query()->pending()->count());
-        $this->assertNull($ssl->fresh()->parent_id);
-    }
-
-    /** Withdrawn, and the contract is free to be changed again. */
-    public function test_withdrawing_the_request_clears_the_way(): void
-    {
-        Notification::fake();
-        $this->contact();
-
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
-            'auto_collect' => true,
-            'stripe_payment_status' => 'active',
-            'stripe_subscription_id' => 'sub_test',
-        ])->save();
-
-        ContractMoves::into($this->service('Hosting', ['sale_price' => 25]), $group->fresh());
-        $group->billingChanges()->pending()->update(['status' => 'withdrawn']);
-
-        $ssl = $this->service('SSL', ['sale_price' => 10]);
-        $this->assertSame(MoveOutcome::AwaitingCustomer, ContractMoves::into($ssl, $group->fresh()));
-        $this->assertSame(1, ContractBillingChange::query()->pending()->count());
+        $this->assertSame(0, ContractBillingChange::query()->count());
+        Notification::assertNothingSent();
     }
 
     /** The only service leaving takes the mandate with it, unchanged. */
-    public function test_the_last_service_out_carries_the_subscription_without_asking_anything(): void
+    public function test_the_last_service_out_carries_the_subscription_without_a_word(): void
     {
         Notification::fake();
         $this->contact();
@@ -526,25 +460,22 @@ class PortalCancellationTest extends TestCase
                     'stripe_payment_status' => 'active',
                     'stripe_subscription_id' => $from->stripe_subscription_id,
                 ])->save();
-                $from->forceFill([
-                    'auto_collect' => false,
-                    'stripe_subscription_id' => null,
-                ])->save();
+                $from->forceFill(['auto_collect' => false, 'stripe_subscription_id' => null])->save();
             }
         });
 
-        // The customer pays exactly what they paid yesterday, so this one
-        // is simply made.
-        $this->assertSame(MoveOutcome::Done, ContractMoves::out($hosting->fresh()));
+        ContractMoves::out($hosting->fresh());
 
         $this->assertNull($hosting->fresh()->parent_id);
         $this->assertSame([[$group->id, $hosting->id]], $moved);
+
+        // They pay exactly what they paid yesterday.
         $this->assertSame(0, ContractBillingChange::query()->count());
         Notification::assertNothingSent();
     }
 
     /** The mandate follows the service in, and covers more than it did. */
-    public function test_a_collecting_service_joining_a_collection_asks_about_the_difference(): void
+    public function test_a_collecting_service_joining_a_collection_hands_its_mandate_over(): void
     {
         Notification::fake();
         $contact = $this->contact();
@@ -558,25 +489,40 @@ class PortalCancellationTest extends TestCase
 
         $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
 
-        $this->assertSame(MoveOutcome::AwaitingCustomer, ContractMoves::into($hosting->fresh(), $group->fresh()));
+        $this->swap(StripeBillingService::class, new class extends StripeBillingService
+        {
+            public function __construct() {}
 
-        // Stripe takes 25 for the service alone; the collection it would
-        // cover is worth 40, and that is the difference to approve.
+            public function updateSubscriptionAmount(Contract $contract): void {}
+
+            public function transferSubscription(Contract $from, Contract $to): void
+            {
+                $to->forceFill([
+                    'auto_collect' => true,
+                    'stripe_payment_status' => 'active',
+                    'stripe_subscription_id' => $from->stripe_subscription_id,
+                ])->save();
+            }
+        });
+
+        ContractMoves::into($hosting->fresh(), $group->fresh());
+
+        // Stripe took 25 for the service alone; it now covers 40.
         $change = ContractBillingChange::query()->firstOrFail();
         $this->assertEqualsWithDelta(25.0, (float) $change->previous_amount, 0.01);
         $this->assertEqualsWithDelta(40.0, (float) $change->new_amount, 0.01);
-        $this->assertSame($group->id, $change->contract_id);
-        $this->assertNull($hosting->fresh()->parent_id);
-        Notification::assertSentTo($contact, BillingChangePending::class);
+        $this->assertSame($group->id, $hosting->fresh()->parent_id);
+        Notification::assertSentTo($contact, BillingAmountChanged::class);
     }
 
     /**
      * Two mandates becoming one, for the same money.
      *
      * The customer is already paying both halves; afterwards they pay the
-     * sum of them on one debit. Nothing to approve, so nothing to ask.
+     * sum of them on one debit. Nothing changed for them, so nothing is
+     * sent — a mail about an amount that did not move is noise.
      */
-    public function test_two_mandates_for_the_same_total_merge_without_a_question(): void
+    public function test_two_mandates_for_the_same_total_merge_without_a_word(): void
     {
         Notification::fake();
         $this->contact();
@@ -604,7 +550,7 @@ class PortalCancellationTest extends TestCase
             public function cancelSubscription(Contract $contract): void {}
         });
 
-        $this->assertSame(MoveOutcome::Done, ContractMoves::into($hosting->fresh(), $group->fresh()));
+        ContractMoves::into($hosting->fresh(), $group->fresh());
 
         $this->assertSame($group->id, $hosting->fresh()->parent_id);
         $this->assertFalse($hosting->fresh()->collectsByDirectDebit());
@@ -612,7 +558,7 @@ class PortalCancellationTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    /** No mandate anywhere, no question to ask. */
+    /** No mandate anywhere, no one to tell. */
     public function test_moving_a_service_without_a_direct_debit_says_nothing(): void
     {
         Notification::fake();
@@ -621,7 +567,7 @@ class PortalCancellationTest extends TestCase
         $hosting = $this->service('Hosting');
         $group = $this->group([$this->service('Domein')]);
 
-        $this->assertSame(MoveOutcome::Done, ContractMoves::into($hosting, $group));
+        $this->assertTrue(ContractMoves::into($hosting, $group));
 
         $this->assertSame($group->id, $hosting->fresh()->parent_id);
         $this->assertSame([], ContractMoves::warnings([$hosting->fresh()]));
@@ -629,7 +575,7 @@ class PortalCancellationTest extends TestCase
         Notification::assertNothingSent();
     }
 
-    /** The operator is told the move is a request, not a done thing. */
+    /** The operator is told what the customer will be told. */
     public function test_the_operator_is_warned_before_a_move_changes_a_collection(): void
     {
         $hosting = $this->service('Hosting', [
@@ -643,31 +589,10 @@ class PortalCancellationTest extends TestCase
         $this->assertStringContainsString('Hosting', $warnings[0]);
     }
 
-    public function test_one_customer_cannot_answer_another_s_billing_change(): void
-    {
-        $other = Company::create(['name' => 'Andere BV', 'country' => 'NL']);
-        $change = ContractBillingChange::query()->create([
-            'contract_id' => $this->service('Hosting')->id,
-            'company_id' => $other->id,
-            'previous_amount' => 10,
-            'new_amount' => 20,
-            'currency' => 'EUR',
-            'reason' => ContractBillingChange::REASON_SERVICE_ADDED,
-            'status' => 'pending',
-        ]);
-
-        $this->actingAs($this->contact(), 'portal')
-            ->post(route('portal.billing-changes.confirm', $change))
-            ->assertNotFound();
-
-        $this->assertSame('pending', $change->fresh()->status);
-    }
-
-    /** It is in front of them wherever they land: it is waiting on them. */
-    public function test_a_pending_change_is_shown_in_the_portal(): void
+    /** A customer with no email address cannot be told, and we record that. */
+    public function test_a_company_without_contacts_still_records_the_change(): void
     {
         Notification::fake();
-        $contact = $this->contact();
 
         $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
         $group->forceFill([
@@ -675,43 +600,16 @@ class PortalCancellationTest extends TestCase
             'stripe_payment_status' => 'active',
             'stripe_subscription_id' => 'sub_test',
         ])->save();
+
+        $repriced = [];
+        $this->swap(StripeBillingService::class, $this->stripe($repriced));
 
         ContractMoves::into($this->service('Hosting', ['sale_price' => 25]), $group->fresh());
 
-        $this->actingAs($contact, 'portal')
-            ->get(route('portal.dashboard'))
-            ->assertOk()
-            ->assertSee(__('Approve an addition to your contract'))
-            ->assertSee(__('Until you approve it, :service is not added and your direct debit stays at :previous.', [
-                'service' => 'Hosting',
-                'previous' => '€15.00',
-            ]));
-    }
-
-    /** An answered change is not answered twice. */
-    public function test_a_change_already_answered_does_nothing_the_second_time(): void
-    {
-        Notification::fake();
-        $contact = $this->contact();
-
-        $group = $this->group([$this->service('Domein', ['sale_price' => 15])]);
-        $group->forceFill([
-            'auto_collect' => true,
-            'stripe_payment_status' => 'active',
-            'stripe_subscription_id' => 'sub_test',
-        ])->save();
-
-        $hosting = $this->service('Hosting', ['sale_price' => 25]);
-        ContractMoves::into($hosting, $group->fresh());
         $change = ContractBillingChange::query()->firstOrFail();
-        $change->forceFill(['status' => 'declined', 'declined_at' => now()])->save();
-
-        $this->actingAs($contact, 'portal')
-            ->post(route('portal.billing-changes.confirm', $change))
-            ->assertRedirect();
-
-        $this->assertSame('declined', $change->fresh()->status);
-        $this->assertNull($hosting->fresh()->parent_id);
+        $this->assertNull($change->notified_at);
+        $this->assertSame([[$group->id, 40.0]], $repriced);
+        Notification::assertNothingSent();
     }
 
     /** Two mandates for one agreement would debit the customer twice. */

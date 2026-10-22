@@ -6,15 +6,6 @@
 <h1>{{ __('Active services') }}</h1>
 <p class="muted lede">{{ __(':company — the services and licenses we currently run for you.', ['company' => $company?->name]) }}</p>
 
-@include('portal.partials.billing-change', ['changes' => $billingChanges])
-
-@php
-    // Nothing is applied while a change waits, so these prices are
-    // correct as they stand. The marker is there to point at the request
-    // when the customer has several contracts and one banner.
-    $awaitingApproval = $billingChanges->keyBy('contract_id');
-@endphp
-
 @if ($services->isEmpty())
     <div class="card"><p class="muted empty">{{ __('There are no active services or licenses right now.') }}</p></div>
 @else
@@ -53,9 +44,6 @@
                 <div class="stack-actions">
                     @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                         <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
-                        @if ($awaitingApproval->has($service->id))
-                            <div class="muted cell-sub">{{ __('A change to this contract is waiting for your approval.') }}</div>
-                        @endif
                     @elseif ($service->stripe_payment_status === 'pending')
                         <span class="badge badge-pending">{{ __('Activating…') }}</span>
                     @elseif ($service->stripe_payment_status === 'past_due')
@@ -114,9 +102,6 @@
                         <td>
                             @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                                 <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
-                                @if ($awaitingApproval->has($service->id))
-                                    <div class="muted cell-sub">{{ __('A change to this contract is waiting for your approval.') }}</div>
-                                @endif
                             @elseif ($service->stripe_payment_status === 'pending')
                                 <span class="badge badge-pending">{{ __('Activating…') }}</span>
                             @elseif ($service->stripe_payment_status === 'past_due')

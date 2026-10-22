@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Portal;
 use App\Enums\ContractStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
-use App\Models\ContractBillingChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -29,18 +28,10 @@ class ContractController extends Controller
             ->where('status', ContractStatus::Active->value)
             ->orderBy('name')]);
 
-        $billingChanges = ContractBillingChange::query()
-            ->with('contract')
-            ->where('contract_id', $contract->getKey())
-            ->pending()
-            ->latest('id')
-            ->get();
-
         return view('portal.contract', [
             'contact' => $contact,
             'company' => $contact->company,
             'contract' => $contract,
-            'billingChanges' => $billingChanges,
         ]);
     }
 }

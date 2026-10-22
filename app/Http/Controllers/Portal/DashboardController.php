@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Portal;
 use App\Enums\ContractStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
-use App\Models\ContractBillingChange;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
@@ -27,20 +26,10 @@ class DashboardController extends Controller
             ->orderBy('name')
             ->get();
 
-        // An unanswered change means we are still collecting the old
-        // amount, so it belongs in front of them wherever they land.
-        $billingChanges = ContractBillingChange::query()
-            ->with('contract')
-            ->where('company_id', $companyId)
-            ->pending()
-            ->latest('id')
-            ->get();
-
         return view('portal.dashboard', [
             'contact' => $contact,
             'company' => $contact->company,
             'services' => $services,
-            'billingChanges' => $billingChanges,
         ]);
     }
 }

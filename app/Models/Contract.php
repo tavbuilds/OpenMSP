@@ -15,6 +15,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contract extends Model
 {
+    /**
+     * What the mandate was collecting before this save.
+     *
+     * Not a column: ContractObserver reads it while the old values are
+     * still on the row and uses it once the new ones are written.
+     */
+    public ?float $collectedBeforeSave = null;
+
     use Auditable;
 
     protected $fillable = [
@@ -84,15 +92,28 @@ class Contract extends Model
         return $this->hasMany(ContractBillingChange::class);
     }
 
-    public function pendingBillingChange(): ?ContractBillingChange
+    /** The last time what this contract collects was changed. */
+    public function lastBillingChange(): ?ContractBillingChange
     {
-        return $this->billingChanges()->pending()->latest('id')->first();
+        return $this->billingChanges()->latest('id')->first();
     }
 
     /** Whether a mandate is in place that an amount change would affect. */
     public function collectsByDirectDebit(): bool
     {
         return (bool) $this->auto_collect && filled($this->stripe_subscription_id);
+    }
+
+    /**
+     * The contract whose subscription this one's price feeds into.
+     *
+     * A service inside a collection has no mandate of its own — the
+     * collection bills for it — so changing its price changes what the
+     * collection collects, not what it does.
+     */
+    public function billingParent(): ?self
+    {
+        return $this->isInGroup() ? $this->parent : $this;
     }
 
     // --- Collections -------------------------------------------------

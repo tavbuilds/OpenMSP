@@ -14,8 +14,6 @@
     ) }}
 </p>
 
-@include('portal.partials.billing-change', ['changes' => $billingChanges])
-
 <div class="card stack-card">
     <dl class="stack-meta">
         <div>
