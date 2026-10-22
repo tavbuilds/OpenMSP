@@ -8,8 +8,8 @@
     "require": {
         "php": "^8.3",
         "filament/filament": "^4.0",
-        "laragear/webauthn": "^5.0",
         "laravel/framework": "^13.8",
+        "laravel/passkeys": "^0.2",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "stripe/stripe-php": "^16.0"

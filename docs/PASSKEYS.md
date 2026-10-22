@@ -68,24 +68,37 @@ a key behind for the next.
 
 | Piece | Where |
 |---|---|
-| Ceremonies (options, register, login) | `routes/passkeys.php`, `app/Http/Controllers/Auth/Passkey*Controller.php` |
-| Domain rules, audit, limits | `app/Support/Passkeys.php` |
+| Ceremonies, routes, storage | `laravel/passkeys` — `/passkeys/login`, `/user/passkeys` |
+| Who may sign in; audit entries | `app/Providers/PasskeyServiceProvider.php` |
+| Password check on enrolment | `app/Http/Middleware/ConfirmPasswordInline.php` |
+| Limits, challenge, audit helper | `app/Support/Passkeys.php` |
 | Second factor | `app/Filament/Auth/MultiFactor/PasskeyAuthentication.php` |
 | Management page | `app/Filament/Pages/Passkeys.php` |
 | Browser side | `resources/views/filament/hooks/passkey-script.blade.php` |
-| Credentials | `webauthn_credentials` (laragear/webauthn) |
+| Credentials | `passkeys` table |
 
-Sign-in is throttled by the same lockout as the password form, counted
-against the caller's address — the discoverable ceremony names no account, so
-there is nothing to spray.
+Built on **laravel/passkeys**, which supplies the ceremonies, the routes,
+the storage and the throttling. What this application adds is the part the
+package cannot know: who may hold a key, what belongs in the audit log, and
+the second-factor challenge, which Filament asks for in a shape of its own.
 
-### Two notes for anyone changing this
+Sign-in is throttled by the package and checked again against the same
+lockout as the password form, counted against the caller's address — the
+discoverable ceremony names no account, so there is nothing to spray.
+
+The package's `password.confirm` default would redirect to a confirmation
+page this panel has no route for, and a redirect is no use to the `fetch()`
+running the ceremony. `ConfirmPasswordInline` checks a password sent with
+the enrolment form instead, which is also the better flow: one form, no
+detour.
+
+### Notes for anyone changing this
 
 The challenge is minted **once per attempt** and cached in the session, in
-`Passkeys::assertionOptionsFor()`. Filament rebuilds the challenge form in
+`Passkeys::challengeOptionsFor()`. Filament rebuilds the challenge form in
 order to validate it, so a generator that ran on every build would replace
 the challenge the browser had just signed, and every sign-in would fail with
-*"challenge is not equal"*. The package pulls the challenge out of the
+*"challenge is not equal"*. The package pulls the options out of the
 session when it checks one, so a retry gets a fresh pair on its own.
 
 The challenge view uses **Alpine, not a plain `<script>`**. Filament swaps it
@@ -94,3 +107,20 @@ morph never executes. It also sets the hidden field with a *deferred*
 `$wire.set(..., false)`: a live set makes a round trip, that round trip
 re-renders the form, and the re-render would invalidate the assertion just
 signed.
+
+## History
+
+This started on `laragear/webauthn`, which was marked abandoned shortly
+after — pointing at `laravel/passkeys`, the official package. The move
+happened before anyone had come to depend on it.
+
+The two store a credential differently enough that converting one into the
+other was not worth writing for a feature days old, so the old
+`webauthn_credentials` table is dropped rather than left holding key
+material nothing reads. **Anyone who enrolled a passkey before that adds it
+again.** Nobody is locked out by it: the password form never went away,
+which is the whole reason passkeys were built beside it.
+
+`laravel/passkeys` is pre-1.0, so its API may still move. That is the cost
+of being on the package that will be maintained rather than the one that
+will not.

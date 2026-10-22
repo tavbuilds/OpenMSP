@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "Geçiş anahtarınız ikinci adımdır. Oturum açmayı onunla tamamlayın.",
   "Your passkeys": "Geçiş anahtarlarınız",
   "Your password": "Parolanız",
-  "or": "veya"
+  "or": "veya",
+  "Last used :date": "Son kullanım :date"
 }

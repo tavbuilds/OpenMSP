@@ -9,9 +9,18 @@
         @forelse ($this->getPasskeys() as $passkey)
             <div class="omsp-passkey-row">
                 <div>
-                    <strong>{{ $passkey->alias ?: __('Passkey') }}</strong>
+                    <strong>{{ $passkey->name ?: __('Passkey') }}</strong>
                     <div class="omsp-passkey-meta">
+                        {{-- The package names the authenticator from its
+                             AAGUID where it recognises one, which is more
+                             use than a date on its own. --}}
+                        @if ($passkey->authenticator)
+                            {{ $passkey->authenticator }} &middot;
+                        @endif
                         {{ __('Added :date', ['date' => $passkey->created_at?->translatedFormat('j F Y')]) }}
+                        @if ($passkey->last_used_at)
+                            &middot; {{ __('Last used :date', ['date' => $passkey->last_used_at->diffForHumans()]) }}
+                        @endif
                     </div>
                 </div>
 

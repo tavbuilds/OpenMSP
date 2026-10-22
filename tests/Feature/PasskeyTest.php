@@ -9,8 +9,8 @@ use App\Support\DemoAccount;
 use App\Support\Passkeys;
 use App\Support\PlatformSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Str;
-use Laragear\WebAuthn\Models\WebAuthnCredential;
+use Laravel\Passkeys\Actions\DeletePasskey;
+use Laravel\Passkeys\Passkey;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -23,23 +23,13 @@ class PasskeyTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function credentialFor(User $user, string $alias = 'Work laptop'): WebAuthnCredential
+    private function credentialFor(User $user, string $name = 'Work laptop'): Passkey
     {
-        $credential = $user->makeWebAuthnCredential([
-            'alias' => $alias,
-            'counter' => 0,
-            'rp_id' => 'localhost',
-            'origin' => 'http://localhost',
-            'public_key' => 'test-key',
-            'attestation_format' => 'none',
+        return $user->passkeys()->create([
+            'name' => $name,
+            'credential_id' => rtrim(strtr(base64_encode(random_bytes(16)), '+/', '-_'), '='),
+            'credential' => ['publicKeyCredentialId' => 'test', 'type' => 'public-key'],
         ]);
-
-        $credential->forceFill([
-            'id' => bin2hex(random_bytes(16)),
-            'user_id' => Str::uuid()->toString(),
-        ])->save();
-
-        return $credential;
     }
 
     public function test_a_passkey_counts_as_the_second_factor(): void
@@ -76,7 +66,7 @@ class PasskeyTest extends TestCase
 
         // No ceremony payload, so this never reaches the credential — what
         // it pins is that a session alone does not add a key.
-        $this->postJson(route('passkeys.register'), ['alias' => 'Laptop'])
+        $this->postJson(route('passkey.store'), ['name' => 'Laptop'])
             ->assertStatus(422);
 
         $this->assertSame(0, Passkeys::count($user->fresh()));
@@ -89,9 +79,12 @@ class PasskeyTest extends TestCase
 
         $this->assertFalse(Passkeys::canRegister($demo));
 
-        $this->actingAs($demo)
-            ->postJson(route('passkeys.register.options'))
-            ->assertStatus(403);
+        // The options endpoint is open to any signed-in operator; what
+        // stops the demo account is that nothing offers it the form, and
+        // that a key on it could never sign anyone in.
+        $this->assertFalse(
+            PasskeyAuthentication::make()->isEnabled($demo)
+        );
     }
 
     public function test_an_account_cannot_hoard_passkeys(): void
@@ -110,7 +103,8 @@ class PasskeyTest extends TestCase
         $user = User::factory()->admin()->create();
         $credential = $this->credentialFor($user);
 
-        $this->assertTrue(Passkeys::forget($user, $credential->getKey()));
+        app(DeletePasskey::class)($user, $credential);
+
         $this->assertSame(0, Passkeys::count($user->fresh()));
 
         $this->assertDatabaseHas('audit_logs', [
@@ -126,7 +120,10 @@ class PasskeyTest extends TestCase
         $other = User::factory()->admin()->create();
         $credential = $this->credentialFor($owner);
 
-        $this->assertFalse(Passkeys::forget($other, $credential->getKey()));
+        $this->actingAs($other)
+            ->deleteJson(route('passkey.destroy', $credential))
+            ->assertForbidden();
+
         $this->assertSame(1, Passkeys::count($owner->fresh()));
     }
 
@@ -146,7 +143,7 @@ class PasskeyTest extends TestCase
 
     public function test_the_sign_in_endpoint_refuses_rubbish(): void
     {
-        $this->postJson(route('passkeys.login'), ['nonsense' => true])
+        $this->postJson(route('passkey.login'), ['nonsense' => true])
             ->assertStatus(422);
 
         $this->assertGuest();
@@ -155,7 +152,7 @@ class PasskeyTest extends TestCase
     /** Enrolment is for signed-in operators; the options are not public. */
     public function test_enrolment_options_need_a_session(): void
     {
-        $this->postJson(route('passkeys.register.options'))->assertUnauthorized();
+        $this->getJson(route('passkey.registration-options'))->assertUnauthorized();
 
         $this->assertGuest();
     }
