@@ -32,7 +32,10 @@ trait Auditable
     protected function writeAudit(string $event, array $old, array $new): void
     {
         AuditLog::create([
-            'user_id' => Auth::id(),
+            // The panel guard specifically: a customer acting in the
+            // portal is a Contact, and writing its id here points the
+            // foreign key at a user that does not exist.
+            'user_id' => Auth::guard('web')->id(),
             'event' => $event,
             'auditable_type' => static::class,
             'auditable_id' => $this->getKey(),

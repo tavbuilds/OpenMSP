@@ -23,6 +23,16 @@ class AutoCollectController extends Controller
 
         abort_unless($contract->status === ContractStatus::Active, 403);
 
+        // A service inside a collection is billed through that collection.
+        // Two mandates for one agreement would debit the customer twice.
+        if ($contract->isInGroup()) {
+            return redirect()
+                ->route('portal.contracts.show', $contract->parent)
+                ->withErrors(['stripe' => __('This service is part of :contract. Set up the direct debit on that contract instead.', [
+                    'contract' => $contract->parent?->name,
+                ])]);
+        }
+
         if ($contract->auto_collect && $contract->stripe_payment_status === 'active') {
             return redirect()
                 ->route('portal.dashboard')

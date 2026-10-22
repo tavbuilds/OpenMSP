@@ -53,6 +53,11 @@
                         <a class="btn" href="{{ route('portal.auto-collect', $service) }}">{{ __('Enable auto-collect') }}</a>
                         <span class="muted cell-sub">{{ __('via iDEAL → SEPA mandate') }}</span>
                     @endif
+
+                    @include('portal.partials.cancel', [
+                        'contract' => $service,
+                        'label' => $service->isGroup() ? __('Cancel this contract') : __('Cancel this service'),
+                    ])
                 </div>
             </article>
         @endforeach
@@ -68,6 +73,7 @@
                         <th scope="col" class="num">{{ __('Price') }}</th>
                         <th scope="col">{{ __('Term / renewal') }}</th>
                         <th scope="col">{{ __('Collection') }}</th>
+                        <th scope="col"><span class="sr-only">{{ __('Cancel') }}</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -107,6 +113,12 @@
                                 <a class="btn btn-sm" href="{{ route('portal.auto-collect', $service) }}">{{ __('Enable auto-collect') }}</a>
                                 <div class="muted cell-sub">{{ __('via iDEAL → SEPA mandate') }}</div>
                             @endif
+                        </td>
+                        <td>
+                            @include('portal.partials.cancel', [
+                                'contract' => $service,
+                                'label' => $service->isGroup() ? __('Cancel contract') : __('Cancel'),
+                            ])
                         </td>
                     </tr>
                 @endforeach

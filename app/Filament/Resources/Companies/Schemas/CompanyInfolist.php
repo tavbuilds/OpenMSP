@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\Companies\Schemas;
 
-use App\Enums\ContractStatus;
 use App\Models\Company;
 use App\Support\Breakpoints;
 use App\Support\Money;
@@ -33,8 +32,7 @@ class CompanyInfolist
                     ->schema([
                         TextEntry::make('active_contracts_count')
                             ->label(__('Active contracts'))
-                            ->state(fn (Company $record) => $record->contracts()
-                                ->where('status', ContractStatus::Active->value)->count()),
+                            ->state(fn (Company $record) => $record->activeContractCount()),
 
                         TextEntry::make('mrr')
                             ->label(__('MRR'))
@@ -100,6 +98,7 @@ class CompanyInfolist
                                 TextEntry::make('auto_collect_count')
                                     ->label(__('Collection active'))
                                     ->state(fn (Company $record) => $record->contracts()
+                                        ->topLevel()
                                         ->where('auto_collect', true)
                                         ->count()),
 

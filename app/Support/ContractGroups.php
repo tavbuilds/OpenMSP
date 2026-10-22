@@ -70,7 +70,7 @@ final class ContractGroups
                     continue;
                 }
 
-                $contract->moveIntoGroup($group);
+                ContractMoves::into($contract, $group);
             }
 
             return $group->fresh(['services']);

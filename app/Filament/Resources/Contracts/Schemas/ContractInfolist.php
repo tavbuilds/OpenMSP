@@ -139,6 +139,26 @@ class ContractInfolist
                                     ->copyable()
                                     ->fontFamily(FontFamily::Mono)
                                     ->columnSpanFull(),
+
+                                TextEntry::make('last_billing_change')
+                                    ->label(__('Last amount change'))
+                                    ->columnSpanFull()
+                                    ->visible(fn (Contract $record) => $record->lastBillingChange() !== null)
+                                    ->state(function (Contract $record) {
+                                        $change = $record->lastBillingChange();
+
+                                        return __(':previous → :new on :date', [
+                                            'previous' => $change?->previousFormatted(),
+                                            'new' => $change?->newFormatted(),
+                                            'date' => $change?->created_at?->format('M j, Y H:i'),
+                                        ]);
+                                    })
+                                    // Whether the customer was told is the
+                                    // part worth knowing when they ring up
+                                    // about an amount they did not expect.
+                                    ->helperText(fn (Contract $record) => $record->lastBillingChange()?->notified_at
+                                        ? __('The customer was emailed about it.')
+                                        : __('No email went out — the customer has no email address on file.')),
                             ]),
 
                         Tab::make(__('License keys & notes'))
