@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "Το κλειδί πρόσβασης είναι το δεύτερο βήμα. Χρησιμοποιήστε το για να ολοκληρώσετε τη σύνδεση.",
   "Your passkeys": "Τα κλειδιά πρόσβασής σας",
   "Your password": "Ο κωδικός σας",
-  "or": "ή"
+  "or": "ή",
+  "Last used :date": "Τελευταία χρήση :date"
 }

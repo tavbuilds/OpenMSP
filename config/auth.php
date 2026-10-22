@@ -24,12 +24,12 @@ return [
 
     'providers' => [
         'users' => [
-            // Resolves a user from a passkey assertion, and falls back to the
-            // password when the request is an ordinary sign-in. Both methods
-            // stay open: a lost device must not lock an operator out.
-            'driver' => 'eloquent-webauthn',
+            // Passkeys do not go through the guard's credential check: the
+            // package verifies the assertion and signs the user in itself.
+            // Both ways in stay open — a lost device must not lock an
+            // operator out — but only one of them is a credential check.
+            'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
-            'password_fallback' => true,
         ],
         'contacts' => [
             'driver' => 'eloquent',
