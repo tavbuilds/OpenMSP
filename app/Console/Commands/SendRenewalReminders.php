@@ -5,8 +5,9 @@ namespace App\Console\Commands;
 use App\Models\Contract;
 use App\Models\User;
 use App\Notifications\ContractRenewalReminder;
-use App\Notifications\CustomerContractReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 class SendRenewalReminders extends Command
@@ -15,7 +16,7 @@ class SendRenewalReminders extends Command
                             {--days=30 : Horizon in days}
                             {--force : Send for everything in the horizon, not only 30/14/7/1}';
 
-    protected $description = 'Send reminders for contracts whose renewal or notice date is approaching.';
+    protected $description = 'Send one digest of the contracts whose renewal or notice date is approaching.';
 
     /** @var list<int> */
     public const DEFAULT_OFFSETS = [30, 14, 7, 1, 0];
@@ -39,8 +40,12 @@ class SendRenewalReminders extends Command
             ->whereIn('role', ['admin', 'manager'])
             ->get();
 
-        $sentStaff = 0;
-        $sentCustomers = 0;
+        /** @var Collection<int, Contract> $forStaff */
+        $forStaff = new Collection;
+        $context = [];
+
+        /** @var array<int, Collection<int, Contract>> $byCompany */
+        $byCompany = [];
 
         foreach ($contracts as $contract) {
             $renewal = $contract->renewal_date->copy()->startOfDay();
@@ -65,28 +70,46 @@ class SendRenewalReminders extends Command
                 continue;
             }
 
+            $context[$contract->getKey()] = ['days' => $daysUntil, 'reason' => $reason];
+            $forStaff->push($contract);
+
+            // The bell in the panel stays one entry per contract — that is
+            // a list you click through, not an inbox you drown in.
             if ($recipients->isNotEmpty()) {
-                Notification::send($recipients, new ContractRenewalReminder(
-                    $contract, $daysUntil, $reason
-                ));
-                $sentStaff++;
+                Notification::send($recipients, new ContractRenewalReminder($contract, $daysUntil, $reason));
             }
 
-            if ($contract->shouldNotifyCustomer()) {
-                $contacts = $contract->company?->contacts
-                    ?->filter(fn ($c) => filled($c->email))
-                    ?? collect();
-
-                if ($contacts->isNotEmpty()) {
-                    Notification::send($contacts, new CustomerContractReminder(
-                        $contract, $daysUntil, $reason
-                    ));
-                    $sentCustomers += $contacts->count();
-                }
+            // A customer hears only about their own.
+            if ($contract->shouldNotifyCustomer() && $contract->company_id) {
+                $byCompany[$contract->company_id] ??= new Collection;
+                $byCompany[$contract->company_id]->push($contract);
             }
         }
 
-        $this->info("{$sentStaff} staff and {$sentCustomers} customer reminder(s) sent (horizon: {$days} days).");
+        if ($forStaff->isEmpty()) {
+            $this->info("Nothing due (horizon: {$days} days).");
+
+            return self::SUCCESS;
+        }
+
+        if ($recipients->isNotEmpty()) {
+            Notification::send($recipients, new ReminderDigest(ReminderDigest::CONTRACTS, $forStaff, $context));
+        }
+
+        $sentCustomers = 0;
+        foreach ($byCompany as $theirs) {
+            $contacts = $theirs->first()->company?->contacts->filter(fn ($c) => filled($c->email)) ?? collect();
+            if ($contacts->isEmpty()) {
+                continue;
+            }
+
+            Notification::send($contacts, new ReminderDigest(
+                ReminderDigest::CONTRACTS, $theirs, $context, forCustomer: true
+            ));
+            $sentCustomers += $contacts->count();
+        }
+
+        $this->info($forStaff->count()." contract(s) digested to {$recipients->count()} staff and {$sentCustomers} customer contact(s) (horizon: {$days} days).");
 
         return self::SUCCESS;
     }

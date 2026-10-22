@@ -3,12 +3,17 @@
 namespace App\Notifications;
 
 use App\Models\Contract;
-use App\Support\Money;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+/**
+ * One entry in the panel's notification bell.
+ *
+ * The mail went out as part of the daily digest — a list you read once,
+ * rather than a dozen separate letters. This is the clickable record
+ * that survives it.
+ */
 class ContractRenewalReminder extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -21,24 +26,7 @@ class ContractRenewalReminder extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
-    }
-
-    public function toMail(object $notifiable): MailMessage
-    {
-        $c = $this->contract;
-        $label = $this->reason === 'notice'
-            ? "notice period ends in {$this->daysUntil} day(s)"
-            : "renews in {$this->daysUntil} day(s)";
-
-        return (new MailMessage)
-            ->subject("Contract due soon: {$c->company?->name} — {$c->name}")
-            ->greeting('Reminder')
-            ->line("The contract '{$c->name}' for {$c->company?->name} {$label}.")
-            ->line('Renewal date: '.($c->renewal_date?->format('M j, Y') ?? 'unknown'))
-            ->line('Auto-renew: '.($c->auto_renew ? 'ON' : 'OFF'))
-            ->line('Sale value: '.Money::format($c->total_sale, $c->currency))
-            ->action('View contract', url('/admin/contracts/'.$c->getKey()));
+        return ['database'];
     }
 
     public function toArray(object $notifiable): array

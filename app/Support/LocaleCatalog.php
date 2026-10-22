@@ -40,6 +40,20 @@ final class LocaleCatalog
         ];
     }
 
+    /**
+     * For a form select: the code, and the language's own name for itself.
+     *
+     * Its own name on purpose — someone looking for their language scans
+     * for "Nederlands", not for "Dutch" written in a language they are
+     * trying to get away from.
+     *
+     * @return array<string, string>
+     */
+    public static function options(): array
+    {
+        return array_map(fn (array $l) => $l['native'], self::all());
+    }
+
     public static function isSupported(?string $code): bool
     {
         return self::match($code) !== null;

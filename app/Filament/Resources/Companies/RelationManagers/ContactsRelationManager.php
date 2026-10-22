@@ -2,9 +2,11 @@
 
 namespace App\Filament\Resources\Companies\RelationManagers;
 
+use App\Support\LocaleCatalog;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -25,6 +27,14 @@ class ContactsRelationManager extends RelationManager
             TextInput::make('name')->label(__('Name'))->required(),
             TextInput::make('email')->label(__('Email'))->email()
                 ->helperText(__('With an email address this person can sign in to the customer portal via magic link.')),
+            Select::make('language')
+                ->label(__('Language'))
+                ->options(LocaleCatalog::options())
+                ->placeholder(__('Platform default'))
+                ->native(false)
+                // There is no language picker in the portal, so this is
+                // the only place their renewal mail gets a language.
+                ->helperText(__('The language reminders and other emails are written in.')),
             TextInput::make('phone')->label(__('Phone'))->tel(),
             TextInput::make('job_title')->label(__('Job title')),
             Toggle::make('is_primary')->label(__('Primary contact'))->default(false),

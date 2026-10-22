@@ -5,9 +5,15 @@ namespace App\Notifications;
 use App\Models\PlannedTask;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
+/**
+ * One entry in the panel's notification bell.
+ *
+ * The mail went out as part of the daily digest — a list you read once,
+ * rather than a dozen separate letters. This is the clickable record
+ * that survives it.
+ */
 class PlannedTaskDeadlineReminder extends Notification implements ShouldQueue
 {
     use Queueable;
@@ -19,25 +25,7 @@ class PlannedTaskDeadlineReminder extends Notification implements ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['mail', 'database'];
-    }
-
-    public function toMail(object $notifiable): MailMessage
-    {
-        $task = $this->task;
-        $when = $this->which === 'expired'
-            ? 'the deadline has passed'
-            : "the deadline is in {$this->which} day(s)";
-        $customer = $task->company?->name ?? 'internal';
-
-        return (new MailMessage)
-            ->subject("Planning due soon: {$task->title}")
-            ->greeting('Reminder')
-            ->line("The planned task '{$task->title}' ({$customer}) — {$when}.")
-            ->line('Deadline: '.($task->due_on?->format('M j, Y') ?? 'unknown'))
-            ->line('Type: '.($task->kind?->getLabel() ?? '—'))
-            ->line('Status: '.($task->status?->getLabel() ?? '—'))
-            ->action('View task', url('/admin/planned-tasks/'.$task->getKey()));
+        return ['database'];
     }
 
     public function toArray(object $notifiable): array
@@ -50,4 +38,4 @@ class PlannedTaskDeadlineReminder extends Notification implements ShouldQueue
             'which' => $this->which,
         ];
     }
-};
+}
