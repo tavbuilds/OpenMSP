@@ -15,6 +15,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Contract extends Model
 {
+    /**
+     * What the mandate was collecting before this save.
+     *
+     * Not a column: ContractObserver reads it while the old values are
+     * still on the row and uses it once the new ones are written.
+     */
+    public ?float $collectedBeforeSave = null;
+
     use Auditable;
 
     protected $fillable = [
@@ -76,6 +84,36 @@ class Contract extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    /** Changes to what this contract's direct debit collects. */
+    public function billingChanges(): HasMany
+    {
+        return $this->hasMany(ContractBillingChange::class);
+    }
+
+    /** The last time what this contract collects was changed. */
+    public function lastBillingChange(): ?ContractBillingChange
+    {
+        return $this->billingChanges()->latest('id')->first();
+    }
+
+    /** Whether a mandate is in place that an amount change would affect. */
+    public function collectsByDirectDebit(): bool
+    {
+        return (bool) $this->auto_collect && filled($this->stripe_subscription_id);
+    }
+
+    /**
+     * The contract whose subscription this one's price feeds into.
+     *
+     * A service inside a collection has no mandate of its own — the
+     * collection bills for it — so changing its price changes what the
+     * collection collects, not what it does.
+     */
+    public function billingParent(): ?self
+    {
+        return $this->isInGroup() ? $this->parent : $this;
     }
 
     // --- Collections -------------------------------------------------
@@ -303,6 +341,21 @@ class Contract extends Model
     }
 
     /**
+     * Whether this service could join that collection.
+     *
+     * Asked on its own because a move may have to wait for the customer,
+     * and there is no point asking them about one that was never allowed.
+     */
+    public function canJoinGroup(self $group): bool
+    {
+        if (! $group->isGroup() || $this->isGroup() || $this->is($group)) {
+            return false;
+        }
+
+        return $this->company_id === $group->company_id;
+    }
+
+    /**
      * Puts a service into a collection and hands it the collection's term.
      *
      * A collection cannot go inside another, and nothing can go inside
@@ -310,11 +363,7 @@ class Contract extends Model
      */
     public function moveIntoGroup(self $group): bool
     {
-        if (! $group->isGroup() || $this->isGroup() || $this->is($group)) {
-            return false;
-        }
-
-        if ($this->company_id !== $group->company_id) {
+        if (! $this->canJoinGroup($group)) {
             return false;
         }
 

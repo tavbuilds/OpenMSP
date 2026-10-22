@@ -29,6 +29,13 @@
             <dd>{{ $contract->portalRenewalDescription() }}</dd>
         </div>
     </dl>
+
+    <div class="stack-actions">
+        @include('portal.partials.cancel', [
+            'contract' => $contract,
+            'label' => __('Cancel this whole contract'),
+        ])
+    </div>
 </div>
 
 @if ($contract->services->isNotEmpty())
@@ -46,6 +53,13 @@
                         <dd><strong>{{ $service->portalSalePriceFormatted() }}</strong></dd>
                     </div>
                 </dl>
+
+                <div class="stack-actions">
+                    @include('portal.partials.cancel', [
+                        'contract' => $service,
+                        'label' => __('Cancel this service'),
+                    ])
+                </div>
             </article>
         @endforeach
     </div>
@@ -58,6 +72,7 @@
                     <tr>
                         <th scope="col">{{ __('Service / license') }}</th>
                         <th scope="col" class="num">{{ __('Price') }}</th>
+                        <th scope="col"><span class="sr-only">{{ __('Cancel') }}</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -70,6 +85,12 @@
                             @endif
                         </td>
                         <td class="num">{{ $service->portalSalePriceFormatted() }}</td>
+                        <td>
+                            @include('portal.partials.cancel', [
+                                'contract' => $service,
+                                'label' => __('Cancel'),
+                            ])
+                        </td>
                     </tr>
                 @endforeach
                 </tbody>

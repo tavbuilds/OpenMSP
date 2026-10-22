@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Models\Contract;
 use App\Models\User;
+use App\Observers\ContractObserver;
 use App\Support\DemoAccount;
 use App\Support\PlatformSettings;
 use Filament\Tables\Table;
@@ -20,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         PlatformSettings::applyToConfig();
+
+        // A price edited in the panel has to reach the subscription that
+        // collects it, or we invoice one amount and debit another.
+        Contract::observe(ContractObserver::class);
 
         // ...and again before every queued job. A worker boots once and runs
         // for hours, so without this it sends with the mail settings that

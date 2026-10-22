@@ -6,7 +6,9 @@ use App\Enums\BillingCycle;
 use App\Models\Company;
 use App\Models\Contract;
 use App\Models\Invoice;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Stripe\Event;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 use UnexpectedValueException;
@@ -72,7 +74,16 @@ class StripeBillingService
 
         $customerId = $this->ensureCustomer($company);
         [$interval, $intervalCount] = $this->stripeRecurring($contract->billing_cycle);
-        $amountCents = (int) round(((float) $contract->sale_price) * (int) $contract->quantity * 100);
+
+        // total_sale answers for a collection as well as a single service:
+        // reading sale_price here would charge a collection nothing, since
+        // it holds no price of its own.
+        $amountCents = (int) round(((float) $contract->total_sale) * 100);
+
+        // A service inside a collection is billed through that collection.
+        if ($contract->isInGroup()) {
+            throw new UnexpectedValueException('A service inside a contract is billed through that contract.');
+        }
 
         if ($amountCents < 50) {
             throw new UnexpectedValueException('Amount too low for Stripe (min. €0.50).');
@@ -125,7 +136,7 @@ class StripeBillingService
         return $session->url;
     }
 
-    public function constructWebhookEvent(string $payload, ?string $signatureHeader): \Stripe\Event
+    public function constructWebhookEvent(string $payload, ?string $signatureHeader): Event
     {
         $secret = config('services.stripe.webhook_secret');
         if (! $secret) {
@@ -218,7 +229,7 @@ class StripeBillingService
 
         $paidAt = null;
         if (($stripeInvoice->status ?? '') === 'paid' && ! empty($stripeInvoice->status_transitions->paid_at)) {
-            $paidAt = \Carbon\Carbon::createFromTimestamp($stripeInvoice->status_transitions->paid_at);
+            $paidAt = Carbon::createFromTimestamp($stripeInvoice->status_transitions->paid_at);
         }
 
         return Invoice::updateOrCreate(
@@ -234,7 +245,7 @@ class StripeBillingService
                 'hosted_invoice_url' => $stripeInvoice->hosted_invoice_url,
                 'invoice_pdf' => $stripeInvoice->invoice_pdf,
                 'stripe_created_at' => isset($stripeInvoice->created)
-                    ? \Carbon\Carbon::createFromTimestamp($stripeInvoice->created)
+                    ? Carbon::createFromTimestamp($stripeInvoice->created)
                     : null,
                 'paid_at' => $paidAt,
             ]
@@ -262,6 +273,104 @@ class StripeBillingService
     }
 
     /** Best-effort: stop the Stripe subscription when cancelling in admin. */
+    /**
+     * Points an existing subscription at a new amount.
+     *
+     * The SEPA mandate is given to us, not to a sum, so a subscription can
+     * be re-priced without asking for it again. The customer still agrees
+     * to the new amount first — that is the pending change — but once they
+     * have, nothing needs re-authorising and the collection carries on
+     * uninterrupted.
+     *
+     * Billed from the next period: changing what is collected for a period
+     * already paid for would be a surprise on the wrong side.
+     */
+    public function updateSubscriptionAmount(Contract $contract): void
+    {
+        if (blank($contract->stripe_subscription_id)) {
+            throw new UnexpectedValueException('This contract has no subscription to update.');
+        }
+
+        [$interval, $intervalCount] = $this->stripeRecurring($contract->billing_cycle);
+        $amountCents = (int) round(((float) $contract->total_sale) * 100);
+
+        if ($amountCents < 50) {
+            throw new UnexpectedValueException('Amount too low for Stripe (min. €0.50).');
+        }
+
+        $subscription = $this->client()->subscriptions->retrieve($contract->stripe_subscription_id, []);
+        $itemId = $subscription->items->data[0]->id ?? null;
+
+        if ($itemId === null) {
+            throw new UnexpectedValueException('Subscription has no item to re-price.');
+        }
+
+        $this->client()->subscriptions->update($contract->stripe_subscription_id, [
+            'items' => [[
+                'id' => $itemId,
+                'price_data' => [
+                    'currency' => strtolower($contract->currency ?: 'eur'),
+                    'product_data' => [
+                        'name' => $contract->name,
+                        'metadata' => ['contract_id' => (string) $contract->id],
+                    ],
+                    'unit_amount' => $amountCents,
+                    'recurring' => array_filter([
+                        'interval' => $interval,
+                        'interval_count' => $intervalCount > 1 ? $intervalCount : null,
+                    ]),
+                ],
+                'quantity' => 1,
+            ]],
+            // No credit, no catch-up charge: the change takes effect when
+            // the next period starts, which is what the customer agreed to.
+            'proration_behavior' => 'none',
+            'metadata' => [
+                'contract_id' => (string) $contract->id,
+                'company_id' => (string) $contract->company_id,
+            ],
+        ]);
+
+        $contract->forceFill([
+            'stripe_subscription_item_id' => $itemId,
+            'auto_collect' => true,
+            'stripe_payment_status' => 'active',
+        ])->save();
+    }
+
+    /**
+     * Hands an existing subscription to another contract.
+     *
+     * Used when a service that was collecting on its own becomes part of a
+     * contract that was not: the same Stripe object, the same mandate, a
+     * new amount and a new owner on our side.
+     */
+    public function transferSubscription(Contract $from, Contract $to): void
+    {
+        if (blank($from->stripe_subscription_id)) {
+            return;
+        }
+
+        $to->forceFill([
+            'stripe_subscription_id' => $from->stripe_subscription_id,
+            'stripe_subscription_item_id' => $from->stripe_subscription_item_id,
+            'stripe_payment_method_id' => $from->stripe_payment_method_id,
+            'stripe_mandate_id' => $from->stripe_mandate_id,
+            'auto_collect' => true,
+            'stripe_payment_status' => $from->stripe_payment_status,
+            'auto_collect_enabled_at' => $from->auto_collect_enabled_at,
+        ])->save();
+
+        $from->forceFill([
+            'stripe_subscription_id' => null,
+            'stripe_subscription_item_id' => null,
+            'auto_collect' => false,
+            'stripe_payment_status' => null,
+        ])->save();
+
+        $this->updateSubscriptionAmount($to->fresh());
+    }
+
     public function cancelSubscription(Contract $contract): void
     {
         if (! filled($contract->stripe_subscription_id)) {
