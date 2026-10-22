@@ -11,6 +11,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ContractsRelationManager extends RelationManager
 {
@@ -27,11 +28,19 @@ class ContractsRelationManager extends RelationManager
     {
         return $table
             ->recordTitleAttribute('name')
+            // A service inside a collection is shown on that collection's
+            // own page. Listing it here as well showed the customer the
+            // same agreement twice and counted its money twice with it.
+            ->modifyQueryUsing(fn (Builder $query) => $query->topLevel())
             ->defaultSort('renewal_date', 'asc')
             ->recordUrl(fn ($record) => ContractResource::getUrl('view', ['record' => $record]))
             ->columns([
                 TextColumn::make('name')->label(__('Service / package'))->weight('bold')
-                    ->description(fn ($record) => $record->reference),
+                    ->description(fn ($record) => $record->reference)
+                    ->icon(fn ($record) => $record->isGroup() ? 'heroicon-m-rectangle-stack' : null)
+                    ->tooltip(fn ($record) => $record->isGroup()
+                        ? trans_choice('{0} empty|{1} :count service|[2,*] :count services', $record->services()->count(), ['count' => $record->services()->count()])
+                        : null),
                 TextColumn::make('type')->label(__('Type'))->badge()->visibleFrom('lg'),
                 TextColumn::make('quantity')->label(__('Quantity'))->alignEnd()->visibleFrom('xl'),
                 TextColumn::make('total_sale')->label(__('Sale'))->money('EUR')->alignEnd()->visibleFrom('md'),

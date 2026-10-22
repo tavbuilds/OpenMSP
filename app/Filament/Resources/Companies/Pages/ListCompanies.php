@@ -28,7 +28,7 @@ class ListCompanies extends ListRecords
                             $c->city,
                             $c->email,
                             $c->phone,
-                            $c->contracts()->count(),
+                            $c->contracts()->topLevel()->count(),
                             number_format($c->mrr(), 2),
                             number_format($c->annualMargin(), 2),
                             $c->notify_renewals ? 'yes' : 'no',
