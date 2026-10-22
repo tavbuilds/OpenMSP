@@ -9,9 +9,9 @@
 @include('portal.partials.billing-change', ['changes' => $billingChanges])
 
 @php
-    // The list shows what each contract is worth; while a change waits
-    // we are still collecting the old amount, and the row has to say so
-    // rather than let the price stand in for it.
+    // Nothing is applied while a change waits, so these prices are
+    // correct as they stand. The marker is there to point at the request
+    // when the customer has several contracts and one banner.
     $awaitingApproval = $billingChanges->keyBy('contract_id');
 @endphp
 
@@ -53,10 +53,8 @@
                 <div class="stack-actions">
                     @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                         <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
-                        @if ($pending = $awaitingApproval->get($service->id))
-                            <div class="muted cell-sub">{{ __('Collecting :amount until you approve the change.', [
-                                'amount' => $pending->previousFormatted(),
-                            ]) }}</div>
+                        @if ($awaitingApproval->has($service->id))
+                            <div class="muted cell-sub">{{ __('A change to this contract is waiting for your approval.') }}</div>
                         @endif
                     @elseif ($service->stripe_payment_status === 'pending')
                         <span class="badge badge-pending">{{ __('Activating…') }}</span>
@@ -116,10 +114,8 @@
                         <td>
                             @if ($service->auto_collect && $service->stripe_payment_status === 'active')
                                 <span class="badge badge-ok">{{ __('Auto-collect on') }}</span>
-                                @if ($pending = $awaitingApproval->get($service->id))
-                                    <div class="muted cell-sub">{{ __('Collecting :amount until you approve the change.', [
-                                        'amount' => $pending->previousFormatted(),
-                                    ]) }}</div>
+                                @if ($awaitingApproval->has($service->id))
+                                    <div class="muted cell-sub">{{ __('A change to this contract is waiting for your approval.') }}</div>
                                 @endif
                             @elseif ($service->stripe_payment_status === 'pending')
                                 <span class="badge badge-pending">{{ __('Activating…') }}</span>

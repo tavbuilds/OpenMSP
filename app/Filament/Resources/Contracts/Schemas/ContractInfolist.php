@@ -50,9 +50,9 @@ class ContractInfolist
                             ->placeholder(__('—')),
                     ]),
 
-                // Only on screen while an answer is outstanding: until then
-                // Stripe is still collecting the old amount, and the page
-                // would otherwise show a total nobody is paying.
+                // Only on screen while an answer is outstanding. The
+                // figures below it are the contract as it stands, because
+                // nothing in it moves until the customer says yes.
                 Section::make(__('Waiting on the customer'))
                     ->icon(Heroicon::OutlinedClock)
                     ->visible(fn (Contract $record) => $record->pendingBillingChange() !== null)
@@ -62,7 +62,7 @@ class ContractInfolist
                             ->hiddenLabel()
                             ->columnSpanFull()
                             ->state(fn (Contract $record) => $record->pendingBillingChange()?->explanation()
-                                .' '.__('We keep collecting the old amount until they approve the new one in the portal.')),
+                                .' '.__('It has not been applied: the customer approves it in the portal, and the contract stays as it is until they do.')),
 
                         TextEntry::make('pending_change_previous')
                             ->label(__('Collecting now'))

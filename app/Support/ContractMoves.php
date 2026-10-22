@@ -2,6 +2,7 @@
 
 namespace App\Support;
 
+use App\Enums\MoveOutcome;
 use App\Models\Contract;
 use App\Models\ContractBillingChange;
 use App\Notifications\BillingChangePending;
@@ -13,15 +14,20 @@ use Throwable;
 /**
  * Moving a service into a contract, or back out of it.
  *
- * What makes this more than a foreign key is the direct debit. Moving a
- * service changes what the contract collecting the money bills, and that
- * is not a thing to do quietly.
+ * What makes this more than a foreign key is the direct debit. A SEPA
+ * mandate is given to us rather than to an amount, so Stripe can re-price
+ * the subscription instead of tearing it down — but the sum itself is the
+ * customer's to agree to, and agreeing to it is the last step, not an
+ * afterthought.
  *
- * The mandate itself survives: it was given to us, not to an amount, so
- * Stripe can re-price the subscription rather than tear it down and ask
- * the customer to authorise us all over again. What they do have to agree
- * to is the new sum — so the move happens immediately and the change to
- * the collection waits, at the old amount, until they say yes.
+ * So a move that would change what a live mandate collects does not
+ * happen. It is written down as a pending change and sent to the customer,
+ * and only their approval carries it out. Decline it, or leave it, and the
+ * service stays exactly where it was: nothing is added, nothing is
+ * removed, and the direct debit goes on collecting what it always did.
+ *
+ * Moves that cost the customer nothing — no mandate in play, or the same
+ * money arranged differently — are simply made.
  */
 final class ContractMoves
 {
@@ -54,22 +60,114 @@ final class ContractMoves
         }
 
         return [
-            __('This changes what the direct debit collects for :names. The current amount keeps running and the customer is asked to approve the new one in the portal; nothing is re-authorised and no mandate is lost.', [
+            __('This changes what the direct debit collects for :names, so it is not applied yet: the customer is asked to approve the new amount in the portal first, and nothing moves until they do.', [
                 'names' => implode(', ', $affected),
             ]),
         ];
     }
 
-    /** Puts a service into a collection. */
-    public static function into(Contract $service, Contract $group): bool
+    /** Puts a service into a collection, or asks the customer first. */
+    public static function into(Contract $service, Contract $group): MoveOutcome
     {
-        $name = $service->name;
+        if (! $service->canJoinGroup($group)) {
+            return MoveOutcome::Refused;
+        }
+
+        // Both mandates count: the customer may be paying for the service
+        // and for the collection separately today, and what matters is
+        // what leaves their account in total.
+        $collected = self::collectedBy($group) + self::collectedBy($service);
+        $after = $group->collectsByDirectDebit() || $service->collectsByDirectDebit()
+            ? $group->periodSalePrice() + $service->periodSalePrice()
+            : 0.0;
+
+        if (self::needsConsent($collected, $after)) {
+            return self::propose(
+                $group,
+                $service,
+                $collected,
+                $after,
+                ContractBillingChange::REASON_SERVICE_ADDED,
+            );
+        }
+
+        return self::performInto($service, $group) ? MoveOutcome::Done : MoveOutcome::Refused;
+    }
+
+    /** Takes a service out of its collection, or asks the customer first. */
+    public static function out(Contract $service): MoveOutcome
+    {
+        $group = $service->parent;
+
+        if ($group === null) {
+            return MoveOutcome::Refused;
+        }
+
+        // What is left behind, plus what the service takes with it: when
+        // it was the only one the mandate follows it out, so the total is
+        // unchanged and there is nothing to ask.
+        $collected = self::collectedBy($group);
+        $remaining = $group->periodSalePrice() - $service->periodSalePrice();
+        $after = $group->collectsByDirectDebit()
+            ? ($group->services()->count() === 1 ? $service->periodSalePrice() : $remaining)
+            : 0.0;
+
+        if (self::needsConsent($collected, $after)) {
+            return self::propose(
+                $group,
+                $service,
+                $collected,
+                $after,
+                ContractBillingChange::REASON_SERVICE_REMOVED,
+            );
+        }
+
+        self::performOut($service, $group);
+
+        return MoveOutcome::Done;
+    }
+
+    /**
+     * Carries out a move the customer has approved.
+     *
+     * The amount is checked against the one they said yes to. Prices can
+     * be edited while a change waits, and charging a figure nobody agreed
+     * to is the thing this whole path exists to prevent.
+     */
+    public static function apply(ContractBillingChange $change): bool
+    {
+        $group = $change->contract;
+        $service = $change->service;
+
+        if ($group === null || $service === null) {
+            return false;
+        }
+
+        $adding = $change->isAddition();
+
+        if ($adding ? ! $service->canJoinGroup($group) : ! $service->parent?->is($group)) {
+            return false;
+        }
+
+        if (abs($change->amountAfterMove() - (float) $change->new_amount) >= 0.01) {
+            return false;
+        }
+
+        if ($adding) {
+            return self::performInto($service, $group);
+        }
+
+        self::performOut($service, $group);
+
+        return true;
+    }
+
+    // --- Doing the move ------------------------------------------------
+
+    private static function performInto(Contract $service, Contract $group): bool
+    {
         $serviceCollected = $service->collectsByDirectDebit();
         $groupCollected = $group->collectsByDirectDebit();
-
-        // Read before the move: afterwards the total is the new one, and
-        // comparing it with itself would find nothing to ask about.
-        $before = self::amountStripeIsCollecting($group);
 
         if (! $service->moveIntoGroup($group)) {
             return false;
@@ -77,15 +175,15 @@ final class ContractMoves
 
         $group->refresh()->load('services');
 
-        // The collection already collects: its amount simply grows, and
-        // a service that had its own mandate stops using it — one
-        // agreement cannot be debited twice.
         if ($groupCollected) {
+            // One agreement cannot be debited twice, so a service that
+            // brought its own mandate gives it up and the collection's
+            // grows to cover it.
             if ($serviceCollected) {
                 self::stopCollecting($service->fresh());
             }
 
-            self::propose($group, $before, $name, ContractBillingChange::REASON_SERVICE_ADDED);
+            self::reprice($group);
 
             return true;
         }
@@ -93,25 +191,20 @@ final class ContractMoves
         // The collection does not collect but the service did: hand the
         // subscription over rather than throwing the mandate away.
         if ($serviceCollected) {
-            $collected = self::amountStripeIsCollecting($service->fresh());
-            self::handOver($service->fresh(), $group, $name, $collected);
+            self::handOver($service->fresh(), $group);
         }
 
         return true;
     }
 
-    /** Takes a service out of its collection. */
-    public static function out(Contract $service): void
+    private static function performOut(Contract $service, Contract $group): void
     {
-        $group = $service->parent;
-        $name = $service->name;
-        $groupCollected = $group?->collectsByDirectDebit() ?? false;
-        $wasOnlyService = $group !== null && $group->services()->count() === 1;
-        $before = $group !== null ? self::amountStripeIsCollecting($group) : 0.0;
+        $groupCollected = $group->collectsByDirectDebit();
+        $wasOnlyService = $group->services()->count() === 1;
 
         $service->detachFromGroup();
 
-        if (! $groupCollected || $group === null) {
+        if (! $groupCollected) {
             return;
         }
 
@@ -120,82 +213,79 @@ final class ContractMoves
         // Nothing left in the collection to bill: the mandate follows the
         // service out rather than collecting for an empty shell.
         if ($wasOnlyService) {
-            self::handOver($group, $service->fresh(), $name, $before);
+            self::handOver($group, $service->fresh());
 
             return;
         }
 
-        self::propose($group, $before, $name, ContractBillingChange::REASON_SERVICE_REMOVED);
+        self::reprice($group);
     }
 
+    // --- Asking the customer -------------------------------------------
+
     /**
-     * Records the new amount and asks the customer for it.
+     * Writes the move down and sends it to the customer.
      *
-     * Stripe is not touched here. The old amount keeps being collected,
-     * which is the only amount anyone has agreed to, until the customer
-     * answers in the portal.
+     * Nothing is moved and Stripe is not touched. The contract stays as it
+     * is, collecting what it always did, until they answer.
      */
-    private static function propose(Contract $contract, float $previous, string $serviceName, string $reason): void
-    {
-        $new = (float) $contract->total_sale;
-
-        // One question at a time, and the old one goes first even when
-        // this move asks nothing new: a service taken out and put back
-        // would otherwise leave the customer looking at a drop that has
-        // already been undone.
-        self::dropTheOldQuestion($contract);
-
-        if (abs($previous - $new) < 0.01) {
-            return;
+    private static function propose(
+        Contract $group,
+        Contract $service,
+        float $collected,
+        float $after,
+        string $reason,
+    ): MoveOutcome {
+        // One question at a time. A second move would be measured against
+        // a contract the first one is about to change, so both answers
+        // together would land on an amount neither of them quoted.
+        if ($group->pendingBillingChange() !== null) {
+            return MoveOutcome::Blocked;
         }
 
-        $change = $contract->billingChanges()->create([
-            'company_id' => $contract->company_id,
-            'service_name' => $serviceName,
-            'previous_amount' => $previous,
-            'new_amount' => $new,
-            'currency' => $contract->currency ?: 'EUR',
+        $change = $group->billingChanges()->create([
+            'company_id' => $group->company_id,
+            'service_id' => $service->getKey(),
+            'service_name' => $service->name,
+            'previous_amount' => $collected,
+            'new_amount' => $after,
+            'currency' => $group->currency ?: 'EUR',
             'reason' => $reason,
             'status' => 'pending',
         ]);
 
-        self::tellTheCustomer($contract, $change);
+        self::tellTheCustomer($group, $change);
+
+        return MoveOutcome::AwaitingCustomer;
     }
 
-    /**
-     * Retires a question the customer has not answered.
-     *
-     * Not a decline: they never said no, and a decline is what stops the
-     * mandate. The row stays for the record, out of the way.
-     */
-    private static function dropTheOldQuestion(Contract $contract): void
+    private static function needsConsent(float $collected, float $after): bool
     {
-        $contract->billingChanges()->pending()->update(['status' => 'superseded']);
+        return abs($collected - $after) >= 0.01;
     }
 
-    /**
-     * What the subscription is set to collect right now.
-     *
-     * Not the contract's current total: an earlier change may be waiting,
-     * in which case Stripe is still on the amount from before that one,
-     * and asking about the difference from anything else would misstate
-     * what the customer is actually paying.
-     */
-    private static function amountStripeIsCollecting(Contract $contract): float
+    /** What a contract's own mandate takes today, zero if it has none. */
+    private static function collectedBy(Contract $contract): float
     {
-        $pending = $contract->billingChanges()->pending()->latest('id')->first();
-
-        return (float) ($pending?->previous_amount ?? $contract->total_sale);
+        return $contract->collectsByDirectDebit() ? $contract->periodSalePrice() : 0.0;
     }
 
-    /**
-     * Moves a live subscription from one contract to the other.
-     *
-     * $collected is what Stripe is taking today, read before the move:
-     * the contract it is leaving may be empty by now, and its total would
-     * say the customer is paying nothing.
-     */
-    private static function handOver(Contract $from, Contract $to, string $serviceName, float $collected): void
+    // --- Stripe ---------------------------------------------------------
+
+    private static function reprice(Contract $contract): void
+    {
+        try {
+            app(StripeBillingService::class)->updateSubscriptionAmount($contract);
+        } catch (Throwable $e) {
+            Log::warning('Stripe subscription re-price failed after a move', [
+                'contract_id' => $contract->id,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /** Moves a live subscription from one contract to the other. */
+    private static function handOver(Contract $from, Contract $to): void
     {
         try {
             app(StripeBillingService::class)->transferSubscription($from, $to->fresh());
@@ -205,30 +295,7 @@ final class ContractMoves
                 'to' => $to->id,
                 'error' => $e->getMessage(),
             ]);
-
-            return;
         }
-
-        $to->refresh();
-
-        self::dropTheOldQuestion($from);
-        self::dropTheOldQuestion($to);
-
-        if (abs($collected - (float) $to->total_sale) < 0.01) {
-            return;
-        }
-
-        $change = $to->billingChanges()->create([
-            'company_id' => $to->company_id,
-            'service_name' => $serviceName,
-            'previous_amount' => $collected,
-            'new_amount' => (float) $to->total_sale,
-            'currency' => $to->currency ?: 'EUR',
-            'reason' => ContractBillingChange::REASON_SERVICE_ADDED,
-            'status' => 'pending',
-        ]);
-
-        self::tellTheCustomer($to, $change);
     }
 
     private static function stopCollecting(Contract $service): void

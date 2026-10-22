@@ -242,8 +242,10 @@ class ContractsTable
                     ->default(true),
             ])
             ->action(function (Collection $records, array $data): void {
+                $deferred = null;
+
                 try {
-                    $group = ContractGroups::merge($records, $data);
+                    $group = ContractGroups::merge($records, $data, $deferred);
                 } catch (Throwable $e) {
                     Notification::make()
                         ->title(__('Nothing was combined'))
@@ -264,6 +266,30 @@ class ContractsTable
                     ))
                     ->success()
                     ->send();
+
+                // Said separately, because it is the opposite of the line
+                // above: these are the ones that did not join.
+                if (($deferred['awaiting'] ?? []) !== []) {
+                    Notification::make()
+                        ->title(__('Waiting on the customer'))
+                        ->body(__('These change their direct debit, so they stay where they are until approved: :names.', [
+                            'names' => implode(', ', $deferred['awaiting']),
+                        ]))
+                        ->warning()
+                        ->persistent()
+                        ->send();
+                }
+
+                if (($deferred['blocked'] ?? []) !== []) {
+                    Notification::make()
+                        ->title(__('Not added yet'))
+                        ->body(__('Only one change at a time can wait on a customer, so these were left out: :names. Add them once the first is answered.', [
+                            'names' => implode(', ', $deferred['blocked']),
+                        ]))
+                        ->danger()
+                        ->persistent()
+                        ->send();
+                }
             })
             ->deselectRecordsAfterCompletion();
     }

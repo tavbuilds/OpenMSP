@@ -4,20 +4,21 @@ namespace App\Http\Controllers\Portal;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContractBillingChange;
-use App\Services\StripeBillingService;
+use App\Support\ContractMoves;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * The customer answering a change to what their direct debit collects.
+ * The customer answering a change to their contract.
  *
- * Approving re-prices the existing subscription: the mandate was given to
- * us rather than to an amount, so nothing is re-authorised and the
- * collection carries on. Declining stops it instead, and they go back to
- * invoices they pay by hand.
+ * Their approval is what carries the change out: the service is not in
+ * the contract, or out of it, until they say so here. Declining leaves
+ * everything exactly as it was — there is nothing to undo, because
+ * nothing was done.
  */
 class BillingChangeController extends Controller
 {
@@ -30,23 +31,37 @@ class BillingChangeController extends Controller
         }
 
         try {
-            app(StripeBillingService::class)->updateSubscriptionAmount($change->contract);
+            $applied = DB::transaction(fn () => ContractMoves::apply($change));
         } catch (Throwable $e) {
-            Log::warning('Stripe subscription re-price failed', [
+            Log::warning('Approved contract change could not be applied', [
                 'change_id' => $change->id,
                 'error' => $e->getMessage(),
             ]);
 
+            $applied = false;
+        }
+
+        if (! $applied) {
+            // Either the contracts moved on underneath this request or the
+            // amount is no longer the one they are approving. Leaving it
+            // pending is the safe end: nothing has changed, and it is
+            // still on screen for whoever has to sort it out.
             return back()->withErrors([
-                'billing' => __('We could not update the direct debit just now. Nothing has changed and we will look into it.'),
+                'billing' => __('We could not put this change through. Nothing has changed and we will look into it.'),
             ]);
         }
 
         $change->forceFill(['status' => 'confirmed', 'confirmed_at' => now()])->save();
 
-        return back()->with('status', __('Thank you. From the next period we will collect :amount.', [
-            'amount' => $change->newFormatted(),
-        ]));
+        return back()->with('status', $change->isAddition()
+            ? __('Thank you. :service is part of your contract, and from the next period we will collect :amount.', [
+                'service' => $change->service_name,
+                'amount' => $change->newFormatted(),
+            ])
+            : __('Thank you. :service has been taken out, and from the next period we will collect :amount.', [
+                'service' => $change->service_name,
+                'amount' => $change->newFormatted(),
+            ]));
     }
 
     public function decline(Request $request, ContractBillingChange $change): RedirectResponse
@@ -57,32 +72,17 @@ class BillingChangeController extends Controller
             return back();
         }
 
-        // They did not agree to the new amount, so we stop collecting
-        // rather than keep taking one they no longer want to pay.
-        $contract = $change->contract;
-
-        try {
-            app(StripeBillingService::class)->cancelSubscription($contract);
-        } catch (Throwable $e) {
-            Log::warning('Stripe subscription cancel failed after a declined change', [
-                'change_id' => $change->id,
-                'error' => $e->getMessage(),
-            ]);
-        }
-
-        // That call keeps its failures to the log, so read the result
-        // rather than the return: telling someone their direct debit has
-        // stopped while it is still running is the one outcome we cannot
-        // have here.
-        if ($contract?->fresh()?->collectsByDirectDebit()) {
-            return back()->withErrors([
-                'billing' => __('We could not stop the direct debit just now. Nothing has changed and we will look into it.'),
-            ]);
-        }
-
+        // Nothing to undo and nothing to tell Stripe: the change was never
+        // made. Their contract and their direct debit are as they were.
         $change->forceFill(['status' => 'declined', 'declined_at' => now()])->save();
 
-        return back()->with('status', __('The direct debit has been stopped. You will receive an invoice to pay yourself, and you can set up a new direct debit whenever you like.'));
+        return back()->with('status', $change->isAddition()
+            ? __(':service has not been added and your direct debit is unchanged. Let us know if you would like it after all.', [
+                'service' => $change->service_name,
+            ])
+            : __(':service stays in your contract and your direct debit is unchanged.', [
+                'service' => $change->service_name,
+            ]));
     }
 
     private function assertTheirs(ContractBillingChange $change): void

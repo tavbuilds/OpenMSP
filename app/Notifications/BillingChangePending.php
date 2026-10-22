@@ -9,12 +9,11 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 /**
- * What a direct debit collects is about to change, and the customer has to
- * agree before it does.
+ * A change to the customer's contract, waiting on their approval.
  *
- * Their mandate is not at risk and nothing needs re-authorising — it was
- * given to us, not to an amount. Until they answer, the old amount keeps
- * being collected, which is the only one they have agreed to.
+ * Their approval is what carries it out, so the mail has to be clear that
+ * nothing has happened yet. Their mandate is not at risk and nothing needs
+ * re-authorising — it was given to us, not to an amount.
  */
 class BillingChangePending extends Notification implements ShouldQueue
 {
@@ -30,18 +29,17 @@ class BillingChangePending extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject(__('Approve the new amount for :contract', [
-                'contract' => $this->change->contract?->name,
-            ]))
+            ->subject($this->change->isAddition()
+                ? __('Approve an addition to :contract', ['contract' => $this->change->contract?->name])
+                : __('Approve a change to :contract', ['contract' => $this->change->contract?->name]))
             ->greeting(__('Hello,'))
             ->line($this->change->explanation())
             ->line(__('Your direct debit would go from :previous to :new per period.', [
                 'previous' => $this->change->previousFormatted(),
                 'new' => $this->change->newFormatted(),
             ]))
-            ->line(__('Nothing has changed yet: we keep collecting :previous until you approve the new amount, and your existing mandate stays as it is.', [
-                'previous' => $this->change->previousFormatted(),
-            ]))
+            ->line($this->change->consequence())
+            ->line(__('Your existing mandate is used; you do not have to authorise anything again.'))
             ->action(__('Review it in the portal'), route('portal.dashboard'));
     }
 }

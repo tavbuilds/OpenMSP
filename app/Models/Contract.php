@@ -320,6 +320,21 @@ class Contract extends Model
     }
 
     /**
+     * Whether this service could join that collection.
+     *
+     * Asked on its own because a move may have to wait for the customer,
+     * and there is no point asking them about one that was never allowed.
+     */
+    public function canJoinGroup(self $group): bool
+    {
+        if (! $group->isGroup() || $this->isGroup() || $this->is($group)) {
+            return false;
+        }
+
+        return $this->company_id === $group->company_id;
+    }
+
+    /**
      * Puts a service into a collection and hands it the collection's term.
      *
      * A collection cannot go inside another, and nothing can go inside
@@ -327,11 +342,7 @@ class Contract extends Model
      */
     public function moveIntoGroup(self $group): bool
     {
-        if (! $group->isGroup() || $this->isGroup() || $this->is($group)) {
-            return false;
-        }
-
-        if ($this->company_id !== $group->company_id) {
+        if (! $this->canJoinGroup($group)) {
             return false;
         }
 
