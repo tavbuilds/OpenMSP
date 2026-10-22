@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Models\User;
 use App\Support\UserAdministration;
 use BackedEnum;
@@ -20,6 +21,7 @@ use Laravel\Sanctum\PersonalAccessToken;
 class ApiTokens extends Page implements HasTable
 {
     use InteractsWithTable;
+    use TranslatesNavigationGroup;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedKey;
 
@@ -45,13 +47,6 @@ class ApiTokens extends Page implements HasTable
     public function getTitle(): string|Htmlable
     {
         return __('API tokens');
-    }
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
     }
 
     public function mcpUrl(): string

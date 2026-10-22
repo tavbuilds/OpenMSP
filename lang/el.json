@@ -776,5 +776,8 @@
   "{1} tomorrow|[2,*] in :count days": "{1} αύριο|[2,*] σε :count ημέρες",
   "All rights reserved.": "Με επιφύλαξη παντός δικαιώματος.",
   "Platform default": "Προεπιλογή πλατφόρμας",
-  "The language reminders and other emails are written in.": "Η γλώσσα στην οποία γράφονται οι υπενθυμίσεις και τα άλλα email."
+  "The language reminders and other emails are written in.": "Η γλώσσα στην οποία γράφονται οι υπενθυμίσεις και τα άλλα email.",
+  "Demo data is off the menu now.": "Τα δεδομένα επίδειξης δεν είναι πλέον στο μενού.",
+  "Removes every record with the demo flag: customers, contacts, contracts, products, vendors, and purchase bundles. Real data stays. This page then disappears — run php artisan demo:seed if you ever want it back.": "Αφαιρεί κάθε εγγραφή με τη σήμανση επίδειξης: πελάτες, επαφές, συμβόλαια, προϊόντα, προμηθευτές και πακέτα αγορών. Τα πραγματικά δεδομένα παραμένουν. Αυτή η σελίδα έπειτα εξαφανίζεται — εκτελέστε php artisan demo:seed αν την θελήσετε ποτέ ξανά.",
+  "{0} No demo records to delete|{1} 1 demo record deleted|[2,*] :count demo records deleted": "{0} Δεν υπάρχουν εγγραφές επίδειξης προς διαγραφή|{1} Διαγράφηκε 1 εγγραφή επίδειξης|[2,*] Διαγράφηκαν :count εγγραφές επίδειξης"
 }

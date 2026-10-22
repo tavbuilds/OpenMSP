@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Models\Domain;
 use App\Registrars\OpenProvider\OpenProviderClient;
 use App\Registrars\OpenProvider\OpenProviderSync as OpenProviderSyncService;
@@ -24,6 +25,7 @@ use Throwable;
 class OpenProviderSync extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
+    use TranslatesNavigationGroup;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedGlobeAlt;
 
@@ -41,13 +43,6 @@ class OpenProviderSync extends Page implements HasSchemas
 
     /** @var array<string, mixed> */
     public array $data = [];
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

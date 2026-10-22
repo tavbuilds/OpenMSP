@@ -17,6 +17,9 @@ class SeedDemoData extends Command
         if (DemoData::exists()) {
             $this->warn('Demo data is already loaded. Remove it first with demo:purge.');
 
+            // Still put the page back: it is how they remove it again.
+            DemoData::reinstate();
+
             return self::SUCCESS;
         }
 

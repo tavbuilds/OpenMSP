@@ -776,5 +776,8 @@
   "{1} tomorrow|[2,*] in :count days": "{1} demain|[2,*] dans :count jours",
   "All rights reserved.": "Tous droits réservés.",
   "Platform default": "Valeur par défaut de la plateforme",
-  "The language reminders and other emails are written in.": "La langue dans laquelle les rappels et autres e-mails sont rédigés."
+  "The language reminders and other emails are written in.": "La langue dans laquelle les rappels et autres e-mails sont rédigés.",
+  "Demo data is off the menu now.": "Les données de démo ne sont plus au menu.",
+  "Removes every record with the demo flag: customers, contacts, contracts, products, vendors, and purchase bundles. Real data stays. This page then disappears — run php artisan demo:seed if you ever want it back.": "Supprime chaque enregistrement marqué démo : clients, contacts, contrats, produits, fournisseurs et lots d’achat. Les données réelles restent. Cette page disparaît ensuite — lancez php artisan demo:seed si vous la voulez de nouveau.",
+  "{0} No demo records to delete|{1} 1 demo record deleted|[2,*] :count demo records deleted": "{0} Aucun enregistrement de démo à supprimer|{1} 1 enregistrement de démo supprimé|[2,*] :count enregistrements de démo supprimés"
 }

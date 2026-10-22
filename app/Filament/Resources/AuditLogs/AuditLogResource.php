@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AuditLogs;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Filament\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Resources\AuditLogs\Pages\ViewAuditLog;
 use App\Models\AuditLog;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuditLogResource extends Resource
 {
+    use TranslatesNavigationGroup;
+
     protected static ?string $model = AuditLog::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedClipboardDocumentList;
@@ -31,13 +34,6 @@ class AuditLogResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'System';
 
     protected static ?int $navigationSort = 85;
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

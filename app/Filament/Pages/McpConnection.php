@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Mcp\ToolCatalog;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -10,6 +11,8 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class McpConnection extends Page
 {
+    use TranslatesNavigationGroup;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCommandLine;
 
     protected static ?string $navigationLabel = 'MCP';
@@ -23,13 +26,6 @@ class McpConnection extends Page
     protected static ?string $title = 'MCP';
 
     protected string $view = 'filament.pages.mcp-connection';
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

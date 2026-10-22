@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Distributors\Pax8\Pax8Client;
 use App\Distributors\Pax8\Pax8Sync as Pax8SyncService;
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Models\Product;
 use App\Support\Money;
 use App\Support\PlatformSettings;
@@ -25,6 +26,7 @@ use Throwable;
 class Pax8Sync extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
+    use TranslatesNavigationGroup;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowsRightLeft;
 
@@ -51,13 +53,6 @@ class Pax8Sync extends Page implements HasSchemas
     public array $catalogHits = [];
 
     public ?string $catalogError = null;
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

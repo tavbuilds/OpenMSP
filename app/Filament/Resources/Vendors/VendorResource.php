@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Vendors;
 
 use App\Filament\Concerns\AuthorizesByRole;
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Filament\Resources\Vendors\Pages\CreateVendor;
 use App\Filament\Resources\Vendors\Pages\EditVendor;
 use App\Filament\Resources\Vendors\Pages\ListVendors;
@@ -18,6 +19,7 @@ use Filament\Tables\Table;
 class VendorResource extends Resource
 {
     use AuthorizesByRole;
+    use TranslatesNavigationGroup;
 
     protected static ?string $model = Vendor::class;
 
@@ -32,13 +34,6 @@ class VendorResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Catalog';
 
     protected static ?int $navigationSort = 11;
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

@@ -52,6 +52,15 @@ class PlatformSettings
 
     public const PAX8_LAST_ERROR = 'pax8.last_error';
 
+    /**
+     * Set once the operator has deleted the demo data.
+     *
+     * Absence of demo data is not the same thing: a fresh install has
+     * none either, and needs the page to load some. This records the
+     * decision, so the page can go away for good.
+     */
+    public const DEMO_DISMISSED = 'demo.dismissed_at';
+
     public const OPENPROVIDER_USERNAME = 'openprovider.username';
 
     public const OPENPROVIDER_PASSWORD = 'openprovider.password';

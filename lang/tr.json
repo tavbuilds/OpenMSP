@@ -776,5 +776,8 @@
   "{1} tomorrow|[2,*] in :count days": "{1} yarın|[2,*] :count gün içinde",
   "All rights reserved.": "Tüm hakları saklıdır.",
   "Platform default": "Platform varsayılanı",
-  "The language reminders and other emails are written in.": "Hatırlatmaların ve diğer e-postaların yazıldığı dil."
+  "The language reminders and other emails are written in.": "Hatırlatmaların ve diğer e-postaların yazıldığı dil.",
+  "Demo data is off the menu now.": "Demo verileri artık menüde değil.",
+  "Removes every record with the demo flag: customers, contacts, contracts, products, vendors, and purchase bundles. Real data stays. This page then disappears — run php artisan demo:seed if you ever want it back.": "Demo işaretli tüm kayıtları siler: müşteriler, kişiler, sözleşmeler, ürünler, tedarikçiler ve satın alma paketleri. Gerçek veriler kalır. Bu sayfa sonrasında kaybolur — bir gün geri isterseniz php artisan demo:seed çalıştırın.",
+  "{0} No demo records to delete|{1} 1 demo record deleted|[2,*] :count demo records deleted": "{0} Silinecek demo kaydı yok|{1} 1 demo kaydı silindi|[2,*] :count demo kaydı silindi"
 }

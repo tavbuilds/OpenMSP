@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Users;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Filament\Resources\Users\Pages\CreateUser;
 use App\Filament\Resources\Users\Pages\EditUser;
 use App\Filament\Resources\Users\Pages\ListUsers;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserResource extends Resource
 {
+    use TranslatesNavigationGroup;
+
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
@@ -32,13 +35,6 @@ class UserResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'System';
 
     protected static ?int $navigationSort = 80;
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getNavigationLabel(): string
     {

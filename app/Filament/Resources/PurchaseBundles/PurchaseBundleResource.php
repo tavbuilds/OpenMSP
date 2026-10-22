@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PurchaseBundles;
 
 use App\Filament\Concerns\AuthorizesByRole;
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Filament\Resources\PurchaseBundles\Pages\CreatePurchaseBundle;
 use App\Filament\Resources\PurchaseBundles\Pages\EditPurchaseBundle;
 use App\Filament\Resources\PurchaseBundles\Pages\ListPurchaseBundles;
@@ -22,6 +23,7 @@ use Illuminate\Database\Eloquent\Model;
 class PurchaseBundleResource extends Resource
 {
     use AuthorizesByRole;
+    use TranslatesNavigationGroup;
 
     protected static ?string $model = PurchaseBundle::class;
 
@@ -36,13 +38,6 @@ class PurchaseBundleResource extends Resource
     protected static \UnitEnum|string|null $navigationGroup = 'Catalog';
 
     protected static ?int $navigationSort = 12;
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
-    }
 
     public static function getRecordTitle(?Model $record): ?string
     {

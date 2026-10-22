@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Models\User;
 use App\Support\Passkeys as PasskeyStore;
 use BackedEnum;
@@ -22,6 +23,8 @@ use Laravel\Passkeys\Actions\DeletePasskey;
  */
 class Passkeys extends Page
 {
+    use TranslatesNavigationGroup;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedFingerPrint;
 
     protected static ?string $navigationLabel = 'Passkeys';

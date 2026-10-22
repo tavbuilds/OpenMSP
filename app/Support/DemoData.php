@@ -33,11 +33,42 @@ final class DemoData
             || PlannedTask::query()->where('is_demo', true)->exists();
     }
 
+    /**
+     * Whether the demo page still has a reason to exist.
+     *
+     * Deleting the demo data is a decision, not a state: a fresh install
+     * has no demo data either and needs the page to load some. Once the
+     * operator has cleared it out, the page is done — unless demo data
+     * turns up again, in which case they need a way to remove it.
+     */
+    public static function stillOffered(): bool
+    {
+        return self::exists() || ! self::wasDismissed();
+    }
+
+    public static function wasDismissed(): bool
+    {
+        return filled(PlatformSettings::get(PlatformSettings::DEMO_DISMISSED));
+    }
+
+    public static function dismiss(): void
+    {
+        PlatformSettings::set(PlatformSettings::DEMO_DISMISSED, now()->toIso8601String());
+    }
+
+    /** Loading demo data again is the way back to the page. */
+    public static function reinstate(): void
+    {
+        PlatformSettings::forget(PlatformSettings::DEMO_DISMISSED);
+    }
+
     public static function seed(): void
     {
         if (self::exists()) {
             return;
         }
+
+        self::reinstate();
 
         DB::transaction(function (): void {
             $contoso = Vendor::create([
@@ -389,6 +420,8 @@ final class DemoData
 
     public static function purge(): int
     {
+        self::dismiss();
+
         return (int) DB::transaction(function (): int {
             $companyIds = Company::query()->where('is_demo', true)->pluck('id');
             $contractIds = Contract::query()->where('is_demo', true)->pluck('id');

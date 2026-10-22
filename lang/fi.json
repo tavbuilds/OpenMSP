@@ -776,5 +776,8 @@
   "{1} tomorrow|[2,*] in :count days": "{1} huomenna|[2,*] :count päivän kuluttua",
   "All rights reserved.": "Kaikki oikeudet pidätetään.",
   "Platform default": "Alustan oletus",
-  "The language reminders and other emails are written in.": "Kieli, jolla muistutukset ja muut sähköpostit kirjoitetaan."
+  "The language reminders and other emails are written in.": "Kieli, jolla muistutukset ja muut sähköpostit kirjoitetaan.",
+  "Demo data is off the menu now.": "Demotiedot eivät ole enää valikossa.",
+  "Removes every record with the demo flag: customers, contacts, contracts, products, vendors, and purchase bundles. Real data stays. This page then disappears — run php artisan demo:seed if you ever want it back.": "Poistaa kaikki demomerkinnällä varustetut tietueet: asiakkaat, yhteyshenkilöt, sopimukset, tuotteet, toimittajat ja ostopaketit. Oikeat tiedot säilyvät. Tämä sivu katoaa sen jälkeen — aja php artisan demo:seed, jos haluat sen joskus takaisin.",
+  "{0} No demo records to delete|{1} 1 demo record deleted|[2,*] :count demo records deleted": "{0} Ei poistettavia demotietueita|{1} 1 demotietue poistettu|[2,*] :count demotietuetta poistettu"
 }

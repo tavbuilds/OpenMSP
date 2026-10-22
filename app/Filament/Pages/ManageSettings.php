@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Concerns\TranslatesNavigationGroup;
 use App\Support\Breakpoints;
 use App\Support\MailTester;
 use App\Support\PlatformSettings;
@@ -31,6 +32,7 @@ use Throwable;
 class ManageSettings extends Page implements HasSchemas
 {
     use InteractsWithSchemas;
+    use TranslatesNavigationGroup;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
 
@@ -57,13 +59,6 @@ class ManageSettings extends Page implements HasSchemas
     public function getTitle(): string|Htmlable
     {
         return __('Settings');
-    }
-
-    public static function getNavigationGroup(): string|\UnitEnum|null
-    {
-        return is_string(static::$navigationGroup)
-            ? __(static::$navigationGroup)
-            : parent::getNavigationGroup();
     }
 
     public static function canAccess(): bool

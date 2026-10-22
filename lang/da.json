@@ -776,5 +776,8 @@
   "{1} tomorrow|[2,*] in :count days": "{1} i morgen|[2,*] om :count dage",
   "All rights reserved.": "Alle rettigheder forbeholdes.",
   "Platform default": "Platformens standard",
-  "The language reminders and other emails are written in.": "Det sprog, påmindelser og andre mails skrives på."
+  "The language reminders and other emails are written in.": "Det sprog, påmindelser og andre mails skrives på.",
+  "Demo data is off the menu now.": "Demodata er ikke længere i menuen.",
+  "Removes every record with the demo flag: customers, contacts, contracts, products, vendors, and purchase bundles. Real data stays. This page then disappears — run php artisan demo:seed if you ever want it back.": "Fjerner alle poster med demo-flaget: kunder, kontakter, kontrakter, produkter, leverandører og indkøbsbundter. Rigtige data bliver. Denne side forsvinder derefter — kør php artisan demo:seed, hvis du nogensinde vil have den tilbage.",
+  "{0} No demo records to delete|{1} 1 demo record deleted|[2,*] :count demo records deleted": "{0} Ingen demoposter at slette|{1} 1 demopost slettet|[2,*] :count demoposter slettet"
 }
