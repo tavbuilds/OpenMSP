@@ -22,6 +22,12 @@ class ContractResource extends JsonResource
             'product_id' => $this->product_id,
             'vendor_id' => $this->vendor_id,
             'purchase_bundle_id' => $this->purchase_bundle_id,
+            // A contract is either a service or a collection of them. The
+            // listing returns both, so a consumer summing money has to be
+            // able to tell which is which: a collection's totals are its
+            // services', and adding both counts the same money twice.
+            'parent_id' => $this->parent_id,
+            'is_group' => (bool) $this->is_group,
             'company' => CompanyResource::make($this->whenLoaded('company')),
             'product' => ProductResource::make($this->whenLoaded('product')),
             'vendor' => VendorResource::make($this->whenLoaded('vendor')),

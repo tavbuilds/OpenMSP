@@ -21,7 +21,10 @@ class DashboardController extends Controller
     {
         $this->authorizeRead($request);
 
+        // Money comes off the services; a collection totals them and
+        // would otherwise be counted alongside its own parts.
         $active = Contract::query()
+            ->billable()
             ->where('status', ContractStatus::Active->value)
             ->get();
 
@@ -105,7 +108,12 @@ class DashboardController extends Controller
 
         return response()->json([
             'data' => [
-                'active_contracts_count' => $active->count(),
+                // ...but the count is of contracts as a person means
+                // them: a collection is one, not one plus its services.
+                'active_contracts_count' => Contract::query()
+                    ->topLevel()
+                    ->where('status', ContractStatus::Active->value)
+                    ->count(),
                 'mrr' => round($mrr, 2),
                 'arr' => round($arr, 2),
                 'annual_margin' => round($annualMargin, 2),
