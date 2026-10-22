@@ -10,7 +10,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Domain;
 use App\Models\User;
-use App\Notifications\DomainExpiryReminder;
+use App\Notifications\ReminderDigest;
 use App\Support\PlatformSettings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -121,9 +121,9 @@ class DomainTest extends TestCase
 
         $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
 
-        Notification::assertSentTo([$admin, $manager], DomainExpiryReminder::class);
-        Notification::assertNotSentTo($viewer, DomainExpiryReminder::class);
-        Notification::assertNotSentTo($contact, DomainExpiryReminder::class);
+        Notification::assertSentTo([$admin, $manager], ReminderDigest::class);
+        Notification::assertNotSentTo($viewer, ReminderDigest::class);
+        Notification::assertNotSentTo($contact, ReminderDigest::class);
     }
 
     public function test_a_step_is_mailed_once_and_the_next_one_still_fires(): void
@@ -138,12 +138,45 @@ class DomainTest extends TestCase
 
         // Same day again: nothing new to say.
         $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
-        Notification::assertSentTimes(DomainExpiryReminder::class, 1);
+        Notification::assertSentTimes(ReminderDigest::class, 1);
 
         // Closer in, the tighter step is still due.
         $domain->forceFill(['expires_at' => now()->addDays(5)->toDateString()])->save();
         $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
-        Notification::assertSentTimes(DomainExpiryReminder::class, 2);
+        Notification::assertSentTimes(ReminderDigest::class, 2);
+    }
+
+    /** Six expiring domains used to be six mails. */
+    public function test_every_due_domain_arrives_in_one_mail(): void
+    {
+        Notification::fake();
+        $admin = User::factory()->admin()->create();
+
+        foreach (['een.nl', 'twee.nl', 'drie.nl'] as $name) {
+            $this->domain($name, ['expires_at' => now()->addDays(6)->toDateString()]);
+        }
+        $this->domain('verlopen.nl', ['expires_at' => now()->subDay()->toDateString()]);
+
+        $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
+
+        Notification::assertSentToTimes($admin, ReminderDigest::class, 1);
+        Notification::assertSentTo($admin, ReminderDigest::class, function (ReminderDigest $digest) {
+            return $digest->kind === ReminderDigest::DOMAINS
+                && $digest->records->count() === 4;
+        });
+    }
+
+    /** Nobody wants a mail that says nothing is wrong. */
+    public function test_a_quiet_morning_sends_no_mail(): void
+    {
+        Notification::fake();
+        User::factory()->admin()->create();
+
+        $this->domain('rustig.nl', ['expires_at' => now()->addYear()->toDateString()]);
+
+        $this->artisan(SendDomainExpiryReminders::class)->assertSuccessful();
+
+        Notification::assertNothingSent();
     }
 
     public function test_the_dashboard_deck_lists_domains_that_need_attention(): void
