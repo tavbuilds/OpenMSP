@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\WritesInTheirLanguage;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -11,12 +13,13 @@ use Illuminate\Support\Str;
  * Portal-authenticatable contact person for a company.
  * Magic-link login only (no password). Separate from Filament admin Users.
  */
-class Contact extends Authenticatable
+class Contact extends Authenticatable implements HasLocalePreference
 {
     use Notifiable;
+    use WritesInTheirLanguage;
 
     protected $fillable = [
-        'company_id', 'name', 'email', 'phone', 'job_title', 'is_primary',
+        'company_id', 'name', 'email', 'language', 'phone', 'job_title', 'is_primary',
         'portal_last_login_at', 'is_demo',
     ];
 

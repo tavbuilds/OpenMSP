@@ -7,6 +7,7 @@ use App\Enums\PlannedTaskStatus;
 use App\Models\PlannedTask;
 use App\Models\User;
 use App\Notifications\PlannedTaskDeadlineReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -87,6 +88,6 @@ class PlannedTaskNotificationTest extends TestCase
 
         $this->artisan('planning:send-deadline-reminders')->assertSuccessful();
 
-        Notification::assertSentTo($assignee, PlannedTaskDeadlineReminder::class);
+        Notification::assertSentTo($assignee, ReminderDigest::class);
     }
 }

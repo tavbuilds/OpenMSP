@@ -4,8 +4,9 @@ namespace App\Console\Commands;
 
 use App\Models\Domain;
 use App\Models\User;
-use App\Notifications\DomainExpiryReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Notification;
 
 /**
@@ -16,7 +17,7 @@ class SendDomainExpiryReminders extends Command
 {
     protected $signature = 'domains:send-expiry-reminders';
 
-    protected $description = 'Send internal domain expiry reminders (30/14/7/1 days and expired).';
+    protected $description = 'Send one internal digest of the domains due (30/14/7/1 days and expired).';
 
     public function handle(): int
     {
@@ -27,27 +28,40 @@ class SendDomainExpiryReminders extends Command
             return self::SUCCESS;
         }
 
-        $sent = 0;
+        /** @var Collection<int, Domain> $due */
+        $due = new Collection;
+        $context = [];
 
         // A domain the registrar no longer lists is nothing to chase.
-        $due = Domain::query()
+        $domains = Domain::query()
             ->with('company')
             ->present()
             ->whereRaw(Domain::ACTIONABLE_DATE.' is not null')
             ->get();
 
-        foreach ($due as $domain) {
+        foreach ($domains as $domain) {
             $which = $domain->dueNotification();
             if ($which === null) {
                 continue;
             }
 
-            Notification::send($staff, new DomainExpiryReminder($domain, $which));
+            $due->push($domain);
+            $context[$domain->getKey()] = ['days' => $which === 'expired' ? null : (int) $which];
+
             $domain->markNotified($which);
-            $sent++;
         }
 
-        $this->info("{$sent} domain reminder(s) sent.");
+        if ($due->isEmpty()) {
+            $this->info('Nothing due.');
+
+            return self::SUCCESS;
+        }
+
+        // One mail for the lot: six of these landing in the same minute
+        // is how an inbox teaches someone to ignore all six.
+        Notification::send($staff, new ReminderDigest(ReminderDigest::DOMAINS, $due, $context));
+
+        $this->info($due->count().' domain(s) in one digest to '.$staff->count().' recipient(s).');
 
         return self::SUCCESS;
     }

@@ -9,7 +9,7 @@ use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\User;
 use App\Notifications\ContractRenewalReminder;
-use App\Notifications\CustomerContractReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -85,8 +85,8 @@ class RenewalNotificationTest extends TestCase
 
         $this->artisan('contracts:send-renewal-reminders')->assertSuccessful();
 
-        Notification::assertSentTo($contactOn, CustomerContractReminder::class);
-        Notification::assertNotSentTo($contactOff, CustomerContractReminder::class);
+        Notification::assertSentTo($contactOn, ReminderDigest::class);
+        Notification::assertNotSentTo($contactOff, ReminderDigest::class);
         $this->assertFalse($contractMuted->fresh()->shouldNotifyCustomer());
         $this->assertTrue($contractOn->fresh()->shouldNotifyCustomer());
         Notification::assertSentTo($admin, ContractRenewalReminder::class);

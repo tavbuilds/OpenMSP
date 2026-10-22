@@ -7,7 +7,7 @@ use App\Models\Company;
 use App\Models\Contact;
 use App\Models\Endpoint;
 use App\Models\User;
-use App\Notifications\EndpointExpiryReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
@@ -53,11 +53,12 @@ class EndpointNotificationTest extends TestCase
 
         $this->artisan('endpoints:send-expiry-reminders')->assertSuccessful();
 
-        Notification::assertSentTo($admin, EndpointExpiryReminder::class, function ($n) use ($on) {
-            return $n->endpoint->is($on) && $n->which === 'expired';
+        Notification::assertSentTo($admin, ReminderDigest::class, function (ReminderDigest $d) use ($on) {
+            return $d->records->contains(fn ($e) => $e->is($on))
+                && $d->context[$on->getKey()]['days'] === null;
         });
-        Notification::assertNotSentTo($admin, EndpointExpiryReminder::class, function ($n) use ($off) {
-            return $n->endpoint->is($off);
+        Notification::assertSentTo($admin, ReminderDigest::class, function (ReminderDigest $d) use ($off) {
+            return ! $d->records->contains(fn ($e) => $e->is($off));
         });
         $this->assertNotNull($on->fresh()->expired_notified_at);
 
@@ -94,11 +95,11 @@ class EndpointNotificationTest extends TestCase
 
         $this->artisan('endpoints:send-expiry-reminders')->assertSuccessful();
 
-        Notification::assertSentTo($contact, EndpointExpiryReminder::class, function ($n) {
-            return $n->forCustomer === true && $n->endpoint->name === 'With customer';
-        });
-        Notification::assertNotSentTo($contact, EndpointExpiryReminder::class, function ($n) {
-            return $n->endpoint->name === 'Staff only';
+        // The customer's digest holds theirs and only theirs.
+        Notification::assertSentToTimes($contact, ReminderDigest::class, 1);
+        Notification::assertSentTo($contact, ReminderDigest::class, function (ReminderDigest $d) {
+            return $d->forCustomer === true
+                && $d->records->pluck('name')->all() === ['With customer'];
         });
     }
 }

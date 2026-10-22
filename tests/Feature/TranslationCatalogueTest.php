@@ -85,7 +85,11 @@ class TranslationCatalogueTest extends TestCase
     }
 
     /**
-     * Every literal passed to __() in application code and views.
+     * Every literal passed to __() or trans_choice() in code and views.
+     *
+     * trans_choice keys are looked up whole, pluralisation and all, so a
+     * missing one falls back to English exactly like any other — and is
+     * just as easy to miss, which is why they are scanned here too.
      *
      * @return list<string>
      */
@@ -103,9 +107,11 @@ class TranslationCatalogueTest extends TestCase
 
                 $contents = (string) file_get_contents($file->getPathname());
 
-                // __('...') and __("...") with no interpolation.
-                preg_match_all('/__\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'/', $contents, $single);
-                preg_match_all('/__\(\s*"((?:[^"\\\\$]|\\\\.)*)"/', $contents, $double);
+                // __('...'), trans_choice('...'), and the double-quoted
+                // forms, all with no interpolation.
+                $call = '(?:__|trans_choice)';
+                preg_match_all('/'.$call.'\(\s*\'((?:[^\'\\\\]|\\\\.)*)\'/', $contents, $single);
+                preg_match_all('/'.$call.'\(\s*"((?:[^"\\\\$]|\\\\.)*)"/', $contents, $double);
 
                 foreach ($single[1] as $match) {
                     $found[] = str_replace("\\'", "'", $match);

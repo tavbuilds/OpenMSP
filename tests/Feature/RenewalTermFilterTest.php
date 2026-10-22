@@ -9,7 +9,7 @@ use App\Models\Contact;
 use App\Models\Contract;
 use App\Models\User;
 use App\Notifications\ContractRenewalReminder;
-use App\Notifications\CustomerContractReminder;
+use App\Notifications\ReminderDigest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
@@ -140,7 +140,7 @@ class RenewalTermFilterTest extends TestCase
 
         $this->artisan('contracts:send-renewal-reminders')->assertSuccessful();
 
-        Notification::assertSentTo($contact, CustomerContractReminder::class);
+        Notification::assertSentTo($contact, ReminderDigest::class);
         Notification::assertSentTimes(ContractRenewalReminder::class, 1);
     }
 }

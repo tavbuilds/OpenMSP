@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Enums\UserRole;
 use App\Support\Breakpoints;
+use App\Support\LocaleCatalog;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -25,6 +26,12 @@ class UserForm
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->maxLength(255),
+                Select::make('language')
+                    ->label(__('Language'))
+                    ->options(LocaleCatalog::options())
+                    ->placeholder(__('Platform default'))
+                    ->native(false)
+                    ->helperText(__('The language reminders and other emails are written in.')),
                 Select::make('role')
                     ->label(__('Role'))
                     ->options(UserRole::class)
