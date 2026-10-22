@@ -690,5 +690,6 @@
   "Your passkey is the second step. Use it to finish signing in.": "A sua chave de acesso é o segundo passo. Use-a para terminar o início de sessão.",
   "Your passkeys": "As suas chaves de acesso",
   "Your password": "A sua palavra-passe",
-  "or": "ou"
+  "or": "ou",
+  "Last used :date": "Última utilização :date"
 }
