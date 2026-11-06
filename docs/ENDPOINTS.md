@@ -39,6 +39,12 @@ URL, hostname, or a name that is itself a domain. Certificate and domain
 expiry notifications on that monitor are turned off, because OpenMSP sends
 the 30/14/7/1 and expired reminders. A downtime channel that was already
 on the monitor stays. Two monitors for the same address are left alone.
+A domain that fails is tried up to 3 times. The ones that still fail are
+marked on the endpoint. **Submit failed domains again** on the endpoints
+list and on **Catalog → Uptime Kuma** sends only those. `failed_only: true`
+does the same on the API. Select rows on the endpoints list and use
+**Submit selection to Uptime Kuma** to send that batch in one go.
+`endpoint_ids` does the same on the API.
 
 The API key only reads `GET /metrics`. The dashboard login is what adds
 the webhook. Kuma 2.x is supported. A login with two-factor authentication

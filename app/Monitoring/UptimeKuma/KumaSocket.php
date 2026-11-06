@@ -13,6 +13,15 @@ use Illuminate\Support\Facades\Http;
  */
 class KumaSocket
 {
+    /**
+     * A new monitor makes Kuma emit heartbeats, uptime and certificate
+     * packets before it acknowledges getMonitor. The ack is often far past
+     * the first handful of packets, so the wait is counted in polls.
+     */
+    private const ACK_POLLS = 15;
+
+    private const ACK_WAIT_SECONDS = 20;
+
     private ?string $sid = null;
 
     private int $ack = 0;
@@ -63,8 +72,28 @@ class KumaSocket
         );
         $this->post($packet);
 
-        for ($attempt = 0; $attempt < 12; $attempt++) {
-            $incoming = $this->nextPacket();
+        $deadline = microtime(true) + self::ACK_WAIT_SECONDS;
+        $polls = 0;
+
+        while (true) {
+            if ($this->inbox === []) {
+                if ($polls >= self::ACK_POLLS || microtime(true) >= $deadline) {
+                    break;
+                }
+
+                $this->fillInbox();
+                $polls++;
+                if ($this->inbox === []) {
+                    continue;
+                }
+            }
+
+            $incoming = array_shift($this->inbox);
+            if ($incoming === '2') {
+                $this->post('3');
+
+                continue;
+            }
             if (! str_starts_with($incoming, '4')) {
                 continue;
             }
@@ -125,17 +154,13 @@ class KumaSocket
         }
     }
 
-    private function nextPacket(): string
+    /**
+     * A ping answered while reading can carry the acknowledgement in the
+     * POST body. Merge it back. Assigning the poll over the inbox drops it.
+     */
+    private function fillInbox(): void
     {
-        if ($this->inbox === []) {
-            $this->inbox = $this->pull();
-        }
-
-        if ($this->inbox === []) {
-            throw new UptimeKumaException('Uptime Kuma closed the socket.');
-        }
-
-        return array_shift($this->inbox);
+        $this->inbox = array_merge($this->inbox, $this->pull());
     }
 
     /**
@@ -275,6 +300,10 @@ class KumaSocket
 
         $decoded = json_decode($rest, true);
         if (! is_array($decoded) || ! isset($decoded[0]) || ! is_string($decoded[0])) {
+            return;
+        }
+
+        if (! in_array($decoded[0], ['monitorList', 'notificationList'], true)) {
             return;
         }
 

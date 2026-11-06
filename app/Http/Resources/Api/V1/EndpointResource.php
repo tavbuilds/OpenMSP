@@ -46,6 +46,8 @@ class EndpointResource extends JsonResource
             'notify_1' => (bool) $this->notify_1,
             'notify_expired' => (bool) $this->notify_expired,
             'notify_customer' => (bool) $this->notify_customer,
+            'kuma_push_failed_at' => $this->kuma_push_failed_at?->toIso8601String(),
+            'kuma_push_error' => $this->kuma_push_error,
             'webhook_url' => $this->when($this->withWebhook, fn () => $this->webhookUrl()),
             'created_at' => $this->created_at?->toIso8601String(),
             'updated_at' => $this->updated_at?->toIso8601String(),
