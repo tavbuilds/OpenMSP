@@ -30,11 +30,10 @@ class ViewEndpoint extends ViewRecord
 
                     try {
                         $report = app(UptimeKumaWebhooks::class)->push($record->id);
-                        Notification::make()
+                        $notification = Notification::make()
                             ->title(__('Webhook URLs sent to Uptime Kuma'))
-                            ->body(UptimeKumaWebhooks::summary($report))
-                            ->success()
-                            ->send();
+                            ->body(UptimeKumaWebhooks::summary($report));
+                        ($report['failed_count'] > 0 ? $notification->warning() : $notification->success())->send();
                     } catch (UptimeKumaException $e) {
                         Notification::make()
                             ->title(__('Could not add the webhook URLs'))

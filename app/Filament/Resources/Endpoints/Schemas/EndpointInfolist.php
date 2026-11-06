@@ -54,6 +54,16 @@ class EndpointInfolist
                         ->label(__('Last webhook'))
                         ->dateTime('M j, Y H:i')
                         ->placeholder(__('None yet')),
+                    TextEntry::make('kuma_push_failed_at')
+                        ->label(__('Kuma push failed'))
+                        ->dateTime('M j, Y H:i')
+                        ->placeholder(__('—'))
+                        ->visible(fn (Endpoint $record): bool => $record->kuma_push_failed_at !== null),
+                    TextEntry::make('kuma_push_error')
+                        ->label(__('Last Kuma error'))
+                        ->placeholder(__('—'))
+                        ->visible(fn (Endpoint $record): bool => filled($record->kuma_push_error))
+                        ->columnSpanFull(),
                     TextEntry::make('last_payload')
                         ->label(__('Last payload'))
                         ->formatStateUsing(fn ($state) => $state

@@ -54,6 +54,7 @@ class Endpoint extends Model
             'notify_customer' => 'boolean',
             'sent_offsets' => 'array',
             'expired_notified_at' => 'datetime',
+            'kuma_push_failed_at' => 'datetime',
             'is_demo' => 'boolean',
         ];
     }

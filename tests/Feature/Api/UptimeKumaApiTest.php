@@ -568,6 +568,279 @@ PROM;
         $this->assertSame([], $this->packets('editMonitor'));
     }
 
+    public function test_push_reads_the_monitor_ack_after_a_heartbeat_burst(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create([
+            'name' => 'Mail',
+            'url' => 'https://mail.example.com',
+        ]);
+
+        $ack = '432'.json_encode([[
+            'ok' => true,
+            'monitor' => [
+                'id' => 3,
+                'name' => 'Mail',
+                'url' => 'https://mail.example.com',
+                'expiryNotification' => true,
+                'domainExpiryNotification' => true,
+                'notificationIDList' => [],
+            ],
+        ]]);
+        $packets = [];
+        for ($i = 0; $i < 30; $i++) {
+            $packets[] = '42'.json_encode(['heartbeat', ['monitorID' => 3, 'status' => 1]]);
+        }
+        $packets[] = $ack;
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '3' => ['id' => 3, 'name' => 'Mail', 'url' => 'https://mail.example.com'],
+            ], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            implode("\x1e", $packets),
+            'ok',
+            '433'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.attached', 1)
+            ->assertJsonPath('data.failed_count', 0)
+            ->assertJsonPath('data.monitors_created', 0);
+
+        Http::assertSentCount(11);
+        $this->assertFalse($this->packet('editMonitor')[1]['expiryNotification']);
+    }
+
+    public function test_push_continues_after_one_endpoint_fails(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create(['name' => 'sandraklaas.nl']);
+        Endpoint::create(['name' => 'feestverbeteraar.nl']);
+
+        $rejected = json_encode([['ok' => false, 'msg' => 'monitor rejected']]);
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.$rejected,
+            'ok',
+            '433'.$rejected,
+            'ok',
+            '434'.$rejected,
+            'ok',
+            '435'.json_encode([['ok' => true, 'id' => 10]]),
+            'ok',
+            '436'.json_encode([['ok' => true, 'monitorID' => 16]]),
+            'ok',
+            '437'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 16,
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '438'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 2)
+            ->assertJsonPath('data.monitors_created', 1)
+            ->assertJsonPath('data.attached', 1)
+            ->assertJsonPath('data.failed_count', 1)
+            ->assertJsonPath('data.failed.0', 'sandraklaas.nl: monitor rejected');
+
+        $added = $this->packets('add');
+        $this->assertCount(4, $added);
+        $this->assertSame('https://sandraklaas.nl', $added[0][1]['url']);
+        $this->assertSame('https://sandraklaas.nl', $added[1][1]['url']);
+        $this->assertSame('https://sandraklaas.nl', $added[2][1]['url']);
+        $this->assertSame('https://feestverbeteraar.nl', $added[3][1]['url']);
+
+        $failed = Endpoint::query()->where('name', 'sandraklaas.nl')->first();
+        $this->assertNotNull($failed);
+        $this->assertNotNull($failed->kuma_push_failed_at);
+        $this->assertSame('monitor rejected', $failed->kuma_push_error);
+        $this->assertNull(Endpoint::query()->where('name', 'feestverbeteraar.nl')->first()?->kuma_push_error);
+    }
+
+    public function test_push_retries_a_failed_domain_and_then_succeeds(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create(['name' => 'sandraklaas.nl']);
+        $endpoint->forceFill([
+            'kuma_push_error' => 'earlier',
+            'kuma_push_failed_at' => now()->subHour(),
+        ])->save();
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.json_encode([['ok' => false, 'msg' => 'monitor rejected']]),
+            'ok',
+            '433'.json_encode([['ok' => true, 'monitorID' => 15]]),
+            'ok',
+            '434'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '435'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.failed_count', 0)
+            ->assertJsonPath('data.monitors_created', 1)
+            ->assertJsonPath('data.attached', 1);
+
+        $endpoint->refresh();
+        $this->assertNull($endpoint->kuma_push_error);
+        $this->assertNull($endpoint->kuma_push_failed_at);
+        $this->assertCount(2, $this->packets('add'));
+    }
+
+    public function test_push_failed_only_resubmits_the_domains_that_failed(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $failed = Endpoint::create(['name' => 'sandraklaas.nl']);
+        $failed->forceFill([
+            'kuma_push_error' => 'monitor rejected',
+            'kuma_push_failed_at' => now(),
+        ])->save();
+        Endpoint::create(['name' => 'feestverbeteraar.nl']);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.json_encode([['ok' => true, 'monitorID' => 15]]),
+            'ok',
+            '433'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '434'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks', ['failed_only' => true])
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 1)
+            ->assertJsonPath('data.attached', 1)
+            ->assertJsonPath('data.failed_count', 0);
+
+        $this->assertSame(['https://sandraklaas.nl'], array_map(
+            fn (array $packet) => $packet[1]['url'],
+            $this->packets('add'),
+        ));
+        $failed->refresh();
+        $this->assertNull($failed->kuma_push_error);
+    }
+
+    public function test_push_failed_only_with_nothing_waiting_does_not_open_kuma(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create(['name' => 'sandraklaas.nl']);
+
+        Http::fake();
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks', ['failed_only' => true])
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 0)
+            ->assertJsonPath('data.failed_count', 0);
+
+        Http::assertNothingSent();
+    }
+
+    public function test_push_endpoint_ids_sends_only_the_selection(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $selected = Endpoint::create(['name' => 'sandraklaas.nl']);
+        $other = Endpoint::create(['name' => 'feestverbeteraar.nl']);
+        $other->forceFill([
+            'kuma_push_error' => 'monitor rejected',
+            'kuma_push_failed_at' => now(),
+        ])->save();
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.json_encode([['ok' => true, 'monitorID' => 15]]),
+            'ok',
+            '433'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '434'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks', [
+            'endpoint_ids' => [$selected->id],
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 1)
+            ->assertJsonPath('data.attached', 1)
+            ->assertJsonPath('data.failed_count', 0);
+
+        $this->assertSame(['https://sandraklaas.nl'], array_map(
+            fn (array $packet) => $packet[1]['url'],
+            $this->packets('add'),
+        ));
+        $other->refresh();
+        $this->assertSame('monitor rejected', $other->kuma_push_error);
+    }
+
+    public function test_push_endpoint_ids_empty_does_not_open_kuma(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create(['name' => 'sandraklaas.nl']);
+
+        Http::fake();
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks', ['endpoint_ids' => []])
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 0);
+
+        Http::assertNothingSent();
+    }
+
     public function test_push_without_a_login_explains_that_the_api_key_is_not_enough(): void
     {
         Sanctum::actingAs(User::factory()->admin()->create());

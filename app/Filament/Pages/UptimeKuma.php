@@ -163,6 +163,39 @@ class UptimeKuma extends Page implements HasSchemas
                             ->send();
                     }
                 }),
+            Action::make('retryFailed')
+                ->label(__('Submit failed domains again'))
+                ->color('warning')
+                ->requiresConfirmation()
+                ->modalHeading(__('Submit the failed domains to Uptime Kuma again?'))
+                ->modalDescription(__('OpenMSP sends only the domains whose last push to Uptime Kuma failed. Each domain is tried up to 3 times.'))
+                ->action(function (): void {
+                    try {
+                        $report = app(UptimeKumaWebhooks::class)->push(failedOnly: true);
+                    } catch (UptimeKumaException $e) {
+                        Notification::make()
+                            ->title(__('Could not add the webhook URLs'))
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
+                    if ($report['endpoints'] === 0) {
+                        Notification::make()
+                            ->title(__('No domains are waiting for another try.'))
+                            ->info()
+                            ->send();
+
+                        return;
+                    }
+
+                    $notification = Notification::make()
+                        ->title(__('Webhook URLs sent to Uptime Kuma'))
+                        ->body(UptimeKumaWebhooks::summary($report));
+                    ($report['failed_count'] > 0 ? $notification->warning() : $notification->success())->send();
+                }),
             Action::make('webhooks')
                 ->label(__('Add webhook URLs'))
                 ->requiresConfirmation()
@@ -171,11 +204,10 @@ class UptimeKuma extends Page implements HasSchemas
                 ->action(function (): void {
                     try {
                         $report = app(UptimeKumaWebhooks::class)->push();
-                        Notification::make()
+                        $notification = Notification::make()
                             ->title(__('Webhook URLs sent to Uptime Kuma'))
-                            ->body(UptimeKumaWebhooks::summary($report))
-                            ->success()
-                            ->send();
+                            ->body(UptimeKumaWebhooks::summary($report));
+                        ($report['failed_count'] > 0 ? $notification->warning() : $notification->success())->send();
                     } catch (UptimeKumaException $e) {
                         Notification::make()
                             ->title(__('Could not add the webhook URLs'))

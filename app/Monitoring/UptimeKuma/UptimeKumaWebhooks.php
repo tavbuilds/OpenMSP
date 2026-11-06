@@ -19,12 +19,15 @@ use Illuminate\Support\Collection;
  */
 class UptimeKumaWebhooks
 {
+    private const ATTEMPTS = 3;
+
     public function __construct(private UptimeKumaClient $client) {}
 
     /**
+     * @param  list<int>|null  $endpointIds  Only these endpoints. Null means no id filter. An empty list sends nothing.
      * @return array<string, mixed>
      */
-    public function push(?int $endpointId = null): array
+    public function push(?int $endpointId = null, bool $failedOnly = false, ?array $endpointIds = null): array
     {
         $username = PlatformSettings::get(PlatformSettings::UPTIME_KUMA_USERNAME);
         $password = PlatformSettings::get(PlatformSettings::UPTIME_KUMA_PASSWORD);
@@ -32,17 +35,44 @@ class UptimeKumaWebhooks
             throw new UptimeKumaException('Set the Uptime Kuma base URL, username and password. The API key only reads /metrics and cannot add a webhook.');
         }
 
-        $socket = new KumaSocket((string) $this->client->baseUrl());
-        $socket->login((string) $username, (string) $password);
-
-        $monitors = $this->monitors($socket);
-        $notifications = $this->notifications($socket);
+        // A single id wins over a selection, matching the API.
+        if ($endpointId !== null) {
+            $endpointIds = null;
+        } elseif (is_array($endpointIds)) {
+            $endpointIds = array_values(array_unique(array_filter(
+                array_map(static fn (mixed $id): int => (int) $id, $endpointIds),
+                static fn (int $id): bool => $id > 0,
+            )));
+            if ($endpointIds === []) {
+                return $this->emptyReport();
+            }
+        }
 
         $query = Endpoint::query()->orderBy('id');
         if ($endpointId !== null) {
             $query->whereKey($endpointId);
+        } elseif (is_array($endpointIds)) {
+            $query->whereKey($endpointIds);
+        } elseif ($failedOnly) {
+            $query->whereNotNull('kuma_push_failed_at');
         }
         $endpoints = $query->get();
+        // A retry of nothing has no reason to open Kuma. A full push still
+        // logs in, so a bad password or two-factor prompt is reported even
+        // when the catalog is empty.
+        if ($endpoints->isEmpty() && ($failedOnly || is_array($endpointIds))) {
+            return $this->emptyReport();
+        }
+
+        $socket = new KumaSocket((string) $this->client->baseUrl());
+        $socket->login((string) $username, (string) $password);
+
+        if ($endpoints->isEmpty()) {
+            return $this->emptyReport();
+        }
+
+        $monitors = $this->monitors($socket);
+        $notifications = $this->notifications($socket);
 
         $attached = 0;
         $created = 0;
@@ -51,9 +81,29 @@ class UptimeKumaWebhooks
         $monitorsCreated = 0;
         $unmatched = [];
         $ambiguous = [];
+        $failed = [];
 
         foreach ($endpoints as $endpoint) {
-            $outcome = $this->pushOne($socket, $endpoint, $monitors, $notifications);
+            $outcome = null;
+            $lastError = null;
+            for ($attempt = 1; $attempt <= self::ATTEMPTS; $attempt++) {
+                try {
+                    $outcome = $this->pushOne($socket, $endpoint, $monitors, $notifications);
+                    $lastError = null;
+                    break;
+                } catch (UptimeKumaException $e) {
+                    $lastError = $e;
+                }
+            }
+
+            if ($lastError !== null) {
+                $this->markFailed($endpoint, $lastError);
+                $failed[] = $endpoint->name.': '.$lastError->getMessage();
+
+                continue;
+            }
+
+            $this->markPushed($endpoint);
             $created += $outcome['created'];
             $updated += $outcome['updated'];
             $monitorsCreated += $outcome['monitors_created'];
@@ -84,6 +134,8 @@ class UptimeKumaWebhooks
             'unmatched' => array_slice($unmatched, 0, 50),
             'ambiguous_count' => count($ambiguous),
             'ambiguous' => array_slice($ambiguous, 0, 50),
+            'failed_count' => count($failed),
+            'failed' => array_slice($failed, 0, 50),
         ];
     }
 
@@ -92,7 +144,7 @@ class UptimeKumaWebhooks
      */
     public static function summary(array $report): string
     {
-        return __(':attached attached, :created new, :updated replaced, :unchanged already in place, :monitors monitors created, :unmatched without a URL, :ambiguous ambiguous.', [
+        $text = __(':attached attached, :created new, :updated replaced, :unchanged already in place, :monitors monitors created, :unmatched without a URL, :ambiguous ambiguous.', [
             'attached' => $report['attached'],
             'created' => $report['created'],
             'updated' => $report['updated'],
@@ -101,6 +153,53 @@ class UptimeKumaWebhooks
             'unmatched' => $report['unmatched_count'],
             'ambiguous' => $report['ambiguous_count'],
         ]);
+
+        if (($report['failed_count'] ?? 0) > 0) {
+            $text .= ' '.__(':failed could not be completed.', ['failed' => $report['failed_count']]);
+        }
+
+        return $text;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function emptyReport(): array
+    {
+        return [
+            'endpoints' => 0,
+            'attached' => 0,
+            'created' => 0,
+            'updated' => 0,
+            'unchanged' => 0,
+            'monitors_created' => 0,
+            'unmatched_count' => 0,
+            'unmatched' => [],
+            'ambiguous_count' => 0,
+            'ambiguous' => [],
+            'failed_count' => 0,
+            'failed' => [],
+        ];
+    }
+
+    private function markFailed(Endpoint $endpoint, UptimeKumaException $e): void
+    {
+        $endpoint->forceFill([
+            'kuma_push_error' => mb_substr($e->getMessage(), 0, 1000),
+            'kuma_push_failed_at' => now(),
+        ])->save();
+    }
+
+    private function markPushed(Endpoint $endpoint): void
+    {
+        if ($endpoint->kuma_push_failed_at === null && $endpoint->kuma_push_error === null) {
+            return;
+        }
+
+        $endpoint->forceFill([
+            'kuma_push_error' => null,
+            'kuma_push_failed_at' => null,
+        ])->save();
     }
 
     /**

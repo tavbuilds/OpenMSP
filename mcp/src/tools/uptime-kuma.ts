@@ -56,9 +56,14 @@ export function registerUptimeKuma(server: McpServer, client: MspClient): void {
 
   server.tool(
     "push_uptime_kuma_webhooks",
-    "Create each endpoint webhook in Uptime Kuma and attach it (admin/manager). Creates the HTTPS monitor when none matches the URL, hostname or domain-like name. Turns certificate and domain expiry notifications off. Requires the dashboard login.",
+    "Create each endpoint webhook in Uptime Kuma and attach it (admin/manager). Creates the HTTPS monitor when none matches. Tries a failure up to 3 times. failed_only resubmits domains that still failed. endpoint_ids sends only that selection. Requires the dashboard login.",
     {
       endpoint_id: z.number().int().optional().describe("Only this endpoint. Omit for every endpoint"),
+      endpoint_ids: z
+        .array(z.number().int())
+        .optional()
+        .describe("Only these endpoints. Omit for every endpoint"),
+      failed_only: z.boolean().optional().describe("Only domains whose last push failed. Default false"),
     },
     async (args) => {
       try {

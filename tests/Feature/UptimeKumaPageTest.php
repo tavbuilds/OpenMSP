@@ -3,9 +3,13 @@
 namespace Tests\Feature;
 
 use App\Filament\Pages\UptimeKuma;
+use App\Filament\Resources\Endpoints\Pages\ListEndpoints;
+use App\Filament\Resources\Endpoints\Tables\EndpointsTable;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\PlatformSettings;
+use Filament\Notifications\Notification;
+use Filament\Tables\Table;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -74,6 +78,61 @@ class UptimeKumaPageTest extends TestCase
             ->assertHasErrors(['data.base_url']);
 
         $this->assertNull(PlatformSettings::get(PlatformSettings::UPTIME_KUMA_BASE_URL));
+    }
+
+    public function test_failed_domains_can_be_submitted_again_from_the_catalog(): void
+    {
+        PlatformSettings::markOnboardingComplete();
+        $admin = User::factory()->admin()->create();
+        $this->actingAs($admin);
+        PlatformSettings::set(PlatformSettings::UPTIME_KUMA_BASE_URL, 'https://kuma.test');
+        PlatformSettings::set(PlatformSettings::UPTIME_KUMA_USERNAME, 'kuma');
+        PlatformSettings::set(PlatformSettings::UPTIME_KUMA_PASSWORD, 'kuma-secret');
+
+        $this->get('/admin/uptime-kuma')
+            ->assertOk()
+            ->assertSee('Submit failed domains again');
+
+        Livewire::test(UptimeKuma::class)
+            ->callAction('retryFailed');
+
+        Notification::assertNotified('No domains are waiting for another try.');
+
+        $this->assertTrue($this->retryActionVisibleFor($admin));
+        $this->assertFalse($this->retryActionVisibleFor(User::factory()->sales()->create()));
+        $this->assertTrue($this->selectionActionVisibleFor($admin));
+        $this->assertFalse($this->selectionActionVisibleFor(User::factory()->sales()->create()));
+    }
+
+    private function retryActionVisibleFor(User $user): bool
+    {
+        $this->actingAs($user);
+
+        $page = new class extends ListEndpoints
+        {
+            public function retryVisible(): bool
+            {
+                foreach ($this->getHeaderActions() as $action) {
+                    if ($action->getName() === 'retryFailed') {
+                        return $action->isVisible();
+                    }
+                }
+
+                return false;
+            }
+        };
+
+        return $page->retryVisible();
+    }
+
+    private function selectionActionVisibleFor(User $user): bool
+    {
+        $this->actingAs($user);
+
+        $action = collect(EndpointsTable::configure(Table::make(new ListEndpoints))->getToolbarActions())
+            ->first(fn ($action) => $action->getName() === 'pushKuma');
+
+        return $action !== null && $action->isVisible();
     }
 
     public function test_sales_cannot_open_the_page(): void

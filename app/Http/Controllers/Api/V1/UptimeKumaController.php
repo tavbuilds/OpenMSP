@@ -135,10 +135,22 @@ class UptimeKumaController extends Controller
 
         $request->validate([
             'endpoint_id' => ['sometimes', 'nullable', 'integer', 'exists:endpoints,id'],
+            'endpoint_ids' => ['sometimes', 'array'],
+            'endpoint_ids.*' => ['integer', 'distinct', 'exists:endpoints,id'],
+            'failed_only' => ['sometimes', 'boolean'],
         ]);
 
+        $endpointId = $request->filled('endpoint_id') ? $request->integer('endpoint_id') : null;
+        $endpointIds = $endpointId === null && $request->exists('endpoint_ids')
+            ? $request->input('endpoint_ids')
+            : null;
+
         try {
-            $report = $webhooks->push($request->filled('endpoint_id') ? $request->integer('endpoint_id') : null);
+            $report = $webhooks->push(
+                $endpointId,
+                $request->boolean('failed_only') && $endpointId === null && $endpointIds === null,
+                is_array($endpointIds) ? $endpointIds : null,
+            );
         } catch (UptimeKumaException $e) {
             throw ValidationException::withMessages([
                 'uptime_kuma' => [$e->getMessage()],
