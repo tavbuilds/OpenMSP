@@ -21,7 +21,7 @@ class ViewEndpoint extends ViewRecord
                 ->color('warning')
                 ->requiresConfirmation()
                 ->modalHeading(__('Create a new webhook URL?'))
-                ->modalDescription(__('The old URL stops immediately. Paste the new URL into Uptime Kuma or your monitor.'))
+                ->modalDescription(__('The old URL stops immediately. Add the webhook URLs again so Uptime Kuma uses the new one.'))
                 ->visible(fn (): bool => auth()->user()?->canManageContracts() ?? false)
                 ->action(function (): void {
                     /** @var Endpoint $record */

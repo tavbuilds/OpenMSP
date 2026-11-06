@@ -8,15 +8,10 @@ Not a full CMDB: this is the MSP work queue for **recurring expiry dates**
 **Endpoints → New**. Optionally link a customer. Set the expiry by hand, or
 let a monitor fill it in.
 
-## Webhook (Uptime Kuma and similar)
+## Webhook (monitors that post JSON)
 
-The detail page shows a **Webhook URL**. In Uptime Kuma:
-
-1. Notifications → Webhook, content-type **JSON**.
-2. URL = this endpoint’s URL (not one global URL).
-3. Attach the notification to the HTTPS monitor for that certificate.
-
-The platform reads, among others:
+The detail page shows a **Webhook URL**. Use it when a monitor posts JSON
+itself. Each endpoint has its own URL. The platform reads, among others:
 
 | Field | Example |
 |-------|---------|
@@ -30,6 +25,21 @@ Unknown token: 404. CSRF is off; rate limit 60/min.
 
 A new expiry date resets the notice cycle (30/14/7/1 again). Rotating the
 token invalidates the old URL.
+
+## Uptime Kuma
+
+**Catalog → Uptime Kuma** stores the server address, the API key and the
+dashboard login.
+
+**Add webhook URLs** (also `push_uptime_kuma_webhooks`) creates one JSON
+webhook per endpoint and attaches it to the monitor with the same URL or
+hostname. Certificate and domain expiry notifications on that monitor are
+turned off, because OpenMSP sends the 30/14/7/1 and expired reminders.
+A downtime channel that was already on the monitor stays.
+
+The API key only reads `GET /metrics`. The dashboard login is what adds
+the webhook. Kuma 2.x is supported. A login with two-factor authentication
+is refused.
 
 ## Notices (per endpoint)
 
@@ -48,3 +58,20 @@ that step for **this** endpoint.
 
 An expiry date on the form is enough if you do not attach a monitor. Source
 stays “Manual” until the first webhook arrives.
+
+## Agent API
+
+`/api/v1/endpoints` (see `AGENT.md`). Create returns `webhook_url`. Lists omit
+it. `POST /api/v1/endpoints/{id}/rotate-webhook` replaces it.
+
+## Uptime Kuma API key
+
+Store the connection with `PUT /api/v1/integrations/uptime-kuma`
+(`base_url`, `api_key`, `username`, `password`, admin/manager). The key
+and the password are encrypted and are never returned.
+`POST /api/v1/integrations/uptime-kuma/webhooks` adds the webhook URLs.
+`POST /api/v1/integrations/uptime-kuma/sync` reads
+`monitor_cert_days_remaining` and writes the expiry onto the endpoint with
+the same URL or hostname. `create_missing: true` adds an endpoint for a
+certificate that does not match yet. The nightly job updates matches and
+does not create.

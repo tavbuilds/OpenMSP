@@ -9,7 +9,8 @@ Grok Build CLI) that spawn a process instead of calling HTTPS.
 
 It wraps the Laravel Agent API (`{MSP_API_BASE}/api/v1`) so those hosts can call
 companies, contacts, contracts, products, product components, purchase bundles,
-vendors, planned tasks, dashboard, and upcoming renewals as tools.
+vendors, planned tasks, domains, endpoints, Uptime Kuma, dashboard, and
+upcoming renewals as tools.
 
 Laravel is unchanged; this package lives under `mcp/` and talks over Sanctum
 Bearer tokens.

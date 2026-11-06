@@ -59,6 +59,10 @@ class McpEndpointTest extends TestCase
         $this->assertTrue($names->contains('get_dashboard'));
         $this->assertTrue($names->contains('list_companies'));
         $this->assertTrue($names->contains('create_planned_task'));
+        $this->assertTrue($names->contains('list_domains'));
+        $this->assertTrue($names->contains('create_endpoint'));
+        $this->assertTrue($names->contains('set_uptime_kuma'));
+        $this->assertTrue($names->contains('push_uptime_kuma_webhooks'));
         $this->assertGreaterThan(30, $names->count());
     }
 

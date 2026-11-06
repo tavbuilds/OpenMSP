@@ -4,11 +4,14 @@ use App\Http\Controllers\Api\V1\CompanyController;
 use App\Http\Controllers\Api\V1\ContactController;
 use App\Http\Controllers\Api\V1\ContractController;
 use App\Http\Controllers\Api\V1\DashboardController;
+use App\Http\Controllers\Api\V1\DomainController;
+use App\Http\Controllers\Api\V1\EndpointController;
 use App\Http\Controllers\Api\V1\PlannedTaskController;
 use App\Http\Controllers\Api\V1\ProductComponentController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\PurchaseBundleController;
 use App\Http\Controllers\Api\V1\TokenController;
+use App\Http\Controllers\Api\V1\UptimeKumaController;
 use App\Http\Controllers\Api\V1\VendorController;
 use Illuminate\Support\Facades\Route;
 
@@ -51,6 +54,20 @@ Route::prefix('v1')
         Route::get('planned-tasks/upcoming', [PlannedTaskController::class, 'upcoming']);
         Route::apiResource('planned-tasks', PlannedTaskController::class)
             ->parameters(['planned-tasks' => 'plannedTask']);
+
+        Route::get('domains/upcoming-expiries', [DomainController::class, 'upcoming']);
+        Route::post('domains/assign', [DomainController::class, 'assign']);
+        Route::apiResource('domains', DomainController::class);
+
+        Route::get('endpoints/upcoming', [EndpointController::class, 'upcoming']);
+        Route::post('endpoints/{endpoint}/rotate-webhook', [EndpointController::class, 'rotateWebhook']);
+        Route::apiResource('endpoints', EndpointController::class);
+
+        Route::get('integrations/uptime-kuma', [UptimeKumaController::class, 'show']);
+        Route::match(['put', 'patch'], 'integrations/uptime-kuma', [UptimeKumaController::class, 'update']);
+        Route::post('integrations/uptime-kuma/test', [UptimeKumaController::class, 'test']);
+        Route::post('integrations/uptime-kuma/sync', [UptimeKumaController::class, 'sync']);
+        Route::post('integrations/uptime-kuma/webhooks', [UptimeKumaController::class, 'pushWebhooks']);
 
         // Own Sanctum tokens only (list / create / revoke).
         Route::get('tokens', [TokenController::class, 'index']);

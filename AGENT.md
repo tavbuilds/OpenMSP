@@ -65,6 +65,13 @@ Token self-service (`/api/v1/tokens`) is **own-tokens-only**: any authenticated 
 | Upcoming renewals | `GET /api/v1/contracts/upcoming-renewals` |
 | Planned tasks | `/api/v1/planned-tasks` |
 | Upcoming planned tasks | `GET /api/v1/planned-tasks/upcoming` |
+| Domains | `/api/v1/domains` |
+| Upcoming domain expiries | `GET /api/v1/domains/upcoming-expiries` |
+| Assign domains | `POST /api/v1/domains/assign` |
+| Endpoints | `/api/v1/endpoints` |
+| Upcoming endpoint expiries | `GET /api/v1/endpoints/upcoming` |
+| Rotate endpoint webhook | `POST /api/v1/endpoints/{id}/rotate-webhook` |
+| Uptime Kuma | `/api/v1/integrations/uptime-kuma` |
 | Products | `/api/v1/products` |
 | Product components (BOM) | `/api/v1/product-components` (+ nested under products) |
 | Purchase bundles | `/api/v1/purchase-bundles` |
@@ -107,6 +114,10 @@ Read-only portfolio metrics. Formulas match Filament `PortfolioStats` / `Upcomin
 | `upcoming_renewals` | Short list (≤25) of active term renewals in the next **60** days (widget horizon) |
 | `upcoming_notice_deadlines` | Active term contracts whose computed `notice_deadline` falls within 60 days |
 | `upcoming_planned_tasks` | Open planned work (moves, migrations, on-site) due within 60 days, including overdue |
+| `domains_expiring_60d_count` | Domains still at the registrar whose actionable date is within 60 days or already past |
+| `upcoming_domain_expiries` | Short list (≤25) of those domains |
+| `endpoints_expiring_60d_count` | Endpoints with an expiry date within 60 days or already past |
+| `upcoming_endpoint_expiries` | Short list (≤25) of those endpoints |
 
 Do **not** invent alternate MRR/ARR math; use these fields or the same model accessors.
 
@@ -190,6 +201,68 @@ Moves, migrations, on-site jobs, and other dated work.
 | `sort` | `id`, `title`, `due_on`, `kind`, `status`, `priority`, `created_at`, `updated_at` |
 
 `GET /api/v1/planned-tasks/upcoming?days=60` returns open tasks due within the horizon (overdue included). Default sort: `due_on` ascending.
+
+### Domains
+
+A domain is not a contract. See [docs/DOMAINS.md](docs/DOMAINS.md). The list defaults to `lifecycle=present` (still at the registrar). Pass `lifecycle=removed` or `lifecycle=all` for the rest.
+
+| Param | Description |
+|-------|-------------|
+| `search` | name, extension, notes, registrar status; also company.name |
+| `company_id` | Exact customer FK |
+| `unassigned` | Boolean; `company_id` is null |
+| `source` | `manual` \| `openprovider` |
+| `extension` | Exact, e.g. `nl` |
+| `auto_renew` | Effective boolean |
+| `expired` | Boolean, on the actionable date (`renewal_date`, else `expires_at`) |
+| `expires_within` | Actionable date within N days, including already expired |
+| `lifecycle` | `present` (default) \| `removed` \| `all` |
+| `sort` | `id`, `name`, `extension`, `expires_at`, `renewal_date`, `status`, `auto_renew`, `company_id`, `source`, `removed_at`, `created_at`, `updated_at` |
+
+Default sort is the actionable date, soonest first. `GET /api/v1/domains/upcoming-expiries?days=60` is the dashboard horizon, present domains only.
+
+Create is for a domain typed in by hand (`source` is forced to `manual`). On an Openprovider domain, `name`, `extension`, `expires_at`, `renewal_date`, `auto_renew`, `status` and `product_id` are rejected when the value would change — the next sync would overwrite them. `company_id`, `notes`, `notes_visible_to_customer` and the `notify_*` toggles are yours.
+
+`POST /api/v1/domains/assign` body `{ "company_id": 1, "ids": [2, 3] }` (max 100). Sales+.
+
+Moving `expires_at` or `renewal_date` on a manual domain clears the reminder cycle.
+
+### Endpoints
+
+Certificate and other expiry monitors. See [docs/ENDPOINTS.md](docs/ENDPOINTS.md).
+
+| Param | Description |
+|-------|-------------|
+| `search` | name, hostname, url, notes; also company.name |
+| `company_id` | Exact customer FK |
+| `kind` | `certificate` \| `domain` \| `other` |
+| `source` | `manual` \| `webhook` \| `uptime_kuma` |
+| `status` | `ok` \| `warning` \| `expired` \| `unknown` (`last_status`) |
+| `expired` | Boolean, on `expires_at` |
+| `expires_within` | `expires_at` within N days, including already expired |
+| `sort` | `id`, `name`, `kind`, `hostname`, `expires_at`, `source`, `last_status`, `company_id`, `created_at`, `updated_at` |
+
+`webhook_url` (the per-endpoint Uptime Kuma URL) is returned on show, create, update and rotate. It is omitted from lists because it contains the token. `POST /api/v1/endpoints/{id}/rotate-webhook` (sales+) replaces it; the old URL 404s.
+
+A changed `expires_at` restarts the reminder cycle.
+
+### Uptime Kuma
+
+The API key from **Settings → Security → API Keys** authenticates `GET /metrics` (HTTP basic auth, the key is the password, the username is ignored). It does **not** create monitors or notifications.
+
+Adding webhook URLs uses the Kuma dashboard username and password over Socket.IO, the same interface as the Kuma UI. Store both under **Catalog → Uptime Kuma**, or with `PUT /api/v1/integrations/uptime-kuma` (`base_url`, `api_key`, `username`, `password`). The key and the password are encrypted and are never returned.
+
+`POST /api/v1/integrations/uptime-kuma/webhooks` (admin/manager, optional `endpoint_id`) creates a JSON webhook notification per endpoint and attaches it to the monitor with the same URL or hostname. Certificate expiry and domain expiry notifications on that monitor are turned off, because OpenMSP sends those reminders. Other notification channels already on the monitor are left as they are.
+
+| Method | Path | Who | Notes |
+|--------|------|-----|-------|
+| `GET` | `/api/v1/integrations/uptime-kuma` | any role | `base_url`, `api_key_set`, last sync. Never the key |
+| `PUT` / `PATCH` | `/api/v1/integrations/uptime-kuma` | admin/manager | `{ "base_url", "api_key", "username", "password" }`. Empty string clears that field. A trailing `/metrics` is stripped. The key and password are write-only |
+| `POST` | `/api/v1/integrations/uptime-kuma/test` | admin/manager | Scrapes `/metrics`, returns `cert_monitors` |
+| `POST` | `/api/v1/integrations/uptime-kuma/sync` | admin/manager | `{ "create_missing": false }`. Matches on URL, then hostname, and writes `expires_at` |
+| `POST` | `/api/v1/integrations/uptime-kuma/webhooks` | admin/manager | `{ "endpoint_id": 4 }` optional. Adds webhook URLs in Kuma |
+
+`create_missing: true` adds an endpoint for each certificate monitor that matches nothing. The nightly `uptime-kuma:sync` (06:50) updates matches and does not create. The key is encrypted at rest with the other platform secrets.
 
 ### Renewal reminder notifications (console only)
 
@@ -344,6 +417,19 @@ curl -sS -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/json"
   -H "Content-Type: application/json" \\
   -d '{"name":"ci-agent"}' \\
   "$APP_URL/api/v1/tokens"
+
+curl -sS -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" \\
+  "$APP_URL/api/v1/domains?unassigned=1&lifecycle=present"
+
+curl -sS -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -d '{"name":"vpn.example.nl","kind":"certificate","hostname":"vpn.example.nl"}' \\
+  "$APP_URL/api/v1/endpoints"
+
+curl -sS -X PUT -H "Authorization: Bearer $TOKEN" -H "Accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -d '{"base_url":"https://status.example","api_key":"uk2_…"}' \\
+  "$APP_URL/api/v1/integrations/uptime-kuma"
 ```
 
 ## Errors
@@ -378,8 +464,10 @@ curl -sS -X POST -H "Authorization: Bearer $TOKEN" \
 ```
 
 Tools match the Agent API (dashboard, companies, contacts, contracts, catalog,
-BOM, purchase bundles, vendors, planned tasks). RBAC is identical. Token
-self-service stays REST-only (`/api/v1/tokens`).
+BOM, purchase bundles, vendors, planned tasks, domains, endpoints, Uptime Kuma).
+RBAC is identical. Token self-service stays REST-only (`/api/v1/tokens`).
+`set_uptime_kuma`, `test_uptime_kuma`, `sync_uptime_kuma` and `push_uptime_kuma_webhooks` are admin/manager.
+The API key is write-only.
 
 An optional Node **stdio** sidecar under [`mcp/`](mcp/) still exists for local
 Cursor/CLI hosts that cannot call HTTP. Prefer `{APP_URL}/mcp` for Grok and any

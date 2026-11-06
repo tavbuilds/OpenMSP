@@ -131,6 +131,14 @@ a portfolio of ten extensions once produced two catalog entries.
 **Your sale price is yours.** It is seeded once from Openprovider's retail
 price and never overwritten again.
 
+## Agent API
+
+`/api/v1/domains` lists them (`lifecycle=present` by default).
+`GET /api/v1/domains/upcoming-expiries` is the 60-day watchlist.
+`POST /api/v1/domains/assign` sets the customer on many domains at once.
+A domain typed in by hand is `POST /api/v1/domains`. On a synced domain the
+API will not change expiry or auto-renew. See `AGENT.md`.
+
 ## API notes
 
 Base URL `https://api.openprovider.eu`, version path `/v1beta`. Both are

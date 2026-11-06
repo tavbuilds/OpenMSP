@@ -6,6 +6,8 @@ use App\Enums\BillingCycle;
 use App\Enums\ContractStatus;
 use App\Models\Company;
 use App\Models\Contract;
+use App\Models\Domain;
+use App\Models\Endpoint;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -84,6 +86,10 @@ class DashboardApiTest extends TestCase
         $this->assertIsArray($response->json('data.upcoming_renewals'));
         $this->assertIsArray($response->json('data.upcoming_notice_deadlines'));
         $this->assertIsArray($response->json('data.upcoming_planned_tasks'));
+        $this->assertIsArray($response->json('data.upcoming_domain_expiries'));
+        $this->assertIsArray($response->json('data.upcoming_endpoint_expiries'));
+        $response->assertJsonPath('data.domains_expiring_60d_count', 0);
+        $response->assertJsonPath('data.endpoints_expiring_60d_count', 0);
         $this->assertGreaterThanOrEqual(1, count($response->json('data.upcoming_renewals')));
     }
 
@@ -127,6 +133,30 @@ class DashboardApiTest extends TestCase
         $this->getJson('/api/v1/contracts/upcoming-renewals?days=60')
             ->assertOk()
             ->assertJsonCount(2, 'data');
+    }
+
+    public function test_dashboard_lists_domain_and_endpoint_expiries(): void
+    {
+        Sanctum::actingAs(User::factory()->viewer()->create());
+
+        $company = Company::create(['name' => 'Watch Co', 'country' => 'NL']);
+        Domain::create([
+            'company_id' => $company->id,
+            'name' => 'watch.nl',
+            'renewal_date' => now()->addDays(8)->toDateString(),
+        ]);
+        Endpoint::create([
+            'company_id' => $company->id,
+            'name' => 'VPN',
+            'expires_at' => now()->addDays(4)->toDateString(),
+        ]);
+
+        $this->getJson('/api/v1/dashboard')
+            ->assertOk()
+            ->assertJsonPath('data.domains_expiring_60d_count', 1)
+            ->assertJsonPath('data.upcoming_domain_expiries.0.name', 'watch.nl')
+            ->assertJsonPath('data.endpoints_expiring_60d_count', 1)
+            ->assertJsonPath('data.upcoming_endpoint_expiries.0.name', 'VPN');
     }
 
     public function test_viewer_cannot_post_contacts_but_can_read_dashboard(): void
