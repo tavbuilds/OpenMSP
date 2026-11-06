@@ -39,6 +39,9 @@ final class ToolCatalog
             self::purchaseBundles(),
             self::vendors(),
             self::plannedTasks(),
+            self::domains(),
+            self::endpoints(),
+            self::uptimeKuma(),
         );
     }
 
@@ -74,7 +77,7 @@ final class ToolCatalog
     private static function dashboard(): array
     {
         return [
-            self::tool('get_dashboard', 'Portfolio metrics (MRR/ARR/margin, active contracts, upcoming renewals and planning).', [], 'GET', '/dashboard'),
+            self::tool('get_dashboard', 'Portfolio metrics (MRR/ARR/margin, active contracts, upcoming renewals, domain and endpoint expiries, and planning).', [], 'GET', '/dashboard'),
             self::tool('list_upcoming_renewals', 'Active contracts renewing within N days (default 30, max 365).', [
                 'days' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
                 'per_page' => self::$pagination['per_page'],
@@ -378,6 +381,128 @@ final class ToolCatalog
             self::tool('create_planned_task', 'Create a planned task (sales+).', $fields, 'POST', '/planned-tasks', ['title', 'due_on']),
             self::tool('update_planned_task', 'Partial-update a planned task (sales+).', ['id' => self::id('Planned task id')] + $fields, 'PATCH', '/planned-tasks/{id}', ['id']),
             self::tool('delete_planned_task', 'Delete a planned task (admin/manager).', ['id' => self::id('Planned task id')], 'DELETE', '/planned-tasks/{id}', ['id']),
+        ];
+    }
+
+    /**
+     * @return list<Tool>
+     */
+    private static function domains(): array
+    {
+        $fields = [
+            'name' => ['type' => 'string', 'description' => 'Domain name, stored lowercased (required on create)'],
+            'extension' => ['type' => 'string', 'description' => 'Filled from the name when omitted'],
+            'company_id' => self::id('Customer id'),
+            'product_id' => self::id('Catalog product for this extension'),
+            'expires_at' => ['type' => 'string', 'description' => 'Registry expiry YYYY-MM-DD'],
+            'renewal_date' => ['type' => 'string', 'description' => 'Date to act on YYYY-MM-DD. Reminders use this, then expires_at'],
+            'auto_renew' => ['type' => 'boolean'],
+            'status' => ['type' => 'string', 'description' => 'Registrar status code, for a domain typed in by hand'],
+            'notes' => ['type' => 'string'],
+            'notes_visible_to_customer' => ['type' => 'boolean', 'description' => 'Off by default. A domain never emails the customer'],
+            'notify_30' => ['type' => 'boolean'],
+            'notify_14' => ['type' => 'boolean'],
+            'notify_7' => ['type' => 'boolean'],
+            'notify_1' => ['type' => 'boolean'],
+            'notify_expired' => ['type' => 'boolean'],
+        ];
+
+        return [
+            self::tool('list_domains', 'List/search domains. Default lifecycle=present hides domains the registrar no longer returns. Pass lifecycle=all or removed to see them.', self::$pagination + [
+                'company_id' => self::id('Customer id'),
+                'source' => ['type' => 'string', 'enum' => ['manual', 'openprovider']],
+                'extension' => ['type' => 'string', 'description' => 'e.g. nl or co.uk'],
+                'auto_renew' => ['type' => 'boolean'],
+                'unassigned' => ['type' => 'boolean', 'description' => 'Only domains with no customer'],
+                'expired' => ['type' => 'boolean'],
+                'expires_within' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 3650, 'description' => 'Actionable date within N days, including already expired'],
+                'lifecycle' => ['type' => 'string', 'enum' => ['present', 'removed', 'all'], 'description' => 'Default present'],
+            ], 'GET', '/domains'),
+            self::tool('list_upcoming_domain_expiries', 'Domains still at the registrar whose renewal (or expiry) falls within N days, including already expired. Default 60.', [
+                'days' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+                'per_page' => self::$pagination['per_page'],
+                'page' => self::$pagination['page'],
+            ], 'GET', '/domains/upcoming-expiries'),
+            self::tool('get_domain', 'Show a domain by id, including days until the actionable date.', ['id' => self::id('Domain id')], 'GET', '/domains/{id}', ['id']),
+            self::tool('create_domain', 'Create a domain typed in by hand (sales+). Openprovider domains arrive via sync, not this tool.', $fields, 'POST', '/domains', ['name']),
+            self::tool('update_domain', 'Partial-update a domain (sales+). On an Openprovider domain only the customer, notes and reminder toggles stick; expiry and auto-renew belong to the registrar.', ['id' => self::id('Domain id')] + $fields, 'PATCH', '/domains/{id}', ['id']),
+            self::tool('assign_domains', 'Assign many domains to one customer (sales+). This is the step after an Openprovider import.', [
+                'company_id' => self::id('Customer id'),
+                'ids' => [
+                    'type' => 'array',
+                    'items' => ['type' => 'integer'],
+                    'minItems' => 1,
+                    'maxItems' => 100,
+                    'description' => 'Domain ids',
+                ],
+            ], 'POST', '/domains/assign', ['company_id', 'ids']),
+            self::tool('delete_domain', 'Delete a domain (admin/manager). A domain still at Openprovider comes back on the next sync.', ['id' => self::id('Domain id')], 'DELETE', '/domains/{id}', ['id']),
+        ];
+    }
+
+    /**
+     * @return list<Tool>
+     */
+    private static function endpoints(): array
+    {
+        $fields = [
+            'name' => ['type' => 'string', 'description' => 'e.g. VPN certificate (required on create)'],
+            'company_id' => self::id('Customer id. Omit for an internal endpoint'),
+            'kind' => ['type' => 'string', 'enum' => ['certificate', 'domain', 'other']],
+            'hostname' => ['type' => 'string'],
+            'url' => ['type' => 'string', 'description' => 'https://…'],
+            'expires_at' => ['type' => 'string', 'description' => 'YYYY-MM-DD. A monitor can fill this in later'],
+            'notes' => ['type' => 'string'],
+            'notify_30' => ['type' => 'boolean'],
+            'notify_14' => ['type' => 'boolean'],
+            'notify_7' => ['type' => 'boolean'],
+            'notify_1' => ['type' => 'boolean'],
+            'notify_expired' => ['type' => 'boolean'],
+            'notify_customer' => ['type' => 'boolean', 'description' => 'Also email the customer contacts. Off by default'],
+        ];
+
+        return [
+            self::tool('list_endpoints', 'List certificate and endpoint monitors. webhook_url is omitted here; get_endpoint returns it.', self::$pagination + [
+                'company_id' => self::id('Customer id'),
+                'kind' => $fields['kind'],
+                'source' => ['type' => 'string', 'enum' => ['manual', 'webhook', 'uptime_kuma']],
+                'status' => ['type' => 'string', 'enum' => ['ok', 'warning', 'expired', 'unknown']],
+                'expired' => ['type' => 'boolean'],
+                'expires_within' => ['type' => 'integer', 'minimum' => 0, 'maximum' => 3650],
+            ], 'GET', '/endpoints'),
+            self::tool('list_upcoming_endpoints', 'Endpoints with an expiry inside N days, including already expired. Default 60.', [
+                'days' => ['type' => 'integer', 'minimum' => 1, 'maximum' => 365],
+                'per_page' => self::$pagination['per_page'],
+                'page' => self::$pagination['page'],
+            ], 'GET', '/endpoints/upcoming'),
+            self::tool('get_endpoint', 'Show an endpoint, including webhook_url. push_uptime_kuma_webhooks registers that URL in Uptime Kuma.', ['id' => self::id('Endpoint id')], 'GET', '/endpoints/{id}', ['id']),
+            self::tool('create_endpoint', 'Add an endpoint monitor (sales+). push_uptime_kuma_webhooks registers its webhook URL in Uptime Kuma and turns that monitor’s certificate and domain expiry notifications off. OpenMSP sends the reminders.', $fields, 'POST', '/endpoints', ['name']),
+            self::tool('update_endpoint', 'Partial-update an endpoint (sales+). A new expiry date restarts the reminder cycle. Returns webhook_url.', ['id' => self::id('Endpoint id')] + $fields, 'PATCH', '/endpoints/{id}', ['id']),
+            self::tool('rotate_endpoint_webhook', 'Issue a new webhook URL (sales+). The previous URL stops working.', ['id' => self::id('Endpoint id')], 'POST', '/endpoints/{id}/rotate-webhook', ['id']),
+            self::tool('delete_endpoint', 'Delete an endpoint monitor (admin/manager).', ['id' => self::id('Endpoint id')], 'DELETE', '/endpoints/{id}', ['id']),
+        ];
+    }
+
+    /**
+     * @return list<Tool>
+     */
+    private static function uptimeKuma(): array
+    {
+        return [
+            self::tool('get_uptime_kuma', 'Whether a Uptime Kuma base URL, API key and dashboard login are stored. The key and password are never returned.', [], 'GET', '/integrations/uptime-kuma'),
+            self::tool('set_uptime_kuma', 'Store the Uptime Kuma base URL, API key and dashboard login (admin/manager). The key and password are encrypted and are not echoed back. Send an empty string to clear a value. The API key only unlocks GET /metrics. The username and password are what add webhook URLs.', [
+                'base_url' => ['type' => 'string', 'description' => 'https://status.example.com — without /metrics. A trailing /metrics is stripped'],
+                'api_key' => ['type' => 'string', 'description' => 'Key from Uptime Kuma → Settings → Security → API Keys. Empty string clears it'],
+                'username' => ['type' => 'string', 'description' => 'Dashboard login. Empty string clears it'],
+                'password' => ['type' => 'string', 'description' => 'Dashboard password. Empty string clears it'],
+            ], 'PUT', '/integrations/uptime-kuma'),
+            self::tool('test_uptime_kuma', 'GET /metrics with the stored API key (admin/manager). Reports how many certificate monitors the scrape contains.', [], 'POST', '/integrations/uptime-kuma/test'),
+            self::tool('push_uptime_kuma_webhooks', 'Add each endpoint webhook URL to Uptime Kuma as a JSON notification and attach it to the monitor with the same URL or hostname (admin/manager). Turns certificate and domain expiry notifications off on that monitor. Other channels stay. Requires the dashboard username and password, not the API key. Omit endpoint_id to do every endpoint.', [
+                'endpoint_id' => self::id('Only this endpoint. Omit for every endpoint'),
+            ], 'POST', '/integrations/uptime-kuma/webhooks'),
+            self::tool('sync_uptime_kuma', 'Import certificate expiry from Uptime Kuma /metrics into endpoints (admin/manager). Matches on URL, then hostname. create_missing=true adds an endpoint for each unmatched certificate monitor. The nightly job updates matches and does not create. This does not enable Kuma notifications.', [
+                'create_missing' => ['type' => 'boolean', 'description' => 'Create endpoints for certificate monitors that do not match yet. Default false'],
+            ], 'POST', '/integrations/uptime-kuma/sync'),
         ];
     }
 

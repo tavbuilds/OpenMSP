@@ -6,6 +6,8 @@ use App\Enums\ContractStatus;
 use App\Http\Controllers\Api\V1\Concerns\AuthorizesAgentApi;
 use App\Http\Controllers\Controller;
 use App\Models\Contract;
+use App\Models\Domain;
+use App\Models\Endpoint;
 use App\Models\PlannedTask;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -86,6 +88,45 @@ class DashboardController extends Controller
                 'status' => $c->status?->value ?? $c->status,
             ]);
 
+        $upcomingDomains = Domain::query()
+            ->with('company')
+            ->present()
+            ->expiringWithin(60)
+            ->orderByDue()
+            ->limit(25)
+            ->get()
+            ->map(fn (Domain $domain) => [
+                'id' => $domain->id,
+                'name' => $domain->name,
+                'company_id' => $domain->company_id,
+                'company_name' => $domain->company?->name,
+                'renewal_date' => $domain->renewal_date?->toDateString(),
+                'expires_at' => $domain->expires_at?->toDateString(),
+                'actionable_date' => $domain->expiryDate()?->toDateString(),
+                'days_until_expiry' => $domain->daysUntilExpiry(),
+                'auto_renew' => (bool) $domain->auto_renew,
+                'expiry_status' => $domain->expiryStatus(),
+            ]);
+
+        $upcomingEndpoints = Endpoint::query()
+            ->with('company')
+            ->whereNotNull('expires_at')
+            ->whereDate('expires_at', '<=', now()->addDays(60)->toDateString())
+            ->orderBy('expires_at')
+            ->limit(25)
+            ->get()
+            ->map(fn (Endpoint $endpoint) => [
+                'id' => $endpoint->id,
+                'name' => $endpoint->name,
+                'company_id' => $endpoint->company_id,
+                'company_name' => $endpoint->company?->name,
+                'kind' => $endpoint->kind?->value ?? $endpoint->kind,
+                'hostname' => $endpoint->hostname,
+                'expires_at' => $endpoint->expires_at?->toDateString(),
+                'days_until_expiry' => $endpoint->daysUntilExpiry(),
+                'status' => $endpoint->last_status ?: $endpoint->computeStatus(),
+            ]);
+
         $upcomingPlanning = PlannedTask::query()
             ->with('company')
             ->open()
@@ -120,6 +161,13 @@ class DashboardController extends Controller
                 'upcoming_renewals_30d_count' => $upcoming30Count,
                 'upcoming_renewals' => $upcomingList,
                 'upcoming_notice_deadlines' => $upcomingNoticeDeadlines,
+                'domains_expiring_60d_count' => Domain::query()->present()->expiringWithin(60)->count(),
+                'upcoming_domain_expiries' => $upcomingDomains,
+                'endpoints_expiring_60d_count' => Endpoint::query()
+                    ->whereNotNull('expires_at')
+                    ->whereDate('expires_at', '<=', now()->addDays(60)->toDateString())
+                    ->count(),
+                'upcoming_endpoint_expiries' => $upcomingEndpoints,
                 'upcoming_planned_tasks' => $upcomingPlanning,
             ],
         ]);

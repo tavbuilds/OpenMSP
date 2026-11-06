@@ -108,6 +108,10 @@ export class MspClient {
     return this.request("PATCH", path, { body });
   }
 
+  put(path: string, body?: unknown) {
+    return this.request("PUT", path, { body });
+  }
+
   delete(path: string) {
     return this.request("DELETE", path);
   }

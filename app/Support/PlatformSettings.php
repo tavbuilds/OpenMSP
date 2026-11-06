@@ -74,6 +74,25 @@ class PlatformSettings
 
     public const OPENPROVIDER_LAST_ERROR = 'openprovider.last_error';
 
+    /**
+     * The API key authenticates GET /metrics only. Adding a webhook
+     * notification uses the dashboard username and password over Socket.IO,
+     * which is the interface Kuma's own UI uses.
+     */
+    public const UPTIME_KUMA_BASE_URL = 'uptime_kuma.base_url';
+
+    public const UPTIME_KUMA_API_KEY = 'uptime_kuma.api_key';
+
+    public const UPTIME_KUMA_USERNAME = 'uptime_kuma.username';
+
+    public const UPTIME_KUMA_PASSWORD = 'uptime_kuma.password';
+
+    public const UPTIME_KUMA_LAST_SYNC_AT = 'uptime_kuma.last_sync_at';
+
+    public const UPTIME_KUMA_LAST_SYNC_REPORT = 'uptime_kuma.last_sync_report';
+
+    public const UPTIME_KUMA_LAST_ERROR = 'uptime_kuma.last_error';
+
     public const REQUIRE_MFA = 'security.require_mfa';
 
     public const ONBOARDING_COMPLETED = 'onboarding.completed';
@@ -93,6 +112,8 @@ class PlatformSettings
         self::STRIPE_WEBHOOK_SECRET,
         self::PAX8_CLIENT_SECRET,
         self::OPENPROVIDER_PASSWORD,
+        self::UPTIME_KUMA_API_KEY,
+        self::UPTIME_KUMA_PASSWORD,
     ];
 
     public static function ready(): bool

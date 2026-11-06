@@ -20,11 +20,15 @@ import { registerProductComponents } from "./tools/product-components.js";
 import { registerProducts } from "./tools/products.js";
 import { registerPurchaseBundles } from "./tools/purchase-bundles.js";
 import { registerPlannedTasks } from "./tools/planned-tasks.js";
+import { registerVendors } from "./tools/vendors.js";
+import { registerDomains } from "./tools/domains.js";
+import { registerEndpoints } from "./tools/endpoints.js";
+import { registerUptimeKuma } from "./tools/uptime-kuma.js";
 
 function createServer(client: MspClient): McpServer {
   const server = new McpServer({
     name: "msp-platform",
-    version: "1.1.0",
+    version: "1.2.0",
   });
 
   registerDashboard(server, client);
@@ -36,6 +40,9 @@ function createServer(client: MspClient): McpServer {
   registerPurchaseBundles(server, client);
   registerVendors(server, client);
   registerPlannedTasks(server, client);
+  registerDomains(server, client);
+  registerEndpoints(server, client);
+  registerUptimeKuma(server, client);
 
   return server;
 }

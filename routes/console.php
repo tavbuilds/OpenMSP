@@ -34,3 +34,7 @@ Schedule::command('pax8:sync')
 Schedule::command('openprovider:sync')
     ->dailyAt('06:45')
     ->timezone($tz);
+
+Schedule::command('uptime-kuma:sync')
+    ->dailyAt('06:50')
+    ->timezone($tz);

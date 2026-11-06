@@ -6,6 +6,7 @@ use App\Enums\EndpointKind;
 use App\Enums\EndpointSource;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\WarnsBeforeExpiry;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
@@ -129,6 +130,31 @@ class Endpoint extends Model
     protected function expiryNotificationExtras(): array
     {
         return ['last_status' => $this->computeStatus()];
+    }
+
+    /**
+     * A pull (Uptime Kuma /metrics) reported this expiry.
+     *
+     * A new date starts a fresh reminder cycle. An endpoint that already
+     * receives webhooks stays a webhook: that URL is still the live channel.
+     */
+    public function applyObservedExpiry(CarbonInterface $expiresAt, EndpointSource $source): bool
+    {
+        $changed = $this->expires_at?->toDateString() !== $expiresAt->toDateString();
+        $fill = ['last_checked_at' => now()];
+        if ($this->source !== EndpointSource::Webhook) {
+            $fill['source'] = $source;
+        }
+        if ($changed) {
+            $fill['expires_at'] = $expiresAt->toDateString();
+            $fill = [...$fill, ...$this->freshExpiryCycle()];
+        }
+
+        $this->forceFill($fill);
+        $this->last_status = $this->computeStatus();
+        $this->save();
+
+        return $changed;
     }
 
     /**

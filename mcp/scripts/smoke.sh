@@ -16,6 +16,14 @@ echo "== GET ${BASE}/companies?per_page=3 =="
 curl -sS "${AUTH[@]}" "${BASE}/companies?per_page=3" | head -c 400
 echo -e "\n"
 
+echo "== GET ${BASE}/domains?per_page=3 =="
+curl -sS "${AUTH[@]}" "${BASE}/domains?per_page=3" | head -c 400
+echo -e "\n"
+
+echo "== GET ${BASE}/endpoints?per_page=3 =="
+curl -sS "${AUTH[@]}" "${BASE}/endpoints?per_page=3" | head -c 400
+echo -e "\n"
+
 echo "== GET ${BASE}/contracts/upcoming-renewals?days=30&per_page=3 =="
 curl -sS "${AUTH[@]}" "${BASE}/contracts/upcoming-renewals?days=30&per_page=3" | head -c 400
 echo -e "\n"

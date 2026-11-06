@@ -1,10 +1,10 @@
 openapi: 3.1.0
 info:
   title: MSP Platform Agent API
-  version: 1.4.0
+  version: 1.5.0
   description: |
     JSON REST API for AI agents (Sanctum PAT). See AGENT.md for filters.
-    v1.4.0 = planned tasks (moves, migrations, on-site work).
+    v1.5.0 = domains, endpoint monitors, Uptime Kuma API key and certificate import.
 servers:
   - url: /api/v1
     description: Relative to APP_URL
@@ -144,3 +144,40 @@ paths:
     delete:
       summary: Revoke own PAT
       responses: { '204': { description: No content } }
+  /domains/upcoming-expiries:
+    get: { summary: Domains renewing or expired within N days, responses: { '200': { description: OK } } }
+  /domains/assign:
+    post: { summary: Assign domains to a customer, responses: { '200': { description: OK } } }
+  /domains:
+    get: { summary: List domains (lifecycle=present by default), responses: { '200': { description: OK } } }
+    post: { summary: Create a manual domain, responses: { '201': { description: Created } } }
+  /domains/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /endpoints/upcoming:
+    get: { summary: Endpoints expiring within N days, responses: { '200': { description: OK } } }
+  /endpoints:
+    get: { summary: List endpoints (no webhook URL), responses: { '200': { description: OK } } }
+    post: { summary: Create an endpoint monitor, responses: { '201': { description: Created, includes webhook_url } } }
+  /endpoints/{id}:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    get: { summary: Show, including webhook_url, responses: { '200': { description: OK } } }
+    put: { summary: Update, responses: { '200': { description: OK } } }
+    patch: { summary: Patch, responses: { '200': { description: OK } } }
+    delete: { summary: Delete, responses: { '204': { description: No content } } }
+  /endpoints/{id}/rotate-webhook:
+    parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
+    post: { summary: Rotate the webhook token, responses: { '200': { description: OK } } }
+  /integrations/uptime-kuma:
+    get: { summary: Uptime Kuma status (api_key_set, password_set, never the secrets), responses: { '200': { description: OK } } }
+    put: { summary: Store base URL, API key and dashboard login (admin/manager), responses: { '200': { description: OK } } }
+    patch: { summary: Store base URL, API key and dashboard login (admin/manager), responses: { '200': { description: OK } } }
+  /integrations/uptime-kuma/test:
+    post: { summary: Scrape /metrics with the stored key, responses: { '200': { description: OK } } }
+  /integrations/uptime-kuma/sync:
+    post: { summary: Import certificate expiry into endpoints, responses: { '200': { description: OK } } }
+  /integrations/uptime-kuma/webhooks:
+    post: { summary: Add endpoint webhook URLs to Uptime Kuma (admin/manager), responses: { '200': { description: OK } } }
