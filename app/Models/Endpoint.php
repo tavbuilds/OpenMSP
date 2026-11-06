@@ -6,10 +6,14 @@ use App\Enums\EndpointKind;
 use App\Enums\EndpointSource;
 use App\Models\Concerns\Auditable;
 use App\Models\Concerns\WarnsBeforeExpiry;
+use App\Monitoring\UptimeKuma\UptimeKumaException;
+use App\Monitoring\UptimeKuma\UptimeKumaWebhooks;
 use Carbon\CarbonInterface;
+use Filament\Notifications\Notification;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class Endpoint extends Model
 {
@@ -70,6 +74,23 @@ class Endpoint extends Model
         static::creating(function (self $endpoint): void {
             if (! filled($endpoint->webhook_token)) {
                 $endpoint->webhook_token = Str::random(40);
+            }
+        });
+
+        static::deleting(function (self $endpoint): void {
+            try {
+                app(UptimeKumaWebhooks::class)->remove($endpoint);
+            } catch (UptimeKumaException $exception) {
+                if (request()->hasHeader('X-Livewire')) {
+                    Notification::make()
+                        ->title($exception->getMessage())
+                        ->danger()
+                        ->send();
+                }
+
+                throw ValidationException::withMessages([
+                    'uptime_kuma' => [$exception->getMessage()],
+                ]);
             }
         });
     }

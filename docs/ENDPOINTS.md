@@ -44,7 +44,14 @@ marked on the endpoint. **Submit failed domains again** on the endpoints
 list and on **Catalog → Uptime Kuma** sends only those. `failed_only: true`
 does the same on the API. Select rows on the endpoints list and use
 **Submit selection to Uptime Kuma** to send that batch in one go.
-`endpoint_ids` does the same on the API.
+`endpoint_ids` does the same on the API. The push then reads
+`monitor_cert_days_remaining` and writes that expiry onto the endpoints
+it just sent. The nightly job still refreshes the date.
+Deleting an endpoint from the list, the endpoint page, or the API also
+removes the matching monitor and the OpenMSP webhook from Uptime Kuma.
+Two monitors for the same address are left in Kuma and the endpoint stays.
+A Kuma error does the same, so the delete can be tried again. Without a
+dashboard login the endpoint is still removed here.
 
 The API key only reads `GET /metrics`. The dashboard login is what adds
 the webhook. Kuma 2.x is supported. A login with two-factor authentication
@@ -66,7 +73,7 @@ that step for **this** endpoint.
 ## Manual
 
 An expiry date on the form is enough if you do not attach a monitor. Source
-stays “Manual” until the first webhook arrives.
+stays “Manual” until a webhook arrives or the push reads a certificate date.
 
 ## Agent API
 

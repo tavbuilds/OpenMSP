@@ -236,7 +236,7 @@ PROM;
             ->assertJsonPath('data.ambiguous_count', 0)
             ->assertJsonPath('data.monitors_created', 0);
 
-        Http::assertSentCount(11);
+        Http::assertSentCount(12);
         $this->assertSame([], $this->packets('add'));
 
         $added = $this->packet('addNotification');
@@ -386,9 +386,78 @@ PROM;
             ->assertJsonPath('data.attached', 0)
             ->assertJsonPath('data.unchanged', 1);
 
-        Http::assertSentCount(7);
+        Http::assertSentCount(8);
         $this->assertSame([], $this->packets('addNotification'));
         $this->assertSame([], $this->packets('editMonitor'));
+    }
+
+    public function test_push_reads_the_certificate_date_immediately(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'kind' => 'domain',
+            'hostname' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+        $other = Endpoint::create([
+            'name' => 'other.example',
+            'url' => 'https://other.example',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '3' => ['id' => 3, 'name' => 'zaanadvocaten.nl', 'url' => 'https://zaanadvocaten.nl'],
+                '4' => ['id' => 4, 'name' => 'other.example', 'url' => 'https://other.example'],
+            ], [[
+                'id' => 9,
+                'name' => 'OpenMSP '.$endpoint->id.': zaanadvocaten.nl',
+                'config' => json_encode(['webhookURL' => $endpoint->webhookUrl()]),
+            ], [
+                'id' => 10,
+                'name' => 'OpenMSP '.$other->id.': other.example',
+                'config' => json_encode(['webhookURL' => $other->webhookUrl()]),
+            ]]),
+            'ok',
+            '431'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 3,
+                    'expiryNotification' => false,
+                    'domainExpiryNotification' => false,
+                    'notificationIDList' => ['9' => true],
+                ],
+            ]]),
+            'ok',
+            '432'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 4,
+                    'expiryNotification' => false,
+                    'domainExpiryNotification' => false,
+                    'notificationIDList' => ['10' => true],
+                ],
+            ]]),
+        ), <<<'PROM'
+monitor_cert_days_remaining{monitor_name="zaanadvocaten.nl",monitor_type="http",monitor_url="https://zaanadvocaten.nl",monitor_hostname="zaanadvocaten.nl",monitor_port="443"} 40
+PROM);
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 2)
+            ->assertJsonPath('data.unchanged', 2)
+            ->assertJsonPath('data.expiries_updated', 1);
+
+        $endpoint->refresh();
+        $this->assertSame(now()->addDays(40)->toDateString(), $endpoint->expires_at->toDateString());
+        $this->assertSame(EndpointSource::UptimeKuma, $endpoint->source);
+        $this->assertSame('ok', $endpoint->last_status);
+
+        $other->refresh();
+        $this->assertNull($other->expires_at);
+        $this->assertSame(EndpointSource::Manual, $other->source);
+        $this->assertNull($other->last_status);
     }
 
     public function test_push_skips_an_ambiguous_monitor(): void
@@ -461,7 +530,7 @@ PROM;
             ->assertJsonPath('data.unmatched_count', 0)
             ->assertJsonPath('data.ambiguous_count', 0);
 
-        Http::assertSentCount(13);
+        Http::assertSentCount(14);
 
         $added = $this->packet('add')[1];
         $this->assertSame('http', $added['type']);
@@ -612,7 +681,7 @@ PROM;
             ->assertJsonPath('data.failed_count', 0)
             ->assertJsonPath('data.monitors_created', 0);
 
-        Http::assertSentCount(11);
+        Http::assertSentCount(12);
         $this->assertFalse($this->packet('editMonitor')[1]['expiryNotification']);
     }
 
@@ -880,6 +949,248 @@ PROM;
         $this->assertSame('previous scrape', PlatformSettings::get(PlatformSettings::UPTIME_KUMA_LAST_ERROR));
     }
 
+    public function test_deleting_an_endpoint_removes_the_kuma_monitor_and_webhook(): void
+    {
+        Sanctum::actingAs(User::factory()->manager()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+            'hostname' => 'zaanadvocaten.nl',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '4' => [
+                    'id' => 4,
+                    'name' => 'zaanadvocaten.nl',
+                    'url' => 'https://zaanadvocaten.nl',
+                ],
+            ], [[
+                'id' => 9,
+                'name' => 'OpenMSP '.$endpoint->id.': zaanadvocaten.nl',
+                'config' => ['webhookURL' => $endpoint->webhookUrl()],
+            ]]),
+            'ok',
+            '431'.json_encode([['ok' => true, 'msg' => 'successDeleted']]),
+            'ok',
+            '432'.json_encode([['ok' => true, 'msg' => 'successDeleted']]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('endpoints', ['id' => $endpoint->id]);
+        Http::assertSentCount(9);
+        $this->assertSame(4, $this->packet('deleteMonitor')[1]);
+        $this->assertArrayNotHasKey(2, $this->packet('deleteMonitor'));
+        $this->assertSame(9, $this->packet('deleteNotification')[1]);
+        $this->assertArrayNotHasKey(2, $this->packet('deleteNotification'));
+        Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '/metrics'));
+    }
+
+    public function test_deleting_a_name_only_endpoint_removes_the_monitor_openmsp_created(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create(['name' => 'zaanadvocaten.nl']);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '4' => [
+                    'id' => 4,
+                    'name' => 'zaanadvocaten.nl',
+                    'url' => 'https://zaanadvocaten.nl',
+                ],
+            ], []),
+            'ok',
+            '431'.json_encode([['ok' => true]]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame(4, $this->packet('deleteMonitor')[1]);
+        $this->assertSame([], $this->packets('deleteNotification'));
+        Http::assertSentCount(7);
+    }
+
+    public function test_deleting_an_endpoint_without_a_monitor_still_removes_the_webhook(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'Mail',
+            'url' => 'https://mail.example.com',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], [[
+                'id' => 9,
+                'name' => 'OpenMSP '.$endpoint->id.': Mail',
+                'config' => ['webhookURL' => $endpoint->webhookUrl()],
+            ]]),
+            'ok',
+            '431'.json_encode([['ok' => true]]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame([], $this->packets('deleteMonitor'));
+        $this->assertSame(9, $this->packet('deleteNotification')[1]);
+    }
+
+    public function test_deleting_an_endpoint_without_a_kuma_login_still_removes_the_row(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        PlatformSettings::set(PlatformSettings::UPTIME_KUMA_BASE_URL, 'https://kuma.test');
+        PlatformSettings::set(PlatformSettings::UPTIME_KUMA_API_KEY, self::KEY);
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+
+        Http::fake();
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('endpoints', ['id' => $endpoint->id]);
+        Http::assertNothingSent();
+    }
+
+    public function test_deleting_an_endpoint_stops_when_two_monitors_match(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '1' => ['id' => 1, 'name' => 'One', 'url' => 'https://zaanadvocaten.nl'],
+                '2' => ['id' => 2, 'name' => 'Two', 'url' => 'https://zaanadvocaten.nl/'],
+            ], []),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.uptime_kuma.0', 'Uptime Kuma has more than one monitor for zaanadvocaten.nl. None was removed.');
+
+        $this->assertDatabaseHas('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame([], $this->packets('deleteMonitor'));
+        $this->assertSame([], $this->packets('deleteNotification'));
+        Http::assertSentCount(5);
+    }
+
+    public function test_deleting_an_endpoint_keeps_the_row_when_kuma_rejects_the_monitor(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '4' => ['id' => 4, 'name' => 'zaanadvocaten.nl', 'url' => 'https://zaanadvocaten.nl'],
+            ], [[
+                'id' => 9,
+                'name' => 'OpenMSP '.$endpoint->id.': zaanadvocaten.nl',
+                'config' => ['webhookURL' => $endpoint->webhookUrl()],
+            ]]),
+            'ok',
+            '431'.json_encode([['ok' => false, 'msg' => 'monitor not found']]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.uptime_kuma.0', 'monitor not found');
+
+        $this->assertDatabaseHas('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame([], $this->packets('deleteNotification'));
+        Http::assertSentCount(7);
+    }
+
+    public function test_deleting_an_endpoint_keeps_the_row_when_the_webhook_delete_fails(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([
+                '4' => ['id' => 4, 'name' => 'zaanadvocaten.nl', 'url' => 'https://zaanadvocaten.nl'],
+            ], [[
+                'id' => 9,
+                'name' => 'OpenMSP '.$endpoint->id.': zaanadvocaten.nl',
+                'config' => ['webhookURL' => $endpoint->webhookUrl()],
+            ]]),
+            'ok',
+            '431'.json_encode([['ok' => true]]),
+            'ok',
+            '432'.json_encode([['ok' => false, 'msg' => 'notification not found']]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)
+            ->assertUnprocessable()
+            ->assertJsonPath('errors.uptime_kuma.0', 'notification not found');
+
+        $this->assertDatabaseHas('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame(4, $this->packet('deleteMonitor')[1]);
+        $this->assertSame(9, $this->packet('deleteNotification')[1]);
+    }
+
+    public function test_deleting_an_endpoint_with_nothing_in_kuma_still_removes_the_row(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'Internal VPN',
+            'hostname' => 'vpn.internal',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)->assertNoContent();
+
+        $this->assertDatabaseMissing('endpoints', ['id' => $endpoint->id]);
+        $this->assertSame([], $this->packets('deleteMonitor'));
+        $this->assertSame([], $this->packets('deleteNotification'));
+        Http::assertSentCount(5);
+    }
+
+    public function test_deleting_an_endpoint_stops_when_kuma_asks_for_two_factor(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'zaanadvocaten.nl',
+            'url' => 'https://zaanadvocaten.nl',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            '430'.json_encode([['ok' => false, 'tokenRequired' => true]]),
+        ));
+
+        $this->deleteJson('/api/v1/endpoints/'.$endpoint->id)
+            ->assertUnprocessable()
+            ->assertJsonPath(
+                'errors.uptime_kuma.0',
+                'Uptime Kuma asked for a two-factor code. Use a login without two-factor authentication.',
+            );
+
+        $this->assertDatabaseHas('endpoints', ['id' => $endpoint->id]);
+        Http::assertNotSent(fn ($request): bool => str_contains($request->url(), '/metrics'));
+    }
+
     public function test_sales_cannot_push_webhooks(): void
     {
         Sanctum::actingAs(User::factory()->sales()->create());
@@ -899,7 +1210,7 @@ PROM;
     /**
      * @param  list<string>  $bodies
      */
-    private function fakeKuma(array $bodies): void
+    private function fakeKuma(array $bodies, string $metrics = ''): void
     {
         Http::preventStrayRequests();
         $sequence = Http::sequence();
@@ -909,6 +1220,7 @@ PROM;
 
         Http::fake([
             'https://kuma.test/socket.io/*' => $sequence,
+            'https://kuma.test/metrics' => Http::response($metrics, 200, ['Content-Type' => 'text/plain']),
         ]);
     }
 
