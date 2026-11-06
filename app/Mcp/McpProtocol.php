@@ -82,7 +82,7 @@ final class McpProtocol
                 'title' => PlatformSettings::name(),
                 'version' => '1.0.0',
             ],
-            'instructions' => 'OpenMSP agent tools for companies, contacts, contracts, catalog, vendors, purchase bundles, planned tasks, and dashboard metrics. Same RBAC as the Agent API.',
+            'instructions' => 'OpenMSP tools follow the Agent API: companies, contacts, contracts, catalog, vendors, purchase bundles, planned tasks, domains, endpoints, Uptime Kuma, and dashboard metrics. create_endpoint adds a monitor and returns webhook_url. push_uptime_kuma_webhooks registers that URL in Uptime Kuma. Same RBAC as the Agent API.',
         ];
     }
 

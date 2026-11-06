@@ -47,6 +47,8 @@ class McpEndpointTest extends TestCase
 
         $init->assertJsonPath('result.protocolVersion', '2025-03-26');
         $init->assertJsonPath('result.serverInfo.name', 'openmsp');
+        $this->assertStringContainsString('create_endpoint', (string) $init->json('result.instructions'));
+        $this->assertStringContainsString('push_uptime_kuma_webhooks', (string) $init->json('result.instructions'));
         $this->assertArrayHasKey('tools', $init->json('result.capabilities'));
 
         $list = $this->postJson('/mcp', [
