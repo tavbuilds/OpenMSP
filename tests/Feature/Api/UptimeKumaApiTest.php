@@ -233,9 +233,11 @@ PROM;
             ->assertJsonPath('data.updated', 0)
             ->assertJsonPath('data.unchanged', 0)
             ->assertJsonPath('data.unmatched_count', 0)
-            ->assertJsonPath('data.ambiguous_count', 0);
+            ->assertJsonPath('data.ambiguous_count', 0)
+            ->assertJsonPath('data.monitors_created', 0);
 
         Http::assertSentCount(11);
+        $this->assertSame([], $this->packets('add'));
 
         $added = $this->packet('addNotification');
         $this->assertSame('webhook', $added[1]['type']);
@@ -412,8 +414,157 @@ PROM;
             ->assertJsonPath('data.created', 1)
             ->assertJsonPath('data.attached', 0)
             ->assertJsonPath('data.ambiguous_count', 1)
-            ->assertJsonPath('data.ambiguous.0', 'Mail');
+            ->assertJsonPath('data.ambiguous.0', 'Mail')
+            ->assertJsonPath('data.monitors_created', 0);
 
+        $this->assertSame([], $this->packets('editMonitor'));
+        $this->assertSame([], $this->packets('add'));
+    }
+
+    public function test_push_creates_an_https_monitor_when_kuma_has_none(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        $endpoint = Endpoint::create([
+            'name' => 'Mail',
+            'url' => 'https://mail.example.com/health',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.json_encode([['ok' => true, 'monitorID' => 15]]),
+            'ok',
+            '433'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'name' => 'Mail',
+                    'url' => 'https://mail.example.com/health',
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '434'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 1)
+            ->assertJsonPath('data.attached', 1)
+            ->assertJsonPath('data.created', 1)
+            ->assertJsonPath('data.monitors_created', 1)
+            ->assertJsonPath('data.unmatched_count', 0)
+            ->assertJsonPath('data.ambiguous_count', 0);
+
+        Http::assertSentCount(13);
+
+        $added = $this->packet('add')[1];
+        $this->assertSame('http', $added['type']);
+        $this->assertSame('GET', $added['method']);
+        $this->assertSame(60, $added['interval']);
+        $this->assertSame('https://mail.example.com/health', $added['url']);
+        $this->assertSame('Mail', $added['name']);
+        $this->assertFalse($added['expiryNotification']);
+        $this->assertFalse($added['domainExpiryNotification']);
+        $this->assertSame(['200-299'], $added['accepted_statuscodes']);
+        $this->assertTrue($added['notificationIDList']['9']);
+        $this->assertStringContainsString('"notificationIDList":{', $this->rawPacket('add'));
+
+        $monitor = $this->packet('editMonitor')[1];
+        $this->assertSame(15, $monitor['id']);
+        $this->assertFalse($monitor['expiryNotification']);
+        $this->assertFalse($monitor['domainExpiryNotification']);
+        $this->assertTrue($monitor['notificationIDList']['9']);
+        $this->assertSame($endpoint->webhookUrl(), $this->packet('addNotification')[1]['webhookURL']);
+    }
+
+    public function test_push_creates_a_monitor_from_a_domain_name_and_reuses_it(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create(['name' => 'sandraklaas.nl']);
+        Endpoint::create([
+            'name' => 'Sandra again',
+            'url' => 'https://sandraklaas.nl/',
+        ]);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+            'ok',
+            '432'.json_encode([['ok' => true, 'monitorID' => 15]]),
+            'ok',
+            '433'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'url' => 'https://sandraklaas.nl',
+                    'expiryNotification' => true,
+                    'domainExpiryNotification' => true,
+                    'notificationIDList' => [],
+                ],
+            ]]),
+            'ok',
+            '434'.json_encode([['ok' => true]]),
+            'ok',
+            '435'.json_encode([['ok' => true, 'id' => 10]]),
+            'ok',
+            '436'.json_encode([[
+                'ok' => true,
+                'monitor' => [
+                    'id' => 15,
+                    'expiryNotification' => false,
+                    'domainExpiryNotification' => false,
+                    'notificationIDList' => ['9' => true],
+                ],
+            ]]),
+            'ok',
+            '437'.json_encode([['ok' => true]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.endpoints', 2)
+            ->assertJsonPath('data.attached', 2)
+            ->assertJsonPath('data.created', 2)
+            ->assertJsonPath('data.monitors_created', 1)
+            ->assertJsonPath('data.unmatched_count', 0);
+
+        $this->assertCount(1, $this->packets('add'));
+        $this->assertSame('https://sandraklaas.nl', $this->packet('add')[1]['url']);
+        $this->assertSame('sandraklaas.nl', $this->packet('add')[1]['name']);
+        $this->assertSame([15, 15], array_map(fn (array $packet) => $packet[1], $this->packets('getMonitor')));
+        $this->assertTrue($this->packets('editMonitor')[1][1]['notificationIDList']['9']);
+        $this->assertTrue($this->packets('editMonitor')[1][1]['notificationIDList']['10']);
+    }
+
+    public function test_push_leaves_an_endpoint_unmatched_when_it_has_no_address(): void
+    {
+        Sanctum::actingAs(User::factory()->admin()->create());
+        $this->configureLogin();
+        Endpoint::create(['name' => 'Internal mail']);
+
+        $this->fakeKuma($this->handshakeThen(
+            $this->loginPoll([], []),
+            'ok',
+            '431'.json_encode([['ok' => true, 'id' => 9]]),
+        ));
+
+        $this->postJson('/api/v1/integrations/uptime-kuma/webhooks')
+            ->assertOk()
+            ->assertJsonPath('data.created', 1)
+            ->assertJsonPath('data.attached', 0)
+            ->assertJsonPath('data.monitors_created', 0)
+            ->assertJsonPath('data.unmatched_count', 1)
+            ->assertJsonPath('data.unmatched.0', 'Internal mail');
+
+        $this->assertSame([], $this->packets('add'));
         $this->assertSame([], $this->packets('editMonitor'));
     }
 

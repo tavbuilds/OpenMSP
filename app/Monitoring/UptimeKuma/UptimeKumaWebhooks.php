@@ -10,9 +10,12 @@ use Illuminate\Support\Collection;
  * Registers each endpoint webhook as a JSON notification in Uptime Kuma
  * and attaches it to the monitor with the same URL or hostname.
  *
- * Certificate and domain expiry notifications on that monitor are turned
- * off. OpenMSP sends those reminders. Other Kuma channels are left as they
- * are, so a downtime notification the operator added stays.
+ * When that monitor does not exist yet, this creates an HTTPS monitor for
+ * the endpoint URL, hostname, or a domain-like name. Certificate and domain
+ * expiry notifications on that monitor are turned off. OpenMSP sends those
+ * reminders. Other Kuma channels are left as they are, so a downtime
+ * notification the operator added stays. Two monitors for the same address
+ * are left alone.
  */
 class UptimeKumaWebhooks
 {
@@ -45,6 +48,7 @@ class UptimeKumaWebhooks
         $created = 0;
         $updated = 0;
         $unchanged = 0;
+        $monitorsCreated = 0;
         $unmatched = [];
         $ambiguous = [];
 
@@ -52,6 +56,7 @@ class UptimeKumaWebhooks
             $outcome = $this->pushOne($socket, $endpoint, $monitors, $notifications);
             $created += $outcome['created'];
             $updated += $outcome['updated'];
+            $monitorsCreated += $outcome['monitors_created'];
 
             if ($outcome['match'] === 'ambiguous') {
                 $ambiguous[] = $endpoint->name;
@@ -74,6 +79,7 @@ class UptimeKumaWebhooks
             'created' => $created,
             'updated' => $updated,
             'unchanged' => $unchanged,
+            'monitors_created' => $monitorsCreated,
             'unmatched_count' => count($unmatched),
             'unmatched' => array_slice($unmatched, 0, 50),
             'ambiguous_count' => count($ambiguous),
@@ -82,11 +88,27 @@ class UptimeKumaWebhooks
     }
 
     /**
+     * @param  array<string, mixed>  $report
+     */
+    public static function summary(array $report): string
+    {
+        return __(':attached attached, :created new, :updated replaced, :unchanged already in place, :monitors monitors created, :unmatched without a URL, :ambiguous ambiguous.', [
+            'attached' => $report['attached'],
+            'created' => $report['created'],
+            'updated' => $report['updated'],
+            'unchanged' => $report['unchanged'],
+            'monitors' => $report['monitors_created'],
+            'unmatched' => $report['unmatched_count'],
+            'ambiguous' => $report['ambiguous_count'],
+        ]);
+    }
+
+    /**
      * @param  list<array<string, mixed>>  $monitors
      * @param  list<array<string, mixed>>  $notifications
-     * @return array{match: string, created: int, updated: int, changed: bool}
+     * @return array{match: string, created: int, updated: int, monitors_created: int, changed: bool}
      */
-    private function pushOne(KumaSocket $socket, Endpoint $endpoint, array $monitors, array &$notifications): array
+    private function pushOne(KumaSocket $socket, Endpoint $endpoint, array &$monitors, array &$notifications): array
     {
         $created = 0;
         $updated = 0;
@@ -112,23 +134,153 @@ class UptimeKumaWebhooks
         }
 
         $candidates = $this->candidates($monitors, $endpoint);
-        if ($candidates->count() !== 1) {
+        if ($candidates->count() > 1) {
             return [
-                'match' => $candidates->count() > 1 ? 'ambiguous' : 'none',
+                'match' => 'ambiguous',
                 'created' => $created,
                 'updated' => $updated,
+                'monitors_created' => 0,
                 'changed' => false,
             ];
         }
 
-        $changed = $this->attach($socket, (int) $candidates->first()['id'], (int) $existing['id']);
+        $monitorsCreated = 0;
+        if ($candidates->isEmpty()) {
+            $monitorUrl = $this->monitorUrl($endpoint);
+            if ($monitorUrl === null) {
+                return [
+                    'match' => 'none',
+                    'created' => $created,
+                    'updated' => $updated,
+                    'monitors_created' => 0,
+                    'changed' => false,
+                ];
+            }
+
+            $monitorId = $this->createMonitor($socket, $endpoint, $monitorUrl, (int) $existing['id']);
+            $monitors[] = [
+                'id' => $monitorId,
+                'name' => $endpoint->name,
+                'url' => $monitorUrl,
+            ];
+            $monitorsCreated = 1;
+        } else {
+            $monitorId = (int) $candidates->first()['id'];
+        }
+
+        $changed = $this->attach($socket, $monitorId, (int) $existing['id']);
 
         return [
             'match' => 'one',
             'created' => $created,
             'updated' => $updated,
-            'changed' => $changed || $created === 1 || $updated === 1,
+            'monitors_created' => $monitorsCreated,
+            'changed' => $changed || $created === 1 || $updated === 1 || $monitorsCreated === 1,
         ];
+    }
+
+    /**
+     * Kuma 2.x `add`. The handler stringifies the list fields before it
+     * stores the bean, and it links notificationIDList itself.
+     */
+    private function createMonitor(KumaSocket $socket, Endpoint $endpoint, string $url, int $notificationId): int
+    {
+        $saved = $this->requireOk($socket->emit('add', [
+            'type' => 'http',
+            'name' => mb_substr((string) $endpoint->name, 0, 255),
+            'url' => $url,
+            'method' => 'GET',
+            'interval' => 60,
+            'retryInterval' => 60,
+            'resendInterval' => 0,
+            'maxretries' => 0,
+            'active' => true,
+            'ignoreTls' => false,
+            'upsideDown' => false,
+            'expiryNotification' => false,
+            'domainExpiryNotification' => false,
+            'maxredirects' => 10,
+            'accepted_statuscodes' => ['200-299'],
+            'notificationIDList' => (object) [(string) $notificationId => true],
+            'kafkaProducerBrokers' => [],
+            'kafkaProducerSaslOptions' => ['mechanism' => 'None'],
+            'conditions' => [],
+            'rabbitmqNodes' => [],
+        ]), 'Uptime Kuma did not add the monitor.');
+
+        $id = (int) ($saved['monitorID'] ?? $saved['monitorId'] ?? 0);
+        if ($id < 1) {
+            throw new UptimeKumaException('Uptime Kuma added a monitor without an id.');
+        }
+
+        return $id;
+    }
+
+    /**
+     * An HTTP(S) URL Kuma can check. A bare hostname is prefixed with https.
+     * The name is used only when it is itself a hostname, so a domain typed
+     * in as the endpoint name still becomes a monitor.
+     */
+    private function monitorUrl(Endpoint $endpoint): ?string
+    {
+        foreach ([$endpoint->url, $endpoint->hostname, $this->domainName($endpoint->name)] as $candidate) {
+            $url = $this->httpUrl($candidate);
+            if ($url !== null) {
+                return $url;
+            }
+        }
+
+        return null;
+    }
+
+    private function domainName(mixed $name): ?string
+    {
+        $name = trim((string) $name);
+
+        return $this->isHostname($name) ? $name : null;
+    }
+
+    private function httpUrl(mixed $value): ?string
+    {
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        if (! preg_match('#^[a-z][a-z0-9+.-]*://#i', $value)) {
+            $value = 'https://'.$value;
+        }
+
+        $parts = parse_url($value);
+        if (! is_array($parts) || empty($parts['host'])) {
+            return null;
+        }
+
+        $scheme = strtolower((string) ($parts['scheme'] ?? ''));
+        if (! in_array($scheme, ['http', 'https'], true)) {
+            return null;
+        }
+
+        $host = strtolower((string) $parts['host']);
+        if (! $this->isHostname($host) && ! filter_var($host, FILTER_VALIDATE_IP)) {
+            return null;
+        }
+
+        $port = isset($parts['port']) ? ':'.$parts['port'] : '';
+        $path = isset($parts['path']) ? rtrim((string) $parts['path'], '/') : '';
+        $query = isset($parts['query']) ? '?'.$parts['query'] : '';
+
+        return $scheme.'://'.$host.$port.$path.$query;
+    }
+
+    private function isHostname(string $value): bool
+    {
+        $value = strtolower(trim($value));
+        if ($value === '' || str_contains($value, ' ') || str_contains($value, '/')) {
+            return false;
+        }
+
+        return (bool) preg_match('/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/', $value);
     }
 
     private function attach(KumaSocket $socket, int $monitorId, int $notificationId): bool

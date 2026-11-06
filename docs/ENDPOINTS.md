@@ -31,11 +31,14 @@ token invalidates the old URL.
 **Catalog → Uptime Kuma** stores the server address, the API key and the
 dashboard login.
 
-**Add webhook URLs** (also `push_uptime_kuma_webhooks`) creates one JSON
-webhook per endpoint and attaches it to the monitor with the same URL or
-hostname. Certificate and domain expiry notifications on that monitor are
-turned off, because OpenMSP sends the 30/14/7/1 and expired reminders.
-A downtime channel that was already on the monitor stays.
+**Add webhook URLs** (also `push_uptime_kuma_webhooks`, and **Add to Uptime
+Kuma** on the endpoint page) creates one JSON webhook per endpoint. It
+attaches that webhook to the monitor with the same URL or hostname. When
+Kuma has no such monitor, OpenMSP creates an HTTPS check for the endpoint
+URL, hostname, or a name that is itself a domain. Certificate and domain
+expiry notifications on that monitor are turned off, because OpenMSP sends
+the 30/14/7/1 and expired reminders. A downtime channel that was already
+on the monitor stays. Two monitors for the same address are left alone.
 
 The API key only reads `GET /metrics`. The dashboard login is what adds
 the webhook. Kuma 2.x is supported. A login with two-factor authentication
@@ -69,7 +72,8 @@ it. `POST /api/v1/endpoints/{id}/rotate-webhook` replaces it.
 Store the connection with `PUT /api/v1/integrations/uptime-kuma`
 (`base_url`, `api_key`, `username`, `password`, admin/manager). The key
 and the password are encrypted and are never returned.
-`POST /api/v1/integrations/uptime-kuma/webhooks` adds the webhook URLs.
+`POST /api/v1/integrations/uptime-kuma/webhooks` adds the webhook URLs and
+creates the HTTPS monitor when Kuma does not have one yet.
 `POST /api/v1/integrations/uptime-kuma/sync` reads
 `monitor_cert_days_remaining` and writes the expiry onto the endpoint with
 the same URL or hostname. `create_missing: true` adds an endpoint for a

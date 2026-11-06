@@ -180,4 +180,4 @@ paths:
   /integrations/uptime-kuma/sync:
     post: { summary: Import certificate expiry into endpoints, responses: { '200': { description: OK } } }
   /integrations/uptime-kuma/webhooks:
-    post: { summary: Add endpoint webhook URLs to Uptime Kuma (admin/manager), responses: { '200': { description: OK } } }
+    post: { summary: Create the Uptime Kuma HTTPS monitor when missing, add the webhook and turn expiry notifications off (admin/manager), responses: { '200': { description: OK } } }

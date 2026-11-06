@@ -56,7 +56,7 @@ export function registerUptimeKuma(server: McpServer, client: MspClient): void {
 
   server.tool(
     "push_uptime_kuma_webhooks",
-    "Add endpoint webhook URLs to Uptime Kuma and attach each one to the monitor with the same URL or hostname (admin/manager). Turns certificate and domain expiry notifications off. Requires the dashboard login.",
+    "Create each endpoint webhook in Uptime Kuma and attach it (admin/manager). Creates the HTTPS monitor when none matches the URL, hostname or domain-like name. Turns certificate and domain expiry notifications off. Requires the dashboard login.",
     {
       endpoint_id: z.number().int().optional().describe("Only this endpoint. Omit for every endpoint"),
     },
