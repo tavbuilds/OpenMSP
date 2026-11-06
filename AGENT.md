@@ -252,7 +252,7 @@ The API key from **Settings → Security → API Keys** authenticates `GET /metr
 
 Adding webhook URLs uses the Kuma dashboard username and password over Socket.IO, the same interface as the Kuma UI. Store both under **Catalog → Uptime Kuma**, or with `PUT /api/v1/integrations/uptime-kuma` (`base_url`, `api_key`, `username`, `password`). The key and the password are encrypted and are never returned.
 
-`POST /api/v1/integrations/uptime-kuma/webhooks` (admin/manager, optional `endpoint_id`) creates a JSON webhook notification per endpoint and attaches it to the monitor with the same URL or hostname. Certificate expiry and domain expiry notifications on that monitor are turned off, because OpenMSP sends those reminders. Other notification channels already on the monitor are left as they are.
+`POST /api/v1/integrations/uptime-kuma/webhooks` (admin/manager, optional `endpoint_id`) creates a JSON webhook notification per endpoint and attaches it to the monitor with the same URL or hostname. When no monitor matches, OpenMSP creates an HTTPS monitor for the endpoint URL, hostname, or a domain-like name. Certificate expiry and domain expiry notifications on that monitor are turned off, because OpenMSP sends those reminders. Other notification channels already on the monitor are left as they are. Two monitors for the same address are skipped. The response counts `monitors_created`. An endpoint with no URL, hostname or domain-like name stays in `unmatched`.
 
 | Method | Path | Who | Notes |
 |--------|------|-----|-------|
@@ -260,7 +260,7 @@ Adding webhook URLs uses the Kuma dashboard username and password over Socket.IO
 | `PUT` / `PATCH` | `/api/v1/integrations/uptime-kuma` | admin/manager | `{ "base_url", "api_key", "username", "password" }`. Empty string clears that field. A trailing `/metrics` is stripped. The key and password are write-only |
 | `POST` | `/api/v1/integrations/uptime-kuma/test` | admin/manager | Scrapes `/metrics`, returns `cert_monitors` |
 | `POST` | `/api/v1/integrations/uptime-kuma/sync` | admin/manager | `{ "create_missing": false }`. Matches on URL, then hostname, and writes `expires_at` |
-| `POST` | `/api/v1/integrations/uptime-kuma/webhooks` | admin/manager | `{ "endpoint_id": 4 }` optional. Adds webhook URLs in Kuma |
+| `POST` | `/api/v1/integrations/uptime-kuma/webhooks` | admin/manager | `{ "endpoint_id": 4 }` optional. Adds webhook URLs and creates missing HTTPS monitors in Kuma |
 
 `create_missing: true` adds an endpoint for each certificate monitor that matches nothing. The nightly `uptime-kuma:sync` (06:50) updates matches and does not create. The key is encrypted at rest with the other platform secrets.
 

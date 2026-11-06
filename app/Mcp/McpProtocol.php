@@ -19,7 +19,7 @@ final class McpProtocol
 
     /**
      * @param  array<string, mixed>  $payload
-     * @return array<string, mixed>|null  Null means a JSON-RPC notification (no body).
+     * @return array<string, mixed>|null Null means a JSON-RPC notification (no body).
      */
     public function handle(array $payload, User $user): ?array
     {
@@ -82,7 +82,7 @@ final class McpProtocol
                 'title' => PlatformSettings::name(),
                 'version' => '1.0.0',
             ],
-            'instructions' => 'OpenMSP tools follow the Agent API: companies, contacts, contracts, catalog, vendors, purchase bundles, planned tasks, domains, endpoints, Uptime Kuma, and dashboard metrics. create_endpoint adds a monitor and returns webhook_url. push_uptime_kuma_webhooks registers that URL in Uptime Kuma. Same RBAC as the Agent API.',
+            'instructions' => 'OpenMSP tools follow the Agent API: companies, contacts, contracts, catalog, vendors, purchase bundles, planned tasks, domains, endpoints, Uptime Kuma, and dashboard metrics. create_endpoint adds an endpoint and returns webhook_url. push_uptime_kuma_webhooks creates the Uptime Kuma HTTPS monitor when it is missing, attaches that webhook and turns certificate and domain expiry notifications off. Same RBAC as the Agent API.',
         ];
     }
 

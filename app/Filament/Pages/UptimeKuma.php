@@ -167,20 +167,13 @@ class UptimeKuma extends Page implements HasSchemas
                 ->label(__('Add webhook URLs'))
                 ->requiresConfirmation()
                 ->modalHeading(__('Add the endpoint webhook URLs to Uptime Kuma?'))
-                ->modalDescription(__('Each endpoint gets a JSON webhook. It is attached to the monitor with the same URL or hostname. Other channels stay as they are. Certificate and domain expiry notifications are turned off.'))
+                ->modalDescription(__('Each endpoint gets a JSON webhook. When Uptime Kuma has no monitor for that URL or hostname, OpenMSP creates an HTTPS monitor and attaches the webhook. Other channels stay as they are. Certificate and domain expiry notifications are turned off.'))
                 ->action(function (): void {
                     try {
                         $report = app(UptimeKumaWebhooks::class)->push();
                         Notification::make()
                             ->title(__('Webhook URLs sent to Uptime Kuma'))
-                            ->body(__(':attached attached, :created new, :updated replaced, :unchanged already in place, :unmatched without a monitor, :ambiguous ambiguous.', [
-                                'attached' => $report['attached'],
-                                'created' => $report['created'],
-                                'updated' => $report['updated'],
-                                'unchanged' => $report['unchanged'],
-                                'unmatched' => $report['unmatched_count'],
-                                'ambiguous' => $report['ambiguous_count'],
-                            ]))
+                            ->body(UptimeKumaWebhooks::summary($report))
                             ->success()
                             ->send();
                     } catch (UptimeKumaException $e) {

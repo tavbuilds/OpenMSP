@@ -64,7 +64,7 @@ export function registerEndpoints(server: McpServer, client: MspClient): void {
 
   server.tool(
     "get_endpoint",
-    "Show an endpoint, including webhook_url. push_uptime_kuma_webhooks registers that URL in Uptime Kuma.",
+    "Show an endpoint, including webhook_url. push_uptime_kuma_webhooks creates the Uptime Kuma HTTPS monitor when it is missing and attaches that URL.",
     { id: z.number().int().describe("Endpoint id") },
     async ({ id }) => {
       try {
@@ -77,7 +77,7 @@ export function registerEndpoints(server: McpServer, client: MspClient): void {
 
   server.tool(
     "create_endpoint",
-    "Add an endpoint monitor (sales+). push_uptime_kuma_webhooks registers its webhook URL in Uptime Kuma and turns that monitor’s certificate and domain expiry notifications off.",
+    "Add an endpoint (sales+). push_uptime_kuma_webhooks then creates the Uptime Kuma HTTPS monitor when it is missing, attaches the webhook and turns certificate and domain expiry notifications off.",
     {
       name: z.string().describe("Name, e.g. VPN certificate"),
       company_id: fields.company_id,

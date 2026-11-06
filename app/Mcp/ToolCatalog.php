@@ -475,8 +475,8 @@ final class ToolCatalog
                 'per_page' => self::$pagination['per_page'],
                 'page' => self::$pagination['page'],
             ], 'GET', '/endpoints/upcoming'),
-            self::tool('get_endpoint', 'Show an endpoint, including webhook_url. push_uptime_kuma_webhooks registers that URL in Uptime Kuma.', ['id' => self::id('Endpoint id')], 'GET', '/endpoints/{id}', ['id']),
-            self::tool('create_endpoint', 'Add an endpoint monitor (sales+). push_uptime_kuma_webhooks registers its webhook URL in Uptime Kuma and turns that monitor’s certificate and domain expiry notifications off. OpenMSP sends the reminders.', $fields, 'POST', '/endpoints', ['name']),
+            self::tool('get_endpoint', 'Show an endpoint, including webhook_url. push_uptime_kuma_webhooks creates the Uptime Kuma HTTPS monitor when it is missing and attaches that URL.', ['id' => self::id('Endpoint id')], 'GET', '/endpoints/{id}', ['id']),
+            self::tool('create_endpoint', 'Add an endpoint (sales+). push_uptime_kuma_webhooks then creates the Uptime Kuma HTTPS monitor when it is missing, attaches the webhook and turns that monitor’s certificate and domain expiry notifications off. OpenMSP sends the reminders.', $fields, 'POST', '/endpoints', ['name']),
             self::tool('update_endpoint', 'Partial-update an endpoint (sales+). A new expiry date restarts the reminder cycle. Returns webhook_url.', ['id' => self::id('Endpoint id')] + $fields, 'PATCH', '/endpoints/{id}', ['id']),
             self::tool('rotate_endpoint_webhook', 'Issue a new webhook URL (sales+). The previous URL stops working.', ['id' => self::id('Endpoint id')], 'POST', '/endpoints/{id}/rotate-webhook', ['id']),
             self::tool('delete_endpoint', 'Delete an endpoint monitor (admin/manager).', ['id' => self::id('Endpoint id')], 'DELETE', '/endpoints/{id}', ['id']),
@@ -497,7 +497,7 @@ final class ToolCatalog
                 'password' => ['type' => 'string', 'description' => 'Dashboard password. Empty string clears it'],
             ], 'PUT', '/integrations/uptime-kuma'),
             self::tool('test_uptime_kuma', 'GET /metrics with the stored API key (admin/manager). Reports how many certificate monitors the scrape contains.', [], 'POST', '/integrations/uptime-kuma/test'),
-            self::tool('push_uptime_kuma_webhooks', 'Add each endpoint webhook URL to Uptime Kuma as a JSON notification and attach it to the monitor with the same URL or hostname (admin/manager). Turns certificate and domain expiry notifications off on that monitor. Other channels stay. Requires the dashboard username and password, not the API key. Omit endpoint_id to do every endpoint.', [
+            self::tool('push_uptime_kuma_webhooks', 'Create each endpoint webhook in Uptime Kuma and attach it to the matching monitor (admin/manager). When no monitor matches the URL, hostname or a domain-like name, OpenMSP creates an HTTPS monitor. Turns certificate and domain expiry notifications off. Other channels stay. Ambiguous matches are skipped. Requires the dashboard username and password, not the API key. Omit endpoint_id to do every endpoint.', [
                 'endpoint_id' => self::id('Only this endpoint. Omit for every endpoint'),
             ], 'POST', '/integrations/uptime-kuma/webhooks'),
             self::tool('sync_uptime_kuma', 'Import certificate expiry from Uptime Kuma /metrics into endpoints (admin/manager). Matches on URL, then hostname. create_missing=true adds an endpoint for each unmatched certificate monitor. The nightly job updates matches and does not create. This does not enable Kuma notifications.', [

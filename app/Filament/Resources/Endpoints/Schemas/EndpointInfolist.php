@@ -42,7 +42,7 @@ class EndpointInfolist
                     TextEntry::make('source')->label(__('Source'))->badge(),
                 ]),
             Section::make('Webhook')
-                ->description(__('OpenMSP can add this URL to Uptime Kuma as a JSON webhook. Certificate and domain expiry notifications on that monitor stay off. Each endpoint has its own token.'))
+                ->description(__('OpenMSP can create the Uptime Kuma HTTPS monitor for this endpoint and add this URL as a JSON webhook. Certificate and domain expiry notifications on that monitor stay off. Each endpoint has its own token.'))
                 ->schema([
                     TextEntry::make('webhook_url')
                         ->label(__('Webhook URL (POST JSON)'))
