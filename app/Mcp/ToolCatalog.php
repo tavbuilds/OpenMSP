@@ -479,7 +479,7 @@ final class ToolCatalog
             self::tool('create_endpoint', 'Add an endpoint (sales+). push_uptime_kuma_webhooks then creates the Uptime Kuma HTTPS monitor when it is missing, attaches the webhook and turns that monitor’s certificate and domain expiry notifications off. OpenMSP sends the reminders.', $fields, 'POST', '/endpoints', ['name']),
             self::tool('update_endpoint', 'Partial-update an endpoint (sales+). A new expiry date restarts the reminder cycle. Returns webhook_url.', ['id' => self::id('Endpoint id')] + $fields, 'PATCH', '/endpoints/{id}', ['id']),
             self::tool('rotate_endpoint_webhook', 'Issue a new webhook URL (sales+). The previous URL stops working.', ['id' => self::id('Endpoint id')], 'POST', '/endpoints/{id}/rotate-webhook', ['id']),
-            self::tool('delete_endpoint', 'Delete an endpoint monitor (admin/manager).', ['id' => self::id('Endpoint id')], 'DELETE', '/endpoints/{id}', ['id']),
+            self::tool('delete_endpoint', 'Delete an endpoint (admin/manager). Also removes the matching Uptime Kuma monitor and the OpenMSP webhook. Two matches or a Kuma error leave the endpoint in place.', ['id' => self::id('Endpoint id')], 'DELETE', '/endpoints/{id}', ['id']),
         ];
     }
 

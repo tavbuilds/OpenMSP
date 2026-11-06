@@ -125,7 +125,7 @@ export function registerEndpoints(server: McpServer, client: MspClient): void {
 
   server.tool(
     "delete_endpoint",
-    "Delete an endpoint monitor (admin/manager).",
+    "Delete an endpoint (admin/manager). Also removes the matching Uptime Kuma monitor and the OpenMSP webhook. Two matches or a Kuma error leave the endpoint in place.",
     { id: z.number().int().describe("Endpoint id") },
     async ({ id }) => {
       try {

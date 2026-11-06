@@ -167,7 +167,7 @@ paths:
     get: { summary: Show, including webhook_url, responses: { '200': { description: OK } } }
     put: { summary: Update, responses: { '200': { description: OK } } }
     patch: { summary: Patch, responses: { '200': { description: OK } } }
-    delete: { summary: Delete, responses: { '204': { description: No content } } }
+    delete: { summary: Delete the endpoint and its Uptime Kuma monitor, responses: { '204': { description: No content } } }
   /endpoints/{id}/rotate-webhook:
     parameters: [{ in: path, name: id, required: true, schema: { type: integer } }]
     post: { summary: Rotate the webhook token, responses: { '200': { description: OK } } }

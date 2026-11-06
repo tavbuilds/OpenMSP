@@ -16,6 +16,9 @@ use Illuminate\Support\Collection;
  * reminders. Other Kuma channels are left as they are, so a downtime
  * notification the operator added stays. Two monitors for the same address
  * are left alone.
+ *
+ * Deleting an endpoint removes that monitor and the OpenMSP webhook.
+ * Two matches, or a Kuma error, leave the endpoint in place.
  */
 class UptimeKumaWebhooks
 {
@@ -123,6 +126,8 @@ class UptimeKumaWebhooks
             $outcome['changed'] ? $attached++ : $unchanged++;
         }
 
+        $expiriesUpdated = $this->readExpiries($endpoints);
+
         return [
             'endpoints' => $endpoints->count(),
             'attached' => $attached,
@@ -136,7 +141,71 @@ class UptimeKumaWebhooks
             'ambiguous' => array_slice($ambiguous, 0, 50),
             'failed_count' => count($failed),
             'failed' => array_slice($failed, 0, 50),
+            'expiries_updated' => $expiriesUpdated,
         ];
+    }
+
+    /**
+     * Remove the monitor and the OpenMSP webhook for this endpoint.
+     * A missing dashboard login skips Kuma. The caller still deletes the row.
+     */
+    public function remove(Endpoint $endpoint): void
+    {
+        $username = PlatformSettings::get(PlatformSettings::UPTIME_KUMA_USERNAME);
+        $password = PlatformSettings::get(PlatformSettings::UPTIME_KUMA_PASSWORD);
+        if (! filled($this->client->baseUrl()) || ! filled($username) || ! filled($password)) {
+            return;
+        }
+
+        $socket = new KumaSocket((string) $this->client->baseUrl());
+        $socket->login((string) $username, (string) $password);
+
+        $monitors = $this->monitorsFor($this->monitors($socket), $endpoint);
+        $notification = $this->existingNotification($this->notifications($socket), $endpoint);
+        if ($monitors->count() > 1) {
+            throw new UptimeKumaException('Uptime Kuma has more than one monitor for '.$endpoint->name.'. None was removed.');
+        }
+
+        if ($monitors->isNotEmpty()) {
+            $monitorId = (int) ($monitors->first()['id'] ?? 0);
+            if ($monitorId < 1) {
+                throw new UptimeKumaException('Uptime Kuma did not return the monitor id.');
+            }
+
+            $this->requireOk(
+                $socket->emit('deleteMonitor', $monitorId),
+                'Uptime Kuma did not delete the monitor.',
+            );
+        }
+        if ($notification === null) {
+            return;
+        }
+
+        $notificationId = (int) ($notification['id'] ?? 0);
+        if ($notificationId < 1) {
+            throw new UptimeKumaException('Uptime Kuma returned a webhook without an id.');
+        }
+
+        $this->requireOk(
+            $socket->emit('deleteNotification', $notificationId),
+            'Uptime Kuma did not delete the webhook.',
+        );
+    }
+
+    /**
+     * @param  Collection<int, Endpoint>  $endpoints
+     */
+    private function readExpiries(Collection $endpoints): int
+    {
+        if ($endpoints->isEmpty() || ! $this->client->configured()) {
+            return 0;
+        }
+
+        try {
+            return app(UptimeKumaSync::class)->applyTo($endpoints, $this->client->metrics());
+        } catch (UptimeKumaException) {
+            return 0;
+        }
     }
 
     /**
@@ -179,6 +248,7 @@ class UptimeKumaWebhooks
             'ambiguous' => [],
             'failed_count' => 0,
             'failed' => [],
+            'expiries_updated' => 0,
         ];
     }
 
@@ -467,6 +537,30 @@ class UptimeKumaWebhooks
         }
 
         return $rows;
+    }
+
+    /**
+     * Same address match as a push. A name-only endpoint is included, because
+     * that is the HTTPS monitor push creates for a domain-like name.
+     *
+     * @param  list<array<string, mixed>>  $monitors
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function monitorsFor(array $monitors, Endpoint $endpoint): Collection
+    {
+        $candidates = $this->candidates($monitors, $endpoint);
+        if ($candidates->isNotEmpty()) {
+            return $candidates;
+        }
+
+        $url = $this->normaliseUrl($this->monitorUrl($endpoint));
+        if ($url === null) {
+            return new Collection;
+        }
+
+        return collect($monitors)
+            ->filter(fn (array $monitor): bool => $this->normaliseUrl($monitor['url'] ?? null) === $url)
+            ->values();
     }
 
     /**

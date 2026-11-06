@@ -101,6 +101,34 @@ class UptimeKumaSync
     }
 
     /**
+     * Write certificate days onto the given endpoints. A push calls this
+     * immediately, so the expiry does not wait for the nightly run.
+     *
+     * @param  Collection<int, Endpoint>  $endpoints
+     */
+    public function applyTo(Collection $endpoints, string $exposition): int
+    {
+        $updated = 0;
+
+        foreach (PrometheusCertMetrics::certificateDays($exposition) as $sample) {
+            $candidates = $this->candidates($endpoints, $sample);
+            if ($candidates->count() !== 1) {
+                continue;
+            }
+
+            $changed = $candidates->first()->applyObservedExpiry(
+                now()->addDays($sample['days_remaining']),
+                EndpointSource::UptimeKuma,
+            );
+            if ($changed) {
+                $updated++;
+            }
+        }
+
+        return $updated;
+    }
+
+    /**
      * @param  Collection<int, Endpoint>  $endpoints
      * @param  array{monitor_name: string, monitor_type: string, monitor_url: string, monitor_hostname: string, monitor_port: string, days_remaining: int}  $sample
      * @return Collection<int, Endpoint>

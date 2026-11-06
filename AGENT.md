@@ -246,13 +246,15 @@ Certificate and other expiry monitors. See [docs/ENDPOINTS.md](docs/ENDPOINTS.md
 
 A changed `expires_at` restarts the reminder cycle.
 
+`DELETE /api/v1/endpoints/{id}` removes the endpoint. When a Uptime Kuma dashboard login is stored, OpenMSP also deletes the matching monitor and the OpenMSP webhook. Two monitors for that address, or a Kuma error, leave the endpoint in place (HTTP 422). Without that login the endpoint is still deleted.
+
 ### Uptime Kuma
 
 The API key from **Settings → Security → API Keys** authenticates `GET /metrics` (HTTP basic auth, the key is the password, the username is ignored). It does **not** create monitors or notifications.
 
 Adding webhook URLs uses the Kuma dashboard username and password over Socket.IO, the same interface as the Kuma UI. Store both under **Catalog → Uptime Kuma**, or with `PUT /api/v1/integrations/uptime-kuma` (`base_url`, `api_key`, `username`, `password`). The key and the password are encrypted and are never returned.
 
-`POST /api/v1/integrations/uptime-kuma/webhooks` (admin/manager, optional `endpoint_id`) creates a JSON webhook notification per endpoint and attaches it to the monitor with the same URL or hostname. When no monitor matches, OpenMSP creates an HTTPS monitor for the endpoint URL, hostname, or a domain-like name. Certificate expiry and domain expiry notifications on that monitor are turned off, because OpenMSP sends those reminders. Other notification channels already on the monitor are left as they are. Two monitors for the same address are skipped. The response counts `monitors_created`. An endpoint with no URL, hostname or domain-like name stays in `unmatched`. A socket error on one endpoint is retried up to 3 times, then listed in `failed`, stored on the endpoint, and the push continues with the rest. `failed_only: true` sends only the endpoints that still failed. `endpoint_ids` sends only that selection, in one batch.
+`POST /api/v1/integrations/uptime-kuma/webhooks` (admin/manager, optional `endpoint_id`) creates a JSON webhook notification per endpoint and attaches it to the monitor with the same URL or hostname. When no monitor matches, OpenMSP creates an HTTPS monitor for the endpoint URL, hostname, or a domain-like name. Certificate expiry and domain expiry notifications on that monitor are turned off, because OpenMSP sends those reminders. Other notification channels already on the monitor are left as they are. Two monitors for the same address are skipped. The response counts `monitors_created`. An endpoint with no URL, hostname or domain-like name stays in `unmatched`. A socket error on one endpoint is retried up to 3 times, then listed in `failed`, stored on the endpoint, and the push continues with the rest. `failed_only: true` sends only the endpoints that still failed. `endpoint_ids` sends only that selection, in one batch. The same request then reads `monitor_cert_days_remaining` and writes the expiry onto those endpoints. The nightly job still refreshes that date.
 
 | Method | Path | Who | Notes |
 |--------|------|-----|-------|
